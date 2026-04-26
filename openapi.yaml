@@ -1,0 +1,308 @@
+swagger: "2.0"
+info:
+  title: Dublee
+  description: Make your own duble
+  version: "1.0.0"
+  contact:
+    name: Luís Felipe Pereira Auth
+    url: https://github.com/LuisFelipe2
+
+basePath: /
+
+schemes:
+  - http
+
+paths:
+  /:
+    get:
+      summary: Hello World endpoint
+      description: Returns a simple greeting message
+      tags:
+        - General
+      responses:
+        200:
+          description: Successful response with greeting message
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Hello World"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Checks if the application is healthy and running
+      tags:
+        - System
+      responses:
+        200:
+          description: Application is healthy
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "healthy"
+              message:
+                type: string
+                example: "Everything is healthy"
+
+  /upload:
+    get:
+      summary: Upload test page
+      description: Serves the upload test page (HTML)
+      tags:
+        - General
+      responses:
+        200:
+          description: HTML page served
+          schema:
+            type: string
+
+  /api/videos/upload:
+    post:
+      summary: Upload a video file
+      description: Upload a video file for processing
+      tags:
+        - Videos
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: file
+          type: file
+          required: true
+          description: Video file to upload
+      responses:
+        201:
+          description: Video uploaded successfully
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        400:
+          description: Invalid file or upload error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos:
+    get:
+      summary: List all videos
+      description: Retrieve a list of all uploaded videos
+      tags:
+        - Videos
+      responses:
+        200:
+          description: List of all videos
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos/{video_id}:
+    get:
+      summary: Get video information
+      description: Retrieve information about a specific video
+      tags:
+        - Videos
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+      responses:
+        200:
+          description: Video information retrieved
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+    delete:
+      summary: Delete a video
+      description: Delete a specific video and its associated files
+      tags:
+        - Videos
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+      responses:
+        200:
+          description: Video deleted successfully
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos/download/{video_id}:
+    get:
+      summary: Download video file
+      description: Download the original uploaded video file
+      tags:
+        - Videos
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+      responses:
+        200:
+          description: Video file
+          schema:
+            type: file
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos/{video_id}/record-audio:
+    post:
+      summary: Replace vocal track with recorded audio
+      description: Replace the vocal track of a video with a recorded audio file
+      tags:
+        - Videos
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+        - in: formData
+          name: audio
+          type: file
+          required: true
+          description: Recorded audio to insert into the video
+      responses:
+        200:
+          description: Final video file with recorded audio
+          schema:
+            type: file
+        400:
+          description: Invalid request
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        500:
+          description: Processing error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos/{video_id}/voice-removal-status:
+    get:
+      summary: Get voice removal status
+      description: Get the status of voice removal processing for a video
+      tags:
+        - Videos
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+      responses:
+        200:
+          description: Voice removal status
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+  /api/videos/{video_id}/no-voice:
+    get:
+      summary: Download video without voice
+      description: Download the video with vocals removed
+      tags:
+        - Videos
+      parameters:
+        - in: path
+          name: video_id
+          type: string
+          required: true
+          description: Video ID
+      responses:
+        200:
+          description: Video file with vocals removed
+          schema:
+            type: file
+        404:
+          description: Video not found
+          schema:
+            $ref: "#/definitions/VideoResponse"
+        500:
+          description: Processing error
+          schema:
+            $ref: "#/definitions/VideoResponse"
+
+definitions:
+  VideoResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: "Video uploaded successfully"
+      data:
+        type: object
+        description: Optional data payload
+      error:
+        type: string
+        description: Optional error message
+    required:
+      - success
+      - message
+
+  Video:
+    type: object
+    properties:
+      id:
+        type: string
+        example: "abc123"
+      filename:
+        type: string
+        example: "myvideo.mp4"
+      file_size:
+        type: string
+        example: "10.50 MB"
+      extension:
+        type: string
+        example: "mp4"
+      upload_date:
+        type: string
+        format: date-time
+        example: "2023-10-01T12:00:00"
+      content_type:
+        type: string
+        example: "video/mp4"
+    required:
+      - id
+      - filename
+      - file_size
+      - extension
+      - upload_date
+      - content_type
