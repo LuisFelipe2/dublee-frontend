@@ -61,7 +61,7 @@ const UploadPage = () => {
       const data = await uploadVideoAPI(file);
       setStatus({ type: 'success', message: 'Vídeo enviado! Redirecionando...' });
       setTimeout(() => {
-        navigate(`/record/${data.data.id}`);
+        navigate(`/subtitle/${data.data.id}`);
       }, 2000);
     } catch (error) {
       setStatus({ type: 'error', message: error.message });

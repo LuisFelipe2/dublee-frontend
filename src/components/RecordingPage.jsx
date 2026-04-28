@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { checkVoiceRemovalStatus as checkStatusAPI, recordAudio as recordAudioAPI, downloadVideo } from '../services/api';
+import { checkVoiceRemovalStatus as checkStatusAPI, downloadVideo } from '../services/api';
+import { setRecordedAudio } from '../store/recordingStore';
+
+const storageKey = (id) => `dublee-subtitles-${id}`;
 
 const RecordingPage = () => {
   const { videoId } = useParams();
@@ -8,12 +11,25 @@ const RecordingPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isProcessing, setIsProcessing] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const [stream, setStream] = useState(null);
   const [progress, setProgress] = useState(0);
+
   const videoRef = useRef(null);
   const statusCheckIntervalRef = useRef(null);
+  const isProcessingRef = useRef(true);
+  const isRecordingRef = useRef(false);
+  const mediaRecorderRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const [subtitles] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey(videoId));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
+  const subtitlesRef = useRef(subtitles);
 
   useEffect(() => {
     if (videoId) {
@@ -23,14 +39,22 @@ const RecordingPage = () => {
     }
 
     return () => {
-      if (statusCheckIntervalRef.current) {
-        clearInterval(statusCheckIntervalRef.current);
-      }
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      if (statusCheckIntervalRef.current) clearInterval(statusCheckIntervalRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, [videoId]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onTimeUpdate = () => {
+      const t = video.currentTime;
+      const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
+      setCurrentSubtitleText(found?.text ?? '');
+    };
+    video.addEventListener('timeupdate', onTimeUpdate);
+    return () => video.removeEventListener('timeupdate', onTimeUpdate);
+  }, []);
 
   const loadVideo = () => {
     if (videoRef.current) {
@@ -40,20 +64,22 @@ const RecordingPage = () => {
   };
 
   const checkVoiceRemovalStatus = async () => {
-    if (!videoId || !isProcessing) return;
-
+    if (!videoId || !isProcessingRef.current) return;
     try {
       const data = await checkStatusAPI(videoId);
-
       const { is_processing, is_complete, error } = data.data;
 
       if (error) {
         setStatus({ type: 'error', message: `Erro no processamento: ${error}` });
+        isProcessingRef.current = false;
         setIsProcessing(false);
+        clearInterval(statusCheckIntervalRef.current);
       } else if (is_complete) {
+        isProcessingRef.current = false;
         setIsProcessing(false);
         setProgress(100);
-        setStatus({ type: 'success', message: 'Vídeo pronto! Você pode começar a gravar sua dubagem.' });
+        setStatus({ type: 'success', message: 'Vídeo pronto! Você pode começar a gravar sua dublagem.' });
+        clearInterval(statusCheckIntervalRef.current);
       } else if (is_processing) {
         setProgress(50);
         setStatus({ type: 'loading', message: 'Processando áudio...' });
@@ -61,6 +87,33 @@ const RecordingPage = () => {
     } catch (error) {
       console.error('Erro ao verificar status:', error);
     }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.onended = null;
+    }
+    isRecordingRef.current = false;
+    setIsRecording(false);
+    setStatus({ type: 'loading', message: 'Processando áudio gravado...' });
+  };
+
+  const saveAndGoToMix = (chunks) => {
+    if (chunks.length === 0) {
+      setStatus({ type: 'error', message: 'Nenhum áudio gravado.' });
+      return;
+    }
+    const blob = new Blob(chunks, { type: 'audio/webm' });
+    setRecordedAudio(blob);
+    navigate(`/mix/${videoId}`);
   };
 
   const startRecording = async () => {
@@ -71,90 +124,41 @@ const RecordingPage = () => {
 
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setStream(mediaStream);
+      streamRef.current = mediaStream;
 
       const recorder = new MediaRecorder(mediaStream);
-      setMediaRecorder(recorder);
+      mediaRecorderRef.current = recorder;
 
       const chunks = [];
       recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          chunks.push(event.data);
-        }
+        if (event.data && event.data.size > 0) chunks.push(event.data);
       };
-
-      recorder.onstop = () => finalizeRecording(chunks);
+      recorder.onstop = () => saveAndGoToMix(chunks);
 
       recorder.start();
+      isRecordingRef.current = true;
       setIsRecording(true);
       setStatus({ type: 'loading', message: '🎙 Gravando... Fale em sincronia com o vídeo.' });
 
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
+        videoRef.current.onended = () => {
+          if (isRecordingRef.current) stopRecording();
+        };
         await videoRef.current.play();
       }
     } catch (error) {
-      let errorMessage = 'Erro ao acessar microfone: ';
-      if (error.name === 'NotAllowedError') {
-        errorMessage += 'Permissão negada. Permita acesso ao microfone.';
-      } else if (error.name === 'NotFoundError') {
-        errorMessage += 'Microfone não encontrado.';
-      } else {
-        errorMessage += error.message;
-      }
-      setStatus({ type: 'error', message: errorMessage });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    setIsRecording(false);
-    setStatus({ type: 'loading', message: 'Processando áudio gravado...' });
-  };
-
-  const finalizeRecording = async (chunks) => {
-    if (chunks.length === 0) {
-      setStatus({ type: 'error', message: 'Nenhum áudio gravado.' });
-      return;
-    }
-
-    const blob = new Blob(chunks, { type: 'audio/webm' });
-
-    setStatus({ type: 'loading', message: 'Renderizando vídeo final...' });
-
-    try {
-      const videoBlob = await recordAudioAPI(videoId, blob);
-      const downloadUrl = URL.createObjectURL(videoBlob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `video-redublado-${new Date().getTime()}.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
-
-      setStatus({ type: 'success', message: '✅ Download iniciado! Seu vídeo redublado está pronto.' });
-    } catch (error) {
-      setStatus({ type: 'error', message: 'Erro ao processar: ' + error.message });
+      let msg = 'Erro ao acessar microfone: ';
+      if (error.name === 'NotAllowedError') msg += 'Permissão negada. Permita acesso ao microfone.';
+      else if (error.name === 'NotFoundError') msg += 'Microfone não encontrado.';
+      else msg += error.message;
+      setStatus({ type: 'error', message: msg });
     }
   };
 
   const resetAll = () => {
-    if (statusCheckIntervalRef.current) {
-      clearInterval(statusCheckIntervalRef.current);
-    }
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+    if (statusCheckIntervalRef.current) clearInterval(statusCheckIntervalRef.current);
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     navigate('/');
   };
 
@@ -168,7 +172,7 @@ const RecordingPage = () => {
       <div className="content">
         <div className="section">
           <h2>
-            <span className="section-number">2</span>
+            <span className="section-number">3</span>
             Grave sua dublagem
           </h2>
 
@@ -181,7 +185,28 @@ const RecordingPage = () => {
             </div>
           )}
 
-          <video ref={videoRef} controls muted style={{ marginTop: '20px' }}></video>
+          <div style={{ position: 'relative', marginTop: '20px' }}>
+            <video ref={videoRef} controls muted style={{ marginBottom: 0 }}></video>
+            {currentSubtitleText && (
+              <div style={{
+                position: 'absolute',
+                bottom: '52px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(0,0,0,0.78)',
+                color: '#fff',
+                padding: '5px 16px',
+                borderRadius: '4px',
+                fontSize: '18px',
+                maxWidth: '90%',
+                textAlign: 'center',
+                pointerEvents: 'none',
+                whiteSpace: 'pre-wrap',
+              }}>
+                {currentSubtitleText}
+              </div>
+            )}
+          </div>
 
           <div className="button-group">
             <button

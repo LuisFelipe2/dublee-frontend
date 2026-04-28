@@ -1,6 +1,6 @@
 // API service functions for interacting with the backend
 
-const API_BASE_URL = '/api'; // Assuming the backend is served from the same origin
+const API_BASE_URL = 'http://localhost:7860/api';
 
 export const uploadVideo = async (file) => {
   const formData = new FormData();
@@ -67,4 +67,23 @@ export const deleteVideo = async (videoId) => {
     throw new Error(data.error || 'Failed to delete video');
   }
   return data;
+};
+
+export const mixAudio = async (videoId, audioBlob, voiceVolume, effectsVolume) => {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'recorded_audio.webm');
+  formData.append('voice_volume', voiceVolume.toString());
+  formData.append('effects_volume', effectsVolume.toString());
+
+  const response = await fetch(`${API_BASE_URL}/videos/${videoId}/mix`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || data.message || 'Mix failed');
+  }
+
+  return response.blob();
 };
