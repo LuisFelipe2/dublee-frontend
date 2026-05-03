@@ -69,6 +69,20 @@ export const deleteVideo = async (videoId) => {
   return data;
 };
 
+export const importFromUrl = async (url) => {
+  const response = await fetch(`${API_BASE_URL}/videos/import-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Falha ao importar vídeo');
+  }
+  return data;
+};
+
 export const mixAudio = async (videoId, audioBlob, voiceVolume, effectsVolume) => {
   const formData = new FormData();
   formData.append('audio', audioBlob, 'recorded_audio.webm');

@@ -1,12 +1,14 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadVideo as uploadVideoAPI } from '../services/api';
+import { uploadVideo as uploadVideoAPI, importFromUrl as importFromUrlAPI } from '../services/api';
 
 const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isUploading, setIsUploading] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -70,6 +72,25 @@ const UploadPage = () => {
     }
   };
 
+  const importFromYoutube = async () => {
+    if (!youtubeUrl.trim()) return;
+
+    setIsImporting(true);
+    setStatus({ type: 'loading', message: 'Baixando vídeo do YouTube...' });
+
+    try {
+      const data = await importFromUrlAPI(youtubeUrl.trim());
+      setStatus({ type: 'success', message: 'Vídeo importado! Redirecionando...' });
+      setTimeout(() => {
+        navigate(`/subtitle/${data.data.id}`);
+      }, 2000);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="container">
       <div className="header">
@@ -120,6 +141,41 @@ const UploadPage = () => {
               Limpar
             </button>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', gap: '12px' }}>
+            <div style={{ flex: 1, height: '1px', background: '#333' }} />
+            <span style={{ color: '#666', fontSize: '13px' }}>ou importe do YouTube</span>
+            <div style={{ flex: 1, height: '1px', background: '#333' }} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && importFromYoutube()}
+              disabled={isImporting || isUploading}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                background: '#1a1a1a',
+                border: '1px solid #333',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+            <button
+              className="btn btn-upload"
+              onClick={importFromYoutube}
+              disabled={!youtubeUrl.trim() || isImporting || isUploading}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              {isImporting ? 'Importando...' : 'Importar'}
+            </button>
+          </div>
+
           {status.message && (
             <div className={`status-message show ${status.type}`}>
               {status.type === 'loading' && <span className="spinner"></span>}
