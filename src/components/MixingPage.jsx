@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mixAudio } from '../services/api';
 import { getRecordedAudio } from '../store/recordingStore';
+import SubtitleSourceSelector from './SubtitleSourceSelector';
+
+const subtitlesStorageKey = (id) => `dublee-subtitles-${id}`;
 
 const MixingPage = () => {
   const { videoId } = useParams();
@@ -13,6 +16,16 @@ const MixingPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [subtitles, setSubtitles] = useState(() => {
+    try {
+      const saved = localStorage.getItem(subtitlesStorageKey(videoId));
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const subtitlesRef = useRef(subtitles);
+  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
+
+  useEffect(() => { subtitlesRef.current = subtitles; }, [subtitles]);
 
   // Track last mixed params to avoid regenerating on download when nothing changed
   const lastMixRef = useRef(null); // { voiceVolume, effectsVolume, url, blob }
@@ -95,6 +108,11 @@ const MixingPage = () => {
             Mixagem de Áudio
           </h2>
 
+          <SubtitleSourceSelector
+            videoId={videoId}
+            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
+          />
+
           {/* Volume sliders */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
             <VolumeSlider
@@ -131,7 +149,23 @@ const MixingPage = () => {
                   src={previewUrl}
                   controls
                   style={{ marginBottom: 0 }}
+                  onTimeUpdate={(e) => {
+                    const t = e.target.currentTime;
+                    const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
+                    setCurrentSubtitleText(found?.text ?? '');
+                  }}
                 />
+                {currentSubtitleText && (
+                  <div style={{
+                    position: 'absolute', bottom: '52px', left: '50%',
+                    transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.78)',
+                    color: '#fff', padding: '5px 16px', borderRadius: '4px',
+                    fontSize: '18px', maxWidth: '90%', textAlign: 'center',
+                    pointerEvents: 'none', whiteSpace: 'pre-wrap',
+                  }}>
+                    {currentSubtitleText}
+                  </div>
+                )}
               </div>
             </div>
           )}

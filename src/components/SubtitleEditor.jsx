@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { downloadVideo } from '../services/api';
+import SubtitleSourceSelector from './SubtitleSourceSelector';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -139,6 +140,11 @@ const SubtitleEditor = () => {
             <span className="section-number">2</span>
             Adicionar Legendas
           </h2>
+
+          <SubtitleSourceSelector
+            videoId={videoId}
+            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
+          />
 
           <div style={{ position: 'relative', width: '100%' }}>
             <video

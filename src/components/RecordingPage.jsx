@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { checkVoiceRemovalStatus as checkStatusAPI, downloadVideo } from '../services/api';
 import { setRecordedAudio } from '../store/recordingStore';
+import SubtitleSourceSelector from './SubtitleSourceSelector';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -20,7 +21,7 @@ const RecordingPage = () => {
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
 
-  const [subtitles] = useState(() => {
+  const [subtitles, setSubtitles] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey(videoId));
       return saved ? JSON.parse(saved) : [];
@@ -30,6 +31,10 @@ const RecordingPage = () => {
   });
   const [currentSubtitleText, setCurrentSubtitleText] = useState('');
   const subtitlesRef = useRef(subtitles);
+
+  useEffect(() => {
+    subtitlesRef.current = subtitles;
+  }, [subtitles]);
 
   useEffect(() => {
     if (videoId) {
@@ -175,6 +180,11 @@ const RecordingPage = () => {
             <span className="section-number">3</span>
             Grave sua dublagem
           </h2>
+
+          <SubtitleSourceSelector
+            videoId={videoId}
+            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
+          />
 
           {isProcessing && (
             <div className="processing-status">

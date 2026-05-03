@@ -80,7 +80,14 @@ const UploadPage = () => {
 
     try {
       const data = await importFromUrlAPI(youtubeUrl.trim());
-      setStatus({ type: 'success', message: 'Vídeo importado! Redirecionando...' });
+      const subtitles = data.data.subtitles ?? [];
+      if (subtitles.length > 0) {
+        localStorage.setItem(`dublee-subtitles-${data.data.id}`, JSON.stringify(subtitles));
+      }
+      const msg = subtitles.length > 0
+        ? `Vídeo importado com ${subtitles.length} legendas! Redirecionando...`
+        : 'Vídeo importado! Redirecionando...';
+      setStatus({ type: 'success', message: msg });
       setTimeout(() => {
         navigate(`/subtitle/${data.data.id}`);
       }, 2000);
