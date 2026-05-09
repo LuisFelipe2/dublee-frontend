@@ -101,6 +101,17 @@ export const importFromUrl = async (url) => {
   return data;
 };
 
+export const translateSubtitles = async (videoId, subtitles, targetLang) => {
+  const response = await fetch(`${API_BASE_URL}/videos/${videoId}/subtitles/translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subtitles, target_lang: targetLang }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Falha na tradução');
+  return data.data;
+};
+
 export const mixAudio = async (videoId, audioBlob, voiceVolume, effectsVolume) => {
   const formData = new FormData();
   formData.append('audio', audioBlob, 'recorded_audio.webm');

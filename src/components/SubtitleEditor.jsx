@@ -1,7 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { downloadVideo } from '../services/api';
+import { downloadVideo, translateSubtitles } from '../services/api';
 import SubtitleSourceSelector from './SubtitleSourceSelector';
+
+const LANGUAGES = [
+  { code: 'pt', label: 'Português' },
+  { code: 'en', label: 'Inglês' },
+  { code: 'es', label: 'Espanhol' },
+  { code: 'fr', label: 'Francês' },
+  { code: 'de', label: 'Alemão' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'ja', label: 'Japonês' },
+  { code: 'ko', label: 'Coreano' },
+  { code: 'zh-CN', label: 'Chinês (simplificado)' },
+  { code: 'ru', label: 'Russo' },
+];
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -31,6 +44,9 @@ const SubtitleEditor = () => {
   const [isPaused, setIsPaused] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editingData, setEditingData] = useState({});
+  const [targetLang, setTargetLang] = useState('pt');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateMsg, setTranslateMsg] = useState({ text: '', error: false });
 
   // Refs to avoid stale closures in event handlers
   const pendingTextRef = useRef('');
@@ -125,6 +141,22 @@ const SubtitleEditor = () => {
     setEditingId(null);
   };
 
+  const handleTranslate = async () => {
+    if (!subtitles.length) return;
+    setIsTranslating(true);
+    setTranslateMsg({ text: 'Traduzindo...', error: false });
+    try {
+      const data = await translateSubtitles(videoId, subtitles, targetLang);
+      const translated = data.subtitles ?? [];
+      setSubtitles(translated);
+      setTranslateMsg({ text: `${translated.length} legendas traduzidas`, error: false });
+    } catch (e) {
+      setTranslateMsg({ text: e.message, error: true });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const overlayText = activeSubtitle?.text || (!isPaused ? displayedSavedText : null);
 
   return (
@@ -145,6 +177,60 @@ const SubtitleEditor = () => {
             videoId={videoId}
             onSubtitlesLoaded={(subs) => setSubtitles(subs)}
           />
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            padding: '10px 14px',
+            background: '#f8f8f8',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            border: '1px solid #eee',
+          }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: '#555', fontWeight: 500 }}>Traduzir para:</span>
+              <select
+                value={targetLang}
+                onChange={e => setTargetLang(e.target.value)}
+                disabled={isTranslating}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '5px',
+                  border: '1px solid #ccc',
+                  fontSize: '13px',
+                  background: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                {LANGUAGES.map(l => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleTranslate}
+                disabled={isTranslating || subtitles.length === 0}
+                style={{
+                  padding: '5px 14px',
+                  fontSize: '13px',
+                  borderRadius: '5px',
+                  border: 'none',
+                  fontWeight: 500,
+                  cursor: isTranslating || subtitles.length === 0 ? 'not-allowed' : 'pointer',
+                  background: isTranslating || subtitles.length === 0 ? '#ccc' : '#764ba2',
+                  color: '#fff',
+                  transition: 'background 0.15s',
+                }}
+              >
+                {isTranslating ? '⏳ Traduzindo...' : '🌐 Traduzir'}
+              </button>
+            </div>
+            {translateMsg.text && (
+              <span style={{ fontSize: '12px', color: translateMsg.error ? '#e53935' : '#777', paddingLeft: '2px' }}>
+                {translateMsg.text}
+              </span>
+            )}
+          </div>
 
           <div style={{ position: 'relative', width: '100%' }}>
             <video

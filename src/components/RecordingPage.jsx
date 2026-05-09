@@ -15,6 +15,9 @@ const RecordingPage = () => {
   const [progress, setProgress] = useState(0);
 
   const videoRef = useRef(null);
+  const videoWrapperRef = useRef(null);
+  const chronoRef = useRef(null);
+  const rafRef = useRef(null);
   const statusCheckIntervalRef = useRef(null);
   const isProcessingRef = useRef(true);
   const isRecordingRef = useRef(false);
@@ -48,6 +51,73 @@ const RecordingPage = () => {
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, [videoId]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const wrapper = videoWrapperRef.current;
+    if (!video || !wrapper) return;
+
+    const redirectFullscreen = () => {
+      if (document.fullscreenElement === video) {
+        document.exitFullscreen()
+          .then(() => wrapper.requestFullscreen?.())
+          .catch(() => {});
+      }
+    };
+
+    const redirectWebkitFullscreen = () => {
+      if (document.webkitFullscreenElement === video) {
+        document.webkitExitFullscreen?.();
+        wrapper.webkitRequestFullscreen?.();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', redirectFullscreen);
+    document.addEventListener('webkitfullscreenchange', redirectWebkitFullscreen);
+    return () => {
+      document.removeEventListener('fullscreenchange', redirectFullscreen);
+      document.removeEventListener('webkitfullscreenchange', redirectWebkitFullscreen);
+    };
+  }, []);
+
+  const formatChrono = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tick = () => {
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const startTick = () => { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); };
+    const stopTick = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+    };
+    const onSeeked = () => {
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+    };
+
+    video.addEventListener('play', startTick);
+    video.addEventListener('pause', stopTick);
+    video.addEventListener('ended', stopTick);
+    video.addEventListener('seeked', onSeeked);
+    return () => {
+      video.removeEventListener('play', startTick);
+      video.removeEventListener('pause', stopTick);
+      video.removeEventListener('ended', stopTick);
+      video.removeEventListener('seeked', onSeeked);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -195,8 +265,9 @@ const RecordingPage = () => {
             </div>
           )}
 
-          <div style={{ position: 'relative', marginTop: '20px' }}>
+          <div ref={videoWrapperRef} className="video-wrapper" style={{ position: 'relative', marginTop: '20px' }}>
             <video ref={videoRef} controls muted style={{ marginBottom: 0 }}></video>
+            <div ref={chronoRef} className="chronometer">00:00:000</div>
             {currentSubtitleText && (
               <div style={{
                 position: 'absolute',
