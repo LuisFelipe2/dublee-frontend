@@ -1,0 +1,23 @@
+.app-header {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  color: white;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-header__logo {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.app-header__text h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}

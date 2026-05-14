@@ -1,28 +1,37 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadVideo as uploadVideoAPI, importFromUrl as importFromUrlAPI } from '../services/api';
+import Header from './shared/Header';
+import Footer from './shared/Footer';
+import './UploadPage.css';
+
+const extractYoutubeId = (url) => {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+  return match ? match[1] : null;
+};
 
 const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isUploading, setIsUploading] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubePreviewId, setYoutubePreviewId] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
-    console.log('Evento de mudança de arquivo:', e);
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setYoutubeUrl('');
+      setYoutubePreviewId(null);
       setFile(selectedFile);
-      setFileName(`Arquivo: ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)}MB)`);
-      console.log('Arquivo selecionado:', selectedFile);
-    } else {
-      setFile(null);
-      setFileName('');
-      console.log('Nenhum arquivo selecionado');
+      setFileName(`${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`);
+      setVideoPreviewUrl(URL.createObjectURL(selectedFile));
+      setStatus({ type: '', message: '' });
     }
   };
 
@@ -46,13 +55,6 @@ const UploadPage = () => {
     }
   };
 
-  const resetForm = () => {
-    setFile(null);
-    setFileName('');
-    fileInputRef.current.value = '';
-    setStatus({ type: '', message: '' });
-  };
-
   const uploadVideo = async () => {
     if (!file) return;
 
@@ -70,6 +72,21 @@ const UploadPage = () => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleYoutubeUrlChange = (e) => {
+    const url = e.target.value;
+    setYoutubeUrl(url);
+    const id = extractYoutubeId(url);
+    setYoutubePreviewId(id);
+    if (id) {
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setFile(null);
+      setFileName('');
+      setVideoPreviewUrl(null);
+      fileInputRef.current.value = '';
+    }
+    setStatus({ type: '', message: '' });
   };
 
   const importFromYoutube = async () => {
@@ -99,99 +116,144 @@ const UploadPage = () => {
   };
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>🎬 Redublador de Vídeos</h1>
-        <p>Importe seu vídeo, grave a dublagem e baixe o resultado</p>
-      </div>
+    <>
+      <Header />
 
-      <div className="content">
-        <div className="section">
-          <h2>
-            <span className="section-number">1</span>
-            Importe seu vídeo
-          </h2>
-          <div className="file-input-wrapper">
-            <input
-              type="file"
-              id="file-input"
-              ref={fileInputRef}
-              accept="video/*"
-              onChange={handleFileChange}
-            />
-            <label
-              htmlFor="file-input"
-              className="file-input-label"
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '10px' }}>📹</div>
-                <div>Clique para selecionar ou arraste seu vídeo aqui</div>
-                <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-                  MP4, MOV, AVI e outros formatos
-                </div>
+      <main className="page-main">
+        <div className="container">
+          <div className="upload-welcome">
+            <h2 className="upload-welcome__title">Bem-vindo ao Dublee</h2>
+            <p className="upload-welcome__subtitle">Sua plataforma de redublagem de vídeos</p>
+            <p className="upload-welcome__desc">
+              Com o Dublee você importa qualquer vídeo — do seu computador ou diretamente do YouTube —
+              e grava sua própria dublagem sincronizada com o áudio e as legendas originais.
+              Ajuste os volumes da sua voz e do áudio de fundo, pré-visualize o resultado e
+              baixe o vídeo final em alta qualidade, tudo em um único fluxo.
+            </p>
+            <p className="upload-welcome__cta">Escolha abaixo como deseja importar o seu vídeo para começar:</p>
+          </div>
+
+          <div className="import-layout">
+
+            {/* Painel esquerdo: upload de arquivo */}
+            <div className="import-panel">
+              <h2 className="import-panel__title">
+                <span className="import-panel__title-icon">📁</span>
+                Arquivo local
+              </h2>
+              <div className="file-input-wrapper">
+                <input
+                  type="file"
+                  id="file-input"
+                  ref={fileInputRef}
+                  accept="video/*"
+                  onChange={handleFileChange}
+                />
+                <label
+                  htmlFor="file-input"
+                  className="file-input-label"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '12px' }}>📹</div>
+                    <div>Clique para selecionar ou arraste seu vídeo aqui</div>
+                    <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                      MP4, MOV, AVI e outros formatos
+                    </div>
+                  </div>
+                </label>
               </div>
-            </label>
-          </div>
-          {fileName && <div className="filename-display">{fileName}</div>}
-          <div className="button-group">
-            <button
-              className="btn btn-upload"
-              onClick={uploadVideo}
-              disabled={!file || isUploading}
-            >
-              {isUploading ? 'Enviando...' : 'Enviar Vídeo'}
-            </button>
-            <button className="btn btn-reset" onClick={resetForm}>
-              Limpar
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', gap: '12px' }}>
-            <div style={{ flex: 1, height: '1px', background: '#333' }} />
-            <span style={{ color: '#666', fontSize: '13px' }}>ou importe do YouTube</span>
-            <div style={{ flex: 1, height: '1px', background: '#333' }} />
+            </div>
+
+            {/* Divisor central */}
+            <div className="import-divider">
+              <div className="import-divider__line" />
+              <span className="import-divider__label">ou</span>
+              <div className="import-divider__line" />
+            </div>
+
+            {/* Painel direito: YouTube */}
+            <div className="import-panel import-panel--youtube">
+              <h2 className="import-panel__title">
+                <span className="import-panel__title-icon">▶️</span>
+                Importar do YouTube
+              </h2>
+              <p className="import-panel__desc">Cole o link e o vídeo aparecerá abaixo para confirmação</p>
+              <input
+                type="url"
+                className="youtube-url-input"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={handleYoutubeUrlChange}
+                disabled={isImporting}
+              />
+            </div>
+
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="url"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && importFromYoutube()}
-              disabled={isImporting || isUploading}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                background: '#1a1a1a',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                color: '#fff',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            />
-            <button
-              className="btn btn-upload"
-              onClick={importFromYoutube}
-              disabled={!youtubeUrl.trim() || isImporting || isUploading}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              {isImporting ? 'Importando...' : 'Importar'}
-            </button>
-          </div>
+          {youtubePreviewId && (
+            <div className="video-preview-section">
+              <h3 className="video-preview-title">
+                <span>▶️</span> Pré-visualização do YouTube
+              </h3>
+              <div className="youtube-iframe-wrapper">
+                <iframe
+                  className="youtube-preview-iframe"
+                  src={`https://www.youtube.com/embed/${youtubePreviewId}`}
+                  title="Pré-visualização do YouTube"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <div className="video-preview-actions">
+                <button
+                  className="btn btn-upload btn-send"
+                  onClick={importFromYoutube}
+                  disabled={isImporting}
+                >
+                  {isImporting ? 'Importando...' : 'Importar Vídeo'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {videoPreviewUrl && (
+            <div className="video-preview-section">
+              <h3 className="video-preview-title">
+                <span>🎬</span> {fileName}
+              </h3>
+              <video
+                className="video-preview-player"
+                src={videoPreviewUrl}
+                controls
+              />
+              <div className="video-preview-actions">
+                <button
+                  className="btn btn-upload btn-send"
+                  onClick={uploadVideo}
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Enviando...' : 'Enviar Vídeo'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {status.message && (
-            <div className={`status-message show ${status.type}`}>
-              {status.type === 'loading' && <span className="spinner"></span>}
-              {status.message}
+            <div className="import-status">
+              <div className={`status-message show ${status.type}`}>
+                {status.type === 'loading' && <span className="spinner"></span>}
+                {status.message}
+              </div>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </main>
+
+      <Footer />
+    </>
   );
 };
 
