@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { downloadVideo, translateSubtitles } from '../services/api';
-import SubtitleSourceSelector from './SubtitleSourceSelector';
+import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../services/api';
+import Header from './shared/Header';
+import Footer from './shared/Footer';
+import './SubtitleEditor.css';
 
 const LANGUAGES = [
   { code: 'pt', label: 'Português' },
@@ -24,374 +26,540 @@ const formatTime = (s) => {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 };
 
+const formatChrono = (s) => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  const ms = Math.floor((s % 1) * 1000);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
+};
+
+const parseTimeInput = (str) => {
+  const s = String(str).trim();
+  if (s.includes(':')) {
+    const [m, sec] = s.split(':');
+    return Math.max(0, (parseInt(m) || 0) * 60 + (parseFloat(sec) || 0));
+  }
+  return Math.max(0, parseFloat(s) || 0);
+};
+
 const SubtitleEditor = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const videoWrapperRef = useRef(null);
+  const chronoRef = useRef(null);
+  const rafRef = useRef(null);
+  const subtitlesRef = useRef([]);
+  const editingValueRef = useRef('');
+  const fsPendingRef = useRef(false);
 
   const [subtitles, setSubtitles] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey(videoId));
       return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
-
-  const [pendingText, setPendingText] = useState('');
-  const [activeSubtitle, setActiveSubtitle] = useState(null);
   const [displayedSavedText, setDisplayedSavedText] = useState('');
-  const [isPaused, setIsPaused] = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [editingData, setEditingData] = useState({});
-  const [targetLang, setTargetLang] = useState('pt');
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translateMsg, setTranslateMsg] = useState({ text: '', error: false });
+  const [editingCell, setEditingCell] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [activeRowId, setActiveRowId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
-  // Refs to avoid stale closures in event handlers
-  const pendingTextRef = useRef('');
-  const activeSubtitleRef = useRef(null);
-  const pausedAtRef = useRef(0);
-  const subtitlesRef = useRef(subtitles);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateMsg, setGenerateMsg] = useState({ text: '', error: false });
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [targetLang, setTargetLang] = useState('pt');
 
   useEffect(() => {
     subtitlesRef.current = subtitles;
     localStorage.setItem(storageKey(videoId), JSON.stringify(subtitles));
   }, [subtitles, videoId]);
 
+  // Load video + subtitle display during playback
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     video.src = downloadVideo(videoId);
 
-    const onPause = () => {
-      setIsPaused(true);
-      if (activeSubtitleRef.current) {
-        const endTime = video.currentTime;
-        if (endTime > activeSubtitleRef.current.startTime) {
-          const sub = {
-            id: Date.now(),
-            text: activeSubtitleRef.current.text,
-            startTime: activeSubtitleRef.current.startTime,
-            endTime,
-          };
-          setSubtitles(prev =>
-            [...prev, sub].sort((a, b) => a.startTime - b.startTime)
-          );
-        }
-        activeSubtitleRef.current = null;
-        setActiveSubtitle(null);
-        setPendingText('');
-        pendingTextRef.current = '';
-      } else {
-        pausedAtRef.current = video.currentTime;
-      }
-    };
-
-    const onPlay = () => {
-      setIsPaused(false);
-      const text = pendingTextRef.current.trim();
-      if (text) {
-        const sub = { text, startTime: pausedAtRef.current };
-        activeSubtitleRef.current = sub;
-        setActiveSubtitle(sub);
-      }
-    };
-
     const onTimeUpdate = () => {
-      if (activeSubtitleRef.current) return;
       const t = video.currentTime;
       const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
       setDisplayedSavedText(found?.text ?? '');
     };
 
-    video.addEventListener('pause', onPause);
-    video.addEventListener('play', onPlay);
     video.addEventListener('timeupdate', onTimeUpdate);
-    return () => {
-      video.removeEventListener('pause', onPause);
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('timeupdate', onTimeUpdate);
-    };
+    return () => video.removeEventListener('timeupdate', onTimeUpdate);
   }, [videoId]);
 
-  const handleTextChange = (e) => {
-    pendingTextRef.current = e.target.value;
-    setPendingText(e.target.value);
-    if (activeSubtitleRef.current) {
-      const updated = { ...activeSubtitleRef.current, text: e.target.value };
-      activeSubtitleRef.current = updated;
-      setActiveSubtitle(updated);
+  // Chronometer
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tick = () => {
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    const startTick = () => { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); };
+    const stopTick = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+    };
+    const onSeeked = () => {
+      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+    };
+
+    video.addEventListener('play', startTick);
+    video.addEventListener('pause', stopTick);
+    video.addEventListener('ended', stopTick);
+    video.addEventListener('seeked', onSeeked);
+    return () => {
+      video.removeEventListener('play', startTick);
+      video.removeEventListener('pause', stopTick);
+      video.removeEventListener('ended', stopTick);
+      video.removeEventListener('seeked', onSeeked);
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+  }, []);
+
+  // Fullscreen redirect: video → wrapper so overlays stay visible.
+  // Uses two-event flag approach: exit first, then re-request on wrapper
+  // inside the second fullscreenchange (which browsers allow without gesture check).
+  useEffect(() => {
+    const video = videoRef.current;
+    const wrapper = videoWrapperRef.current;
+    if (!video || !wrapper) return;
+
+    const onFsChange = () => {
+      if (document.fullscreenElement === video) {
+        fsPendingRef.current = true;
+        document.exitFullscreen().catch(() => { fsPendingRef.current = false; });
+      } else if (!document.fullscreenElement && fsPendingRef.current) {
+        fsPendingRef.current = false;
+        wrapper.requestFullscreen?.().catch(() => {});
+      }
+    };
+    const onWebkitFsChange = () => {
+      if (document.webkitFullscreenElement === video) {
+        document.webkitExitFullscreen?.();
+        wrapper.webkitRequestFullscreen?.();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onWebkitFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onWebkitFsChange);
+    };
+  }, []);
+
+  // ── Cell editing ──────────────────────────────────────────────────────────
+
+  const startCellEdit = (id, field, currentValue) => {
+    if (editingCell?.id === id && editingCell?.field === field) return;
+    const initValue = (field === 'startTime' || field === 'endTime')
+      ? formatTime(currentValue)
+      : currentValue;
+    editingValueRef.current = initValue;
+    setEditingCell({ id, field });
+    setEditingValue(initValue);
+  };
+
+  const saveCellEdit = (id, field) => {
+    const raw = editingValueRef.current;
+    const newValue = (field === 'startTime' || field === 'endTime')
+      ? parseTimeInput(raw)
+      : raw;
+    // Preserve display order — do NOT auto-sort
+    setSubtitles(prev => prev.map(s => s.id === id ? { ...s, [field]: newValue } : s));
+    setEditingCell(null);
+    setEditingValue('');
+    editingValueRef.current = '';
+  };
+
+  const handleCellKeyDown = (e, id, field) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveCellEdit(id, field); }
+    if (e.key === 'Escape') {
+      setEditingCell(null);
+      setEditingValue('');
+      editingValueRef.current = '';
     }
   };
 
-  const deleteSubtitle = (id) => setSubtitles(prev => prev.filter(s => s.id !== id));
-
-  const startEditing = (sub) => {
-    setEditingId(sub.id);
-    setEditingData({ text: sub.text, startTime: sub.startTime, endTime: sub.endTime });
+  const handleEditingValueChange = (val) => {
+    editingValueRef.current = val;
+    setEditingValue(val);
   };
 
-  const saveEdit = () => {
-    setSubtitles(prev =>
-      prev
-        .map(s => (s.id === editingId ? { ...s, ...editingData } : s))
-        .sort((a, b) => a.startTime - b.startTime)
-    );
-    setEditingId(null);
+  const editCell = (e, id, field, currentValue) => {
+    if (activeRowId !== id) return; // first click → bubble up to handleRowClick (opens menu)
+    e.stopPropagation();            // second click on active row → start editing
+    setActiveRowId(null);
+    startCellEdit(id, field, currentValue);
   };
 
-  const handleTranslate = async () => {
-    if (!subtitles.length) return;
-    setIsTranslating(true);
-    setTranslateMsg({ text: 'Traduzindo...', error: false });
+  // ── Row menu ──────────────────────────────────────────────────────────────
+
+  const handleRowClick = (e, id) => {
+    e.stopPropagation();
+    if (activeRowId === id) { setActiveRowId(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPos({ top: rect.top, right: window.innerWidth - rect.right });
+    setActiveRowId(id);
+  };
+
+  const moveSubtitle = (id, direction) => {
+    setSubtitles(prev => {
+      const idx = prev.findIndex(s => s.id === id);
+      if (idx === -1) return prev;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const arr = [...prev];
+      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      return arr;
+    });
+    setActiveRowId(null);
+  };
+
+  const deleteSubtitle = (id) => {
+    setSubtitles(prev => prev.filter(s => s.id !== id));
+    if (editingCell?.id === id) {
+      setEditingCell(null);
+      setEditingValue('');
+      editingValueRef.current = '';
+    }
+    setActiveRowId(null);
+  };
+
+  const addSubtitle = () => {
+    const lastSub = subtitles[subtitles.length - 1];
+    const startTime = lastSub ? lastSub.endTime : 0;
+    const newSub = { id: Date.now(), text: '', startTime, endTime: startTime + 3 };
+    setSubtitles(prev => [...prev, newSub]);
+    editingValueRef.current = '';
+    setEditingCell({ id: newSub.id, field: 'text' });
+    setEditingValue('');
+  };
+
+  // ── AI generation ─────────────────────────────────────────────────────────
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerateMsg({ text: 'Transcrevendo com IA… pode levar alguns instantes', error: false });
     try {
-      const data = await translateSubtitles(videoId, subtitles, targetLang);
-      const translated = data.subtitles ?? [];
-      setSubtitles(translated);
-      setTranslateMsg({ text: `${translated.length} legendas traduzidas`, error: false });
+      const result = await transcribeWithWhisper(videoId);
+      let subs = result.subtitles ?? [];
+      if (autoTranslate && subs.length > 0) {
+        setGenerateMsg({ text: 'Traduzindo legendas…', error: false });
+        const translated = await translateSubtitles(videoId, subs, targetLang);
+        subs = translated.subtitles ?? subs;
+      }
+      setSubtitles(subs);
+      setGenerateMsg({ text: `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`, error: false });
     } catch (e) {
-      setTranslateMsg({ text: e.message, error: true });
+      setGenerateMsg({ text: e.message, error: true });
     } finally {
-      setIsTranslating(false);
+      setIsGenerating(false);
     }
   };
 
-  const overlayText = activeSubtitle?.text || (!isPaused ? displayedSavedText : null);
+  // ── Derived: out-of-order row IDs ─────────────────────────────────────────
+
+  const outOfOrderIds = new Set();
+  for (let i = 0; i < subtitles.length - 1; i++) {
+    if (subtitles[i + 1].startTime < subtitles[i].startTime) {
+      outOfOrderIds.add(subtitles[i].id);
+      outOfOrderIds.add(subtitles[i + 1].id);
+    }
+  }
+
+  const activeIdx = activeRowId !== null ? subtitles.findIndex(s => s.id === activeRowId) : -1;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>🎬 Redublador de Vídeos</h1>
-        <p>Adicione legendas ao vídeo antes de gravar sua dublagem</p>
-      </div>
+    <>
+      <Header />
 
-      <div className="content">
-        <div className="section">
-          <h2>
-            <span className="section-number">2</span>
-            Adicionar Legendas
-          </h2>
+      <main className="page-main">
+        <div className="container">
 
-          <SubtitleSourceSelector
-            videoId={videoId}
-            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
-          />
-
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-            padding: '10px 14px',
-            background: '#f8f8f8',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            border: '1px solid #eee',
-          }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: '#555', fontWeight: 500 }}>Traduzir para:</span>
-              <select
-                value={targetLang}
-                onChange={e => setTargetLang(e.target.value)}
-                disabled={isTranslating}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '5px',
-                  border: '1px solid #ccc',
-                  fontSize: '13px',
-                  background: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                {LANGUAGES.map(l => (
-                  <option key={l.code} value={l.code}>{l.label}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleTranslate}
-                disabled={isTranslating || subtitles.length === 0}
-                style={{
-                  padding: '5px 14px',
-                  fontSize: '13px',
-                  borderRadius: '5px',
-                  border: 'none',
-                  fontWeight: 500,
-                  cursor: isTranslating || subtitles.length === 0 ? 'not-allowed' : 'pointer',
-                  background: isTranslating || subtitles.length === 0 ? '#ccc' : '#764ba2',
-                  color: '#fff',
-                  transition: 'background 0.15s',
-                }}
-              >
-                {isTranslating ? '⏳ Traduzindo...' : '🌐 Traduzir'}
-              </button>
-            </div>
-            {translateMsg.text && (
-              <span style={{ fontSize: '12px', color: translateMsg.error ? '#e53935' : '#777', paddingLeft: '2px' }}>
-                {translateMsg.text}
-              </span>
-            )}
+          <div className="subtitle-welcome">
+            <h2 className="subtitle-welcome__title">Adicionar Legendas</h2>
+            <p className="subtitle-welcome__subtitle">Passo 2 de 4</p>
+            <p className="subtitle-welcome__desc">
+              Use a IA para gerar legendas automaticamente, ou adicione manualmente
+              consultando o cronômetro do vídeo e preenchendo a tabela abaixo.
+            </p>
           </div>
 
-          <div style={{ position: 'relative', width: '100%' }}>
-            <video
-              ref={videoRef}
-              controls
-              style={{ width: '100%', display: 'block', marginBottom: 0, borderRadius: '8px', background: '#000' }}
-            />
+          <div className="content">
 
-            {/* Subtitle text overlay during playback */}
-            {overlayText && (
-              <div style={{
-                position: 'absolute',
-                bottom: '52px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'rgba(0,0,0,0.78)',
-                color: '#fff',
-                padding: '5px 16px',
-                borderRadius: '4px',
-                fontSize: '18px',
-                maxWidth: '90%',
-                textAlign: 'center',
-                pointerEvents: 'none',
-                whiteSpace: 'pre-wrap',
-              }}>
-                {overlayText}
-              </div>
-            )}
-
-            {/* Subtitle input overlay when paused */}
-            {isPaused && (
-              <div style={{
-                position: 'absolute',
-                bottom: '52px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '90%',
-              }}>
-                <input
-                  type="text"
-                  value={pendingText}
-                  onChange={handleTextChange}
-                  placeholder="Digite a legenda e dê play para iniciar..."
-                  style={{
-                    width: '100%',
-                    padding: '8px 14px',
-                    background: 'rgba(0,0,0,0.75)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.35)',
-                    borderRadius: '4px',
-                    fontSize: '16px',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                  }}
+            {/* ── Seção 1: Vídeo ── */}
+            <div className="section">
+              <div ref={videoWrapperRef} className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
+                <video
+                  ref={videoRef}
+                  controls
+                  controlsList="nofullscreen"
+                  style={{ width: '100%', display: 'block', borderRadius: '8px', background: '#000', marginBottom: 0 }}
                 />
-              </div>
-            )}
-          </div>
-
-          <p style={{ fontSize: '12px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
-            Pause → escreva a legenda → play para iniciar → pause novamente para salvar
-          </p>
-
-          {/* Saved subtitles list */}
-          {subtitles.length > 0 && (
-            <div style={{ marginTop: '24px' }}>
-              <h3 style={{ fontSize: '14px', color: '#555', marginBottom: '10px' }}>
-                Legendas adicionadas ({subtitles.length})
-              </h3>
-              {subtitles.map(sub => (
-                <div
-                  key={sub.id}
-                  style={{
-                    background: '#f8f8f8',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    marginBottom: '8px',
-                  }}
+                <div ref={chronoRef} className="subtitle-chrono">00:00:000</div>
+                {displayedSavedText && (
+                  <div className="subtitle-overlay-text">{displayedSavedText}</div>
+                )}
+                <button
+                  className="subtitle-fs-btn"
+                  title="Tela cheia (com legendas e cronômetro)"
+                  onClick={() => videoWrapperRef.current?.requestFullscreen()}
                 >
-                  {editingId === sub.id ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <input
-                        type="text"
-                        value={editingData.text}
-                        onChange={e => setEditingData(d => ({ ...d, text: e.target.value }))}
-                        style={{ padding: '6px 8px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px' }}
-                      />
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', flexWrap: 'wrap' }}>
-                        <label style={{ color: '#666' }}>Início (s)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={Number(editingData.startTime).toFixed(1)}
-                          onChange={e => setEditingData(d => ({ ...d, startTime: parseFloat(e.target.value) || 0 }))}
-                          style={{ width: '70px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #ccc' }}
-                        />
-                        <label style={{ color: '#666' }}>Fim (s)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={Number(editingData.endTime).toFixed(1)}
-                          onChange={e => setEditingData(d => ({ ...d, endTime: parseFloat(e.target.value) || 0 }))}
-                          style={{ width: '70px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #ccc' }}
-                        />
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                          <button
-                            onClick={saveEdit}
-                            className="btn"
-                            style={{ padding: '4px 12px', background: '#4caf50', color: '#fff', fontSize: '13px' }}
-                          >
-                            Salvar
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="btn btn-cancel"
-                            style={{ padding: '4px 10px', fontSize: '13px' }}
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '12px', color: '#999', minWidth: '105px' }}>
-                        {formatTime(sub.startTime)} → {formatTime(sub.endTime)}
-                      </span>
-                      <span style={{ flex: 1, fontSize: '14px', color: '#333' }}>{sub.text}</span>
-                      <button
-                        onClick={() => startEditing(sub)}
-                        className="btn"
-                        style={{ padding: '3px 10px', background: '#667eea', color: '#fff', fontSize: '12px' }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => deleteSubtitle(sub.id)}
-                        className="btn"
-                        style={{ padding: '3px 10px', background: '#e53935', color: '#fff', fontSize: '12px' }}
-                      >
-                        Excluir
-                      </button>
-                    </div>
+                  ⛶
+                </button>
+              </div>
+            </div>
+
+            {/* ── Seção 2: Métodos ── */}
+            <div className="section">
+              <div className="subtitle-methods">
+
+                <div className="subtitle-method-panel">
+                  <h3 className="subtitle-method-panel__title">
+                    <span>✍️</span> Manual
+                  </h3>
+                  <p className="subtitle-method-panel__desc">
+                    Adicione legendas consultando o cronômetro do vídeo e preenchendo a tabela abaixo:
+                  </p>
+                  <ol className="subtitle-method-steps">
+                    <li>Reproduza o vídeo e anote os tempos pelo <strong>cronômetro</strong></li>
+                    <li>Clique em <strong>+</strong> na tabela para adicionar uma linha</li>
+                    <li>Clique no campo <strong>Início</strong> e digite o tempo (ex: <code>0:05</code>)</li>
+                    <li>Clique no campo <strong>Legenda</strong> e escreva o texto</li>
+                    <li>Clique em <strong>Fim</strong> e informe quando a fala termina</li>
+                  </ol>
+                </div>
+
+                <div className="subtitle-methods__divider">
+                  <div className="subtitle-methods__divider-line" />
+                  <span className="subtitle-methods__divider-label">ou</span>
+                  <div className="subtitle-methods__divider-line" />
+                </div>
+
+                <div className="subtitle-method-panel">
+                  <h3 className="subtitle-method-panel__title">
+                    <span>🤖</span> IA (Whisper)
+                  </h3>
+                  <p className="subtitle-method-panel__desc">
+                    Gere legendas automaticamente a partir do áudio usando o modelo Whisper.
+                    O processo pode levar alguns instantes dependendo da duração do vídeo.
+                  </p>
+                  <button
+                    className="btn btn-upload"
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas'}
+                  </button>
+                  <label className="subtitle-translate-check">
+                    <input
+                      type="checkbox"
+                      checked={autoTranslate}
+                      onChange={e => setAutoTranslate(e.target.checked)}
+                      disabled={isGenerating}
+                    />
+                    Traduzir automaticamente após gerar
+                  </label>
+                  {autoTranslate && (
+                    <select
+                      value={targetLang}
+                      onChange={e => setTargetLang(e.target.value)}
+                      disabled={isGenerating}
+                      className="subtitle-lang-select"
+                    >
+                      {LANGUAGES.map(l => (
+                        <option key={l.code} value={l.code}>{l.label}</option>
+                      ))}
+                    </select>
+                  )}
+                  {generateMsg.text && (
+                    <span className={`subtitle-method-msg${generateMsg.error ? ' subtitle-method-msg--error' : ''}`}>
+                      {generateMsg.text}
+                    </span>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
 
-          <div className="button-group" style={{ marginTop: '24px' }}>
-            <button className="btn btn-record" onClick={() => navigate(`/record/${videoId}`)}>
-              Iniciar Gravação 🎙
-            </button>
-            <button className="btn btn-cancel" onClick={() => navigate('/')}>
-              Voltar
-            </button>
+              </div>
+            </div>
+
+            {/* ── Seção 3: Tabela ── */}
+            <div className="section">
+              <div className="subtitle-table">
+                <div className="subtitle-table__header">
+                  <div className="subtitle-col subtitle-col--time">Início</div>
+                  <div className="subtitle-col subtitle-col--text">
+                    Legenda
+                    <span className="subtitle-col__hint">clique para editar</span>
+                  </div>
+                  <div className="subtitle-col subtitle-col--time">Fim</div>
+                </div>
+
+                <div className="subtitle-table__body">
+                  {subtitles.length === 0 && (
+                    <div className="subtitle-table__empty">
+                      Nenhuma legenda ainda — clique em <strong>+</strong> abaixo para adicionar.
+                    </div>
+                  )}
+
+                  {subtitles.map(sub => {
+                    const isOoo = outOfOrderIds.has(sub.id);
+                    return (
+                      <div
+                        key={sub.id}
+                        className={`subtitle-row${activeRowId === sub.id ? ' subtitle-row--active' : ''}`}
+                        onClick={e => handleRowClick(e, sub.id)}
+                      >
+                        {/* Início */}
+                        <div
+                          className="subtitle-cell subtitle-cell--time"
+                          onClick={e => editCell(e, sub.id, 'startTime', sub.startTime)}
+                        >
+                          {editingCell?.id === sub.id && editingCell?.field === 'startTime' ? (
+                            <input
+                              autoFocus
+                              className="subtitle-cell__input subtitle-cell__input--time"
+                              value={editingValue}
+                              onChange={e => handleEditingValueChange(e.target.value)}
+                              onBlur={() => saveCellEdit(sub.id, 'startTime')}
+                              onKeyDown={e => handleCellKeyDown(e, sub.id, 'startTime')}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className={`subtitle-cell__value subtitle-cell__value--time${isOoo ? ' subtitle-cell__value--ooo' : ''}`}>
+                              {formatTime(sub.startTime)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Texto */}
+                        <div
+                          className="subtitle-cell subtitle-cell--text"
+                          onClick={e => editCell(e, sub.id, 'text', sub.text)}
+                        >
+                          {editingCell?.id === sub.id && editingCell?.field === 'text' ? (
+                            <input
+                              autoFocus
+                              className="subtitle-cell__input"
+                              value={editingValue}
+                              onChange={e => handleEditingValueChange(e.target.value)}
+                              onBlur={() => saveCellEdit(sub.id, 'text')}
+                              onKeyDown={e => handleCellKeyDown(e, sub.id, 'text')}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className={`subtitle-cell__value${!sub.text ? ' subtitle-cell__value--empty' : ''}`}>
+                              {sub.text || 'clique para editar…'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Fim */}
+                        <div
+                          className="subtitle-cell subtitle-cell--time"
+                          onClick={e => editCell(e, sub.id, 'endTime', sub.endTime)}
+                        >
+                          {editingCell?.id === sub.id && editingCell?.field === 'endTime' ? (
+                            <input
+                              autoFocus
+                              className="subtitle-cell__input subtitle-cell__input--time"
+                              value={editingValue}
+                              onChange={e => handleEditingValueChange(e.target.value)}
+                              onBlur={() => saveCellEdit(sub.id, 'endTime')}
+                              onKeyDown={e => handleCellKeyDown(e, sub.id, 'endTime')}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className={`subtitle-cell__value subtitle-cell__value--time${isOoo ? ' subtitle-cell__value--ooo' : ''}`}>
+                              {formatTime(sub.endTime)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div
+                    className="subtitle-row subtitle-row--add"
+                    onClick={e => { e.stopPropagation(); addSubtitle(); }}
+                  >
+                    <span className="subtitle-row--add__icon">+</span>
+                    <span className="subtitle-row--add__label">Adicionar legenda</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Seção 4: Navegação ── */}
+            <div className="section">
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px' }}>
+                Quando as legendas estiverem prontas, prossiga para a gravação da dublagem.
+              </p>
+              <div className="button-group">
+                <button className="btn btn-record" onClick={() => navigate(`/record/${videoId}`)}>
+                  Iniciar Gravação 🎙
+                </button>
+                <button className="btn btn-cancel" onClick={() => navigate('/')}>
+                  Voltar
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
-    </div>
+      </main>
+
+      {/* Ghost menu — backdrop closes on outside click; menu floats above row */}
+      {activeRowId !== null && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+            onClick={() => setActiveRowId(null)}
+          />
+          <div
+            className="subtitle-row-menu"
+            style={{
+              position: 'fixed',
+              bottom: `calc(100vh - ${menuPos.top}px + 4px)`,
+              right: `${menuPos.right}px`,
+              zIndex: 100,
+            }}
+          >
+          {activeIdx > 0 && (
+            <button className="subtitle-row-menu__btn" onClick={() => moveSubtitle(activeRowId, -1)}>
+              ↑ Mover para cima
+            </button>
+          )}
+          {activeIdx < subtitles.length - 1 && (
+            <button className="subtitle-row-menu__btn" onClick={() => moveSubtitle(activeRowId, 1)}>
+              ↓ Mover para baixo
+            </button>
+          )}
+          {(activeIdx > 0 || activeIdx < subtitles.length - 1) && (
+            <div className="subtitle-row-menu__sep" />
+          )}
+          <button
+            className="subtitle-row-menu__btn subtitle-row-menu__btn--delete"
+            onClick={() => deleteSubtitle(activeRowId)}
+          >
+            🗑 Excluir
+          </button>
+        </div>
+        </>
+      )}
+
+      <Footer />
+    </>
   );
 };
 
