@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { checkVoiceRemovalStatus as checkStatusAPI, downloadVideo } from '../services/api';
 import { setRecordedAudio } from '../store/recordingStore';
-import SubtitleSourceSelector from './SubtitleSourceSelector';
+import Header from './shared/Header';
+import VideoPlayer from './shared/VideoPlayer';
+import Footer from './shared/Footer';
+import './RecordingPage.css';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -12,19 +15,17 @@ const RecordingPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isProcessing, setIsProcessing] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const videoRef = useRef(null);
-  const videoWrapperRef = useRef(null);
-  const chronoRef = useRef(null);
-  const rafRef = useRef(null);
   const statusCheckIntervalRef = useRef(null);
   const isProcessingRef = useRef(true);
   const isRecordingRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
 
-  const [subtitles, setSubtitles] = useState(() => {
+  const [subtitles] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey(videoId));
       return saved ? JSON.parse(saved) : [];
@@ -32,16 +33,9 @@ const RecordingPage = () => {
       return [];
     }
   });
-  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
-  const subtitlesRef = useRef(subtitles);
-
-  useEffect(() => {
-    subtitlesRef.current = subtitles;
-  }, [subtitles]);
 
   useEffect(() => {
     if (videoId) {
-      loadVideo();
       checkVoiceRemovalStatus();
       statusCheckIntervalRef.current = setInterval(checkVoiceRemovalStatus, 2000);
     }
@@ -51,92 +45,6 @@ const RecordingPage = () => {
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, [videoId]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    const wrapper = videoWrapperRef.current;
-    if (!video || !wrapper) return;
-
-    const redirectFullscreen = () => {
-      if (document.fullscreenElement === video) {
-        document.exitFullscreen()
-          .then(() => wrapper.requestFullscreen?.())
-          .catch(() => {});
-      }
-    };
-
-    const redirectWebkitFullscreen = () => {
-      if (document.webkitFullscreenElement === video) {
-        document.webkitExitFullscreen?.();
-        wrapper.webkitRequestFullscreen?.();
-      }
-    };
-
-    document.addEventListener('fullscreenchange', redirectFullscreen);
-    document.addEventListener('webkitfullscreenchange', redirectWebkitFullscreen);
-    return () => {
-      document.removeEventListener('fullscreenchange', redirectFullscreen);
-      document.removeEventListener('webkitfullscreenchange', redirectWebkitFullscreen);
-    };
-  }, []);
-
-  const formatChrono = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    const ms = Math.floor((seconds % 1) * 1000);
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
-  };
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const tick = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    const startTick = () => { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); };
-    const stopTick = () => {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-    };
-    const onSeeked = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-    };
-
-    video.addEventListener('play', startTick);
-    video.addEventListener('pause', stopTick);
-    video.addEventListener('ended', stopTick);
-    video.addEventListener('seeked', onSeeked);
-    return () => {
-      video.removeEventListener('play', startTick);
-      video.removeEventListener('pause', stopTick);
-      video.removeEventListener('ended', stopTick);
-      video.removeEventListener('seeked', onSeeked);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const onTimeUpdate = () => {
-      const t = video.currentTime;
-      const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
-      setCurrentSubtitleText(found?.text ?? '');
-    };
-    video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, []);
-
-  const loadVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.src = downloadVideo(videoId);
-      videoRef.current.load();
-    }
-  };
 
   const checkVoiceRemovalStatus = async () => {
     if (!videoId || !isProcessingRef.current) return;
@@ -178,7 +86,55 @@ const RecordingPage = () => {
     }
     isRecordingRef.current = false;
     setIsRecording(false);
+    setIsPaused(false);
     setStatus({ type: 'loading', message: 'Processando áudio gravado...' });
+  };
+
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.pause();
+      videoRef.current?.pause();
+      setIsPaused(true);
+      setStatus({ type: '', message: '' });
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current?.state === 'paused') {
+      mediaRecorderRef.current.resume();
+      videoRef.current?.play();
+      setIsPaused(false);
+      setStatus({ type: 'loading', message: 'Gravando... Fale em sincronia com o vídeo.' });
+    }
+  };
+
+  const restartRecording = async () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.onstop = null;
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      videoRef.current.onended = null;
+    }
+    isRecordingRef.current = false;
+    setIsRecording(false);
+    setIsPaused(false);
+    await startRecording();
+  };
+
+  const finalizeRecording = () => {
+    if (mediaRecorderRef.current?.state === 'paused') {
+      mediaRecorderRef.current.resume();
+    }
+    stopRecording();
   };
 
   const saveAndGoToMix = (chunks) => {
@@ -193,7 +149,7 @@ const RecordingPage = () => {
 
   const startRecording = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus({ type: 'error', message: '❌ Microfone não suportado. Use HTTPS ou um navegador moderno.' });
+      setStatus({ type: 'error', message: 'Microfone não suportado. Use HTTPS ou um navegador moderno.' });
       return;
     }
 
@@ -213,7 +169,7 @@ const RecordingPage = () => {
       recorder.start();
       isRecordingRef.current = true;
       setIsRecording(true);
-      setStatus({ type: 'loading', message: '🎙 Gravando... Fale em sincronia com o vídeo.' });
+      setStatus({ type: 'loading', message: 'Gravando... Fale em sincronia com o vídeo.' });
 
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
@@ -238,90 +194,97 @@ const RecordingPage = () => {
   };
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>🎬 Redublador de Vídeos</h1>
-        <p>Importe seu vídeo, grave a dublagem e baixe o resultado</p>
-      </div>
+    <>
+      <Header />
 
-      <div className="content">
-        <div className="section">
-          <h2>
-            <span className="section-number">3</span>
-            Grave sua dublagem
-          </h2>
+      <main className="page-main">
+        <div className="container">
 
-          <SubtitleSourceSelector
-            videoId={videoId}
-            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
-          />
-
-          {isProcessing && (
-            <div className="processing-status">
-              <div style={{ marginBottom: '10px' }}>⚙️ Preparando vídeo...</div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-              </div>
-            </div>
-          )}
-
-          <div ref={videoWrapperRef} className="video-wrapper" style={{ position: 'relative', marginTop: '20px' }}>
-            <video ref={videoRef} controls muted style={{ marginBottom: 0 }}></video>
-            <div ref={chronoRef} className="chronometer">00:00:000</div>
-            {currentSubtitleText && (
-              <div style={{
-                position: 'absolute',
-                bottom: '52px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'rgba(0,0,0,0.78)',
-                color: '#fff',
-                padding: '5px 16px',
-                borderRadius: '4px',
-                fontSize: '18px',
-                maxWidth: '90%',
-                textAlign: 'center',
-                pointerEvents: 'none',
-                whiteSpace: 'pre-wrap',
-              }}>
-                {currentSubtitleText}
-              </div>
-            )}
+          <div className="recording-welcome">
+            <h2 className="recording-welcome__title">Gravar Dublagem</h2>
+            <p className="recording-welcome__subtitle">Passo 3 de 4</p>
+            <p className="recording-welcome__desc">
+              Aguarde o processamento do vídeo e em seguida grave sua dublagem
+              em sincronia com as legendas e o áudio original.
+            </p>
           </div>
 
-          <div className="button-group">
+          <div className="content">
+            <div className="section">
+
+              {isProcessing && (
+                <div className="processing-status">
+                  <div style={{ marginBottom: '10px' }}>⚙️ Preparando vídeo...</div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                  </div>
+                </div>
+              )}
+
+              <VideoPlayer
+                ref={videoRef}
+                src={downloadVideo(videoId)}
+                muted
+                subtitles={subtitles}
+                showFsButton
+              />
+
+              {!isRecording ? (
+                <button
+                  className="btn recording-btn-main"
+                  onClick={startRecording}
+                  disabled={isProcessing}
+                >
+                  Iniciar Gravação 🎙
+                </button>
+              ) : (
+                <div className="recording-controls">
+                  <button
+                    className={`btn ${isPaused ? 'recording-btn-continue' : 'recording-btn-pause'}`}
+                    onClick={isPaused ? resumeRecording : pauseRecording}
+                  >
+                    {isPaused ? 'Continuar' : 'Pausar'}
+                  </button>
+                  <button
+                    className="btn recording-btn-restart"
+                    onClick={restartRecording}
+                  >
+                    Recomeçar
+                  </button>
+                  <button
+                    className="btn recording-btn-finish"
+                    onClick={finalizeRecording}
+                  >
+                    Finalizar ✓
+                  </button>
+                </div>
+              )}
+
+              {status.message && (
+                <div className={`status-message show ${status.type}`}>
+                  {status.type === 'loading' && <span className="spinner"></span>}
+                  {status.message}
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          <div className="recording-nav">
             <button
-              className="btn btn-record"
-              onClick={startRecording}
-              disabled={isProcessing || isRecording}
+              className="btn btn-cancel recording-nav__back"
+              onClick={() => navigate(`/subtitle/${videoId}`)}
+              disabled={isRecording}
             >
-              Iniciar Gravação 🎙
-            </button>
-            <button
-              className="btn btn-stop"
-              onClick={stopRecording}
-              disabled={!isRecording}
-            >
-              Parar Gravação
+              ← Reeditar Legendas
             </button>
           </div>
-          <button
-            className="btn btn-cancel"
-            style={{ width: '100%', marginTop: '10px' }}
-            onClick={resetAll}
-          >
-            Cancelar
-          </button>
 
-          {status.message && (
-            <div className={`status-message show ${status.type}`}>
-              {status.type === 'loading' && <span className="spinner"></span>}
-              {status.message}
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+      </main>
+
+      <Footer />
+    </>
   );
 };
 

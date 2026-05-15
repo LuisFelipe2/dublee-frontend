@@ -1,0 +1,105 @@
+/* ─── Welcome ─────────────────────────────────────────── */
+.recording-welcome {
+  padding: 52px 40px 40px;
+  text-align: center;
+  border-bottom: 1px solid #ebebeb;
+}
+.recording-welcome__title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.recording-welcome__subtitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: #667eea;
+  margin-bottom: 20px;
+}
+.recording-welcome__desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.75;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* ─── Main record button ──────────────────────────────── */
+.recording-btn-main {
+  width: 100%;
+  margin-top: 20px;
+  padding: 13px 20px;
+  font-size: 15px;
+  background: #667eea;
+  color: white;
+}
+.recording-btn-main:hover:not(:disabled) {
+  background: #5568d3;
+}
+.recording-btn-main:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+/* ─── Recording controls (3 buttons) ─────────────────── */
+.recording-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.recording-controls .btn {
+  flex: 1;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+.recording-btn-pause {
+  background: transparent;
+  color: #555;
+  border: 1.5px solid #ddd;
+}
+.recording-btn-pause:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+.recording-btn-continue {
+  background: #667eea;
+  color: white;
+}
+.recording-btn-continue:hover {
+  background: #5568d3;
+}
+.recording-btn-restart {
+  background: #f5f5f5;
+  color: #555;
+  border: 1.5px solid #e0e0e0;
+}
+.recording-btn-restart:hover {
+  background: #eaeaea;
+  border-color: #bbb;
+}
+.recording-btn-finish {
+  background: #43a047;
+  color: white;
+}
+.recording-btn-finish:hover {
+  background: #388e3c;
+}
+
+/* ─── Nav footer ──────────────────────────────────────── */
+.recording-nav {
+  display: flex;
+  align-items: center;
+  padding: 24px 40px 32px;
+  border-top: 1px solid #ebebeb;
+}
+.recording-nav__back {
+  background: transparent;
+  color: #999;
+  border: 1.5px solid #e0e0e0;
+  padding: 10px 20px;
+}
+.recording-nav__back:hover {
+  background: #f5f5f5;
+  color: #666;
+  border-color: #ccc;
+}

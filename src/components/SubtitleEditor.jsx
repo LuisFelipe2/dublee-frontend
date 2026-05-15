@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../services/api';
 import Header from './shared/Header';
 import Footer from './shared/Footer';
+import VideoPlayer from './shared/VideoPlayer';
 import './SubtitleEditor.css';
 
 const LANGUAGES = [
@@ -26,13 +27,6 @@ const formatTime = (s) => {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 };
 
-const formatChrono = (s) => {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  const ms = Math.floor((s % 1) * 1000);
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
-};
-
 const parseTimeInput = (str) => {
   const s = String(str).trim();
   if (s.includes(':')) {
@@ -45,13 +39,7 @@ const parseTimeInput = (str) => {
 const SubtitleEditor = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const videoWrapperRef = useRef(null);
-  const chronoRef = useRef(null);
-  const rafRef = useRef(null);
-  const subtitlesRef = useRef([]);
   const editingValueRef = useRef('');
-  const fsPendingRef = useRef(false);
 
   const [subtitles, setSubtitles] = useState(() => {
     try {
@@ -59,11 +47,11 @@ const SubtitleEditor = () => {
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
-  const [displayedSavedText, setDisplayedSavedText] = useState('');
   const [editingCell, setEditingCell] = useState(null);
   const [editingValue, setEditingValue] = useState('');
-  const [activeRowId, setActiveRowId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMsg, setGenerateMsg] = useState({ text: '', error: false });
@@ -71,90 +59,8 @@ const SubtitleEditor = () => {
   const [targetLang, setTargetLang] = useState('pt');
 
   useEffect(() => {
-    subtitlesRef.current = subtitles;
     localStorage.setItem(storageKey(videoId), JSON.stringify(subtitles));
   }, [subtitles, videoId]);
-
-  // Load video + subtitle display during playback
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.src = downloadVideo(videoId);
-
-    const onTimeUpdate = () => {
-      const t = video.currentTime;
-      const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
-      setDisplayedSavedText(found?.text ?? '');
-    };
-
-    video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, [videoId]);
-
-  // Chronometer
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const tick = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    const startTick = () => { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); };
-    const stopTick = () => {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-    };
-    const onSeeked = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
-    };
-
-    video.addEventListener('play', startTick);
-    video.addEventListener('pause', stopTick);
-    video.addEventListener('ended', stopTick);
-    video.addEventListener('seeked', onSeeked);
-    return () => {
-      video.removeEventListener('play', startTick);
-      video.removeEventListener('pause', stopTick);
-      video.removeEventListener('ended', stopTick);
-      video.removeEventListener('seeked', onSeeked);
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    };
-  }, []);
-
-  // Fullscreen redirect: video → wrapper so overlays stay visible.
-  // Uses two-event flag approach: exit first, then re-request on wrapper
-  // inside the second fullscreenchange (which browsers allow without gesture check).
-  useEffect(() => {
-    const video = videoRef.current;
-    const wrapper = videoWrapperRef.current;
-    if (!video || !wrapper) return;
-
-    const onFsChange = () => {
-      if (document.fullscreenElement === video) {
-        fsPendingRef.current = true;
-        document.exitFullscreen().catch(() => { fsPendingRef.current = false; });
-      } else if (!document.fullscreenElement && fsPendingRef.current) {
-        fsPendingRef.current = false;
-        wrapper.requestFullscreen?.().catch(() => {});
-      }
-    };
-    const onWebkitFsChange = () => {
-      if (document.webkitFullscreenElement === video) {
-        document.webkitExitFullscreen?.();
-        wrapper.webkitRequestFullscreen?.();
-      }
-    };
-
-    document.addEventListener('fullscreenchange', onFsChange);
-    document.addEventListener('webkitfullscreenchange', onWebkitFsChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', onFsChange);
-      document.removeEventListener('webkitfullscreenchange', onWebkitFsChange);
-    };
-  }, []);
 
   // ── Cell editing ──────────────────────────────────────────────────────────
 
@@ -173,7 +79,6 @@ const SubtitleEditor = () => {
     const newValue = (field === 'startTime' || field === 'endTime')
       ? parseTimeInput(raw)
       : raw;
-    // Preserve display order — do NOT auto-sort
     setSubtitles(prev => prev.map(s => s.id === id ? { ...s, [field]: newValue } : s));
     setEditingCell(null);
     setEditingValue('');
@@ -194,35 +99,66 @@ const SubtitleEditor = () => {
     setEditingValue(val);
   };
 
+  const handleTimeInputChange = (raw) => {
+    const prev = editingValueRef.current;
+    const cleaned = raw.replace(/[^\d:]/g, '');
+
+    let formatted;
+    if (cleaned.includes(':')) {
+      const [mins, secs = ''] = cleaned.split(':');
+      formatted = `${mins}:${secs.slice(0, 2)}`;
+    } else if (raw.length > prev.length && cleaned.length >= 3) {
+      formatted = `${cleaned.slice(0, cleaned.length - 2)}:${cleaned.slice(-2)}`;
+    } else {
+      formatted = cleaned;
+    }
+
+    handleEditingValueChange(formatted);
+  };
+
   const editCell = (e, id, field, currentValue) => {
-    if (activeRowId !== id) return; // first click → bubble up to handleRowClick (opens menu)
-    e.stopPropagation();            // second click on active row → start editing
-    setActiveRowId(null);
+    e.stopPropagation();
     startCellEdit(id, field, currentValue);
   };
 
-  // ── Row menu ──────────────────────────────────────────────────────────────
+  // ── Drag and drop ──────────────────────────────────────────────────────────
 
-  const handleRowClick = (e, id) => {
-    e.stopPropagation();
-    if (activeRowId === id) { setActiveRowId(null); return; }
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPos({ top: rect.top, right: window.innerWidth - rect.right });
-    setActiveRowId(id);
+  const handleDragStart = (e, id) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const moveSubtitle = (id, direction) => {
+  const handleDragOver = (e, id) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverId !== id) setDragOverId(id);
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
     setSubtitles(prev => {
-      const idx = prev.findIndex(s => s.id === id);
-      if (idx === -1) return prev;
-      const newIdx = idx + direction;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
       const arr = [...prev];
-      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      const fromIdx = arr.findIndex(s => s.id === draggedId);
+      const toIdx = arr.findIndex(s => s.id === targetId);
+      const [removed] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, removed);
       return arr;
     });
-    setActiveRowId(null);
+    setDraggedId(null);
+    setDragOverId(null);
   };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
+  // ── Row actions ────────────────────────────────────────────────────────────
 
   const deleteSubtitle = (id) => {
     setSubtitles(prev => prev.filter(s => s.id !== id));
@@ -231,7 +167,6 @@ const SubtitleEditor = () => {
       setEditingValue('');
       editingValueRef.current = '';
     }
-    setActiveRowId(null);
   };
 
   const addSubtitle = () => {
@@ -266,7 +201,7 @@ const SubtitleEditor = () => {
     }
   };
 
-  // ── Derived: out-of-order row IDs ─────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
 
   const outOfOrderIds = new Set();
   for (let i = 0; i < subtitles.length - 1; i++) {
@@ -276,7 +211,13 @@ const SubtitleEditor = () => {
     }
   }
 
-  const activeIdx = activeRowId !== null ? subtitles.findIndex(s => s.id === activeRowId) : -1;
+  const invalidEndIds = new Set();
+  for (let i = 0; i < subtitles.length; i++) {
+    const sub = subtitles[i];
+    const next = subtitles[i + 1];
+    if (sub.endTime <= sub.startTime) invalidEndIds.add(sub.id);
+    else if (next && sub.endTime > next.startTime) invalidEndIds.add(sub.id);
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -300,25 +241,11 @@ const SubtitleEditor = () => {
 
             {/* ── Seção 1: Vídeo ── */}
             <div className="section">
-              <div ref={videoWrapperRef} className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
-                <video
-                  ref={videoRef}
-                  controls
-                  controlsList="nofullscreen"
-                  style={{ width: '100%', display: 'block', borderRadius: '8px', background: '#000', marginBottom: 0 }}
-                />
-                <div ref={chronoRef} className="subtitle-chrono">00:00:000</div>
-                {displayedSavedText && (
-                  <div className="subtitle-overlay-text">{displayedSavedText}</div>
-                )}
-                <button
-                  className="subtitle-fs-btn"
-                  title="Tela cheia (com legendas e cronômetro)"
-                  onClick={() => videoWrapperRef.current?.requestFullscreen()}
-                >
-                  ⛶
-                </button>
-              </div>
+              <VideoPlayer
+                src={downloadVideo(videoId)}
+                subtitles={subtitles}
+                showFsButton
+              />
             </div>
 
             {/* ── Seção 2: Métodos ── */}
@@ -397,12 +324,14 @@ const SubtitleEditor = () => {
             <div className="section">
               <div className="subtitle-table">
                 <div className="subtitle-table__header">
+                  <div className="subtitle-col subtitle-col--handle" />
                   <div className="subtitle-col subtitle-col--time">Início</div>
                   <div className="subtitle-col subtitle-col--text">
                     Legenda
                     <span className="subtitle-col__hint">clique para editar</span>
                   </div>
                   <div className="subtitle-col subtitle-col--time">Fim</div>
+                  <div className="subtitle-col subtitle-col--delete" />
                 </div>
 
                 <div className="subtitle-table__body">
@@ -414,12 +343,27 @@ const SubtitleEditor = () => {
 
                   {subtitles.map(sub => {
                     const isOoo = outOfOrderIds.has(sub.id);
+                    const isDragging = draggedId === sub.id;
+                    const isDragOver = dragOverId === sub.id && draggedId !== sub.id;
                     return (
                       <div
                         key={sub.id}
-                        className={`subtitle-row${activeRowId === sub.id ? ' subtitle-row--active' : ''}`}
-                        onClick={e => handleRowClick(e, sub.id)}
+                        className={`subtitle-row${isDragging ? ' subtitle-row--dragging' : ''}${isDragOver ? ' subtitle-row--drag-over' : ''}`}
+                        onDragOver={e => handleDragOver(e, sub.id)}
+                        onDrop={e => handleDrop(e, sub.id)}
                       >
+                        {/* Handle */}
+                        <div className="subtitle-cell subtitle-cell--handle">
+                          <span
+                            className="subtitle-drag-handle"
+                            draggable
+                            onDragStart={e => handleDragStart(e, sub.id)}
+                            onDragEnd={handleDragEnd}
+                          >
+                            ⠿
+                          </span>
+                        </div>
+
                         {/* Início */}
                         <div
                           className="subtitle-cell subtitle-cell--time"
@@ -430,7 +374,7 @@ const SubtitleEditor = () => {
                               autoFocus
                               className="subtitle-cell__input subtitle-cell__input--time"
                               value={editingValue}
-                              onChange={e => handleEditingValueChange(e.target.value)}
+                              onChange={e => handleTimeInputChange(e.target.value)}
                               onBlur={() => saveCellEdit(sub.id, 'startTime')}
                               onKeyDown={e => handleCellKeyDown(e, sub.id, 'startTime')}
                               onClick={e => e.stopPropagation()}
@@ -474,16 +418,27 @@ const SubtitleEditor = () => {
                               autoFocus
                               className="subtitle-cell__input subtitle-cell__input--time"
                               value={editingValue}
-                              onChange={e => handleEditingValueChange(e.target.value)}
+                              onChange={e => handleTimeInputChange(e.target.value)}
                               onBlur={() => saveCellEdit(sub.id, 'endTime')}
                               onKeyDown={e => handleCellKeyDown(e, sub.id, 'endTime')}
                               onClick={e => e.stopPropagation()}
                             />
                           ) : (
-                            <span className={`subtitle-cell__value subtitle-cell__value--time${isOoo ? ' subtitle-cell__value--ooo' : ''}`}>
+                            <span className={`subtitle-cell__value subtitle-cell__value--time${invalidEndIds.has(sub.id) ? ' subtitle-cell__value--ooo' : ''}`}>
                               {formatTime(sub.endTime)}
                             </span>
                           )}
+                        </div>
+
+                        {/* Excluir */}
+                        <div className="subtitle-cell subtitle-cell--delete">
+                          <button
+                            className="subtitle-delete-btn"
+                            title="Excluir legenda"
+                            onClick={e => { e.stopPropagation(); deleteSubtitle(sub.id); }}
+                          >
+                            ×
+                          </button>
                         </div>
                       </div>
                     );
@@ -501,62 +456,18 @@ const SubtitleEditor = () => {
             </div>
 
             {/* ── Seção 4: Navegação ── */}
-            <div className="section">
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px' }}>
-                Quando as legendas estiverem prontas, prossiga para a gravação da dublagem.
-              </p>
-              <div className="button-group">
-                <button className="btn btn-record" onClick={() => navigate(`/record/${videoId}`)}>
-                  Iniciar Gravação 🎙
-                </button>
-                <button className="btn btn-cancel" onClick={() => navigate('/')}>
-                  Voltar
-                </button>
-              </div>
+            <div className="subtitle-nav">
+              <button className="btn btn-cancel subtitle-nav__back" onClick={() => navigate('/')}>
+                ← Importar outro vídeo
+              </button>
+              <button className="btn btn-upload subtitle-nav__next" onClick={() => navigate(`/record/${videoId}`)}>
+                Iniciar Gravação 🎙
+              </button>
             </div>
 
           </div>
         </div>
       </main>
-
-      {/* Ghost menu — backdrop closes on outside click; menu floats above row */}
-      {activeRowId !== null && (
-        <>
-          <div
-            style={{ position: 'fixed', inset: 0, zIndex: 99 }}
-            onClick={() => setActiveRowId(null)}
-          />
-          <div
-            className="subtitle-row-menu"
-            style={{
-              position: 'fixed',
-              bottom: `calc(100vh - ${menuPos.top}px + 4px)`,
-              right: `${menuPos.right}px`,
-              zIndex: 100,
-            }}
-          >
-          {activeIdx > 0 && (
-            <button className="subtitle-row-menu__btn" onClick={() => moveSubtitle(activeRowId, -1)}>
-              ↑ Mover para cima
-            </button>
-          )}
-          {activeIdx < subtitles.length - 1 && (
-            <button className="subtitle-row-menu__btn" onClick={() => moveSubtitle(activeRowId, 1)}>
-              ↓ Mover para baixo
-            </button>
-          )}
-          {(activeIdx > 0 || activeIdx < subtitles.length - 1) && (
-            <div className="subtitle-row-menu__sep" />
-          )}
-          <button
-            className="subtitle-row-menu__btn subtitle-row-menu__btn--delete"
-            onClick={() => deleteSubtitle(activeRowId)}
-          >
-            🗑 Excluir
-          </button>
-        </div>
-        </>
-      )}
 
       <Footer />
     </>

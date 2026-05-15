@@ -1,0 +1,111 @@
+.video-player {
+  position: relative;
+  width: 100%;
+}
+
+.video-player video {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  background: #000;
+  margin-bottom: 0;
+}
+
+/* ─── Chronometer ─────────────────────────────────────── */
+.video-player__chrono {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 4px 14px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+
+/* ─── Subtitle overlay ────────────────────────────────── */
+.video-player__subtitle {
+  position: absolute;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  padding: 5px 16px;
+  border-radius: 4px;
+  font-size: 18px;
+  max-width: 90%;
+  text-align: center;
+  pointer-events: none;
+  white-space: pre-wrap;
+  z-index: 2;
+}
+
+/* ─── Custom fullscreen button ───────────────────────── */
+.video-player__fs-btn {
+  position: absolute;
+  bottom: 56px;
+  right: 10px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s;
+  padding: 0;
+  line-height: 1;
+}
+.video-player:hover .video-player__fs-btn {
+  opacity: 1;
+}
+.video-player:fullscreen .video-player__fs-btn,
+.video-player:-webkit-full-screen .video-player__fs-btn {
+  display: none;
+}
+
+/* ─── Fullscreen ──────────────────────────────────────── */
+.video-player:fullscreen,
+.video-player:-webkit-full-screen {
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
+.video-player:fullscreen video,
+.video-player:-webkit-full-screen video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+.video-player:fullscreen .video-player__chrono,
+.video-player:-webkit-full-screen .video-player__chrono {
+  z-index: 10;
+  font-size: 20px;
+}
+.video-player:fullscreen .video-player__subtitle,
+.video-player:-webkit-full-screen .video-player__subtitle {
+  z-index: 10;
+  font-size: 22px;
+  bottom: 72px;
+}
