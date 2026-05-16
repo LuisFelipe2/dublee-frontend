@@ -10,8 +10,6 @@ import Button from './shared/Button';
 import Toast from './shared/Toast';
 import './MixingPage.css';
 
-const subtitlesStorageKey = (id) => `dublee-subtitles-${id}`;
-
 const MixingPage = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
@@ -24,13 +22,6 @@ const MixingPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [lastMixedVolumes, setLastMixedVolumes] = useState(null);
-
-  const [subtitles] = useState(() => {
-    try {
-      const saved = localStorage.getItem(subtitlesStorageKey(videoId));
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
 
   const lastMixRef = useRef(null);
 
