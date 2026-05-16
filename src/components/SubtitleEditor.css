@@ -128,13 +128,6 @@
 .subtitle-lang-select:focus {
   border-color: #667eea;
 }
-.subtitle-method-msg {
-  font-size: 12px;
-  color: #777;
-}
-.subtitle-method-msg--error {
-  color: #e53935;
-}
 
 /* ─── Subtitle table ──────────────────────────────────── */
 .subtitle-table {

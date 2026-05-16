@@ -7,6 +7,7 @@ import VideoPlayer from './shared/VideoPlayer';
 import Button from './shared/Button';
 import SplitLayout from './shared/SplitLayout';
 import PageHeader from './shared/PageHeader';
+import Toast from './shared/Toast';
 import './SubtitleEditor.css';
 
 const LANGUAGES = [
@@ -57,8 +58,9 @@ const SubtitleEditor = () => {
   const [dragOverId, setDragOverId] = useState(null);
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generateMsg, setGenerateMsg] = useState({ text: '', error: false });
+  const [toast, setToast] = useState(null);
   const [autoTranslate, setAutoTranslate] = useState(false);
+  const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [targetLang, setTargetLang] = useState('pt');
 
   useEffect(() => {
@@ -186,19 +188,19 @@ const SubtitleEditor = () => {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    setGenerateMsg({ text: 'Transcrevendo com IA… pode levar alguns instantes', error: false });
+    showToast('loading', 'Transcrevendo com IA… pode levar alguns instantes');
     try {
       const result = await transcribeWithWhisper(videoId);
       let subs = result.subtitles ?? [];
       if (autoTranslate && subs.length > 0) {
-        setGenerateMsg({ text: 'Traduzindo legendas…', error: false });
+        showToast('loading', 'Traduzindo legendas…');
         const translated = await translateSubtitles(videoId, subs, targetLang);
         subs = translated.subtitles ?? subs;
       }
       setSubtitles(subs);
-      setGenerateMsg({ text: `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`, error: false });
+      showToast('success', `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`);
     } catch (e) {
-      setGenerateMsg({ text: e.message, error: true });
+      showToast('error', e.message);
     } finally {
       setIsGenerating(false);
     }
@@ -306,11 +308,6 @@ const SubtitleEditor = () => {
                           <option key={l.code} value={l.code}>{l.label}</option>
                         ))}
                       </select>
-                    )}
-                    {generateMsg.text && (
-                      <span className={`subtitle-method-msg${generateMsg.error ? ' subtitle-method-msg--error' : ''}`}>
-                        {generateMsg.text}
-                      </span>
                     )}
                   </>
                 }
@@ -467,6 +464,15 @@ const SubtitleEditor = () => {
       </main>
 
       <Footer />
+
+      {toast && (
+        <Toast
+          key={toast.id}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </>
   );
 };

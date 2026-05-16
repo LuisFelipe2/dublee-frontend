@@ -1,0 +1,105 @@
+.toast {
+  --toast-color: #667eea;
+  --toast-glow: rgba(102, 126, 234, 0.30);
+
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 280px;
+  max-width: 400px;
+  padding: 14px 44px 14px 16px;
+
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 10px;
+  border-left: 4px solid var(--toast-color);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 12px var(--toast-glow);
+
+  animation:
+    toastIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards,
+    toastGlow 0.9s ease 0.3s 1 forwards;
+}
+
+.toast--success { --toast-color: #43a047; --toast-glow: rgba(67, 160, 71, 0.30); }
+.toast--error   { --toast-color: #e53935; --toast-glow: rgba(229, 57, 53, 0.30); }
+.toast--loading { --toast-color: #667eea; --toast-glow: rgba(102, 126, 234, 0.30); }
+
+.toast--leaving {
+  animation: toastOut 0.28s ease forwards !important;
+}
+
+/* ─── Icon ────────────────────────────────────────────── */
+.toast__icon {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--toast-color);
+  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toast__spinner {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.20);
+  border-top-color: var(--toast-color);
+  border-radius: 50%;
+  animation: toastSpin 0.8s linear infinite;
+}
+
+/* ─── Message ─────────────────────────────────────────── */
+.toast__message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  margin: 0;
+}
+
+/* ─── Close button ────────────────────────────────────── */
+.toast__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: #bbb;
+  padding: 0 2px;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.toast__close:hover { color: #555; }
+
+/* ─── Animations ──────────────────────────────────────── */
+@keyframes toastIn {
+  from { transform: translateX(calc(100% + 32px)); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes toastOut {
+  to { transform: translateX(calc(100% + 32px)); opacity: 0; }
+}
+
+@keyframes toastGlow {
+  0%   { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 12px var(--toast-glow); }
+  50%  { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 36px var(--toast-glow); }
+  100% { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 12px var(--toast-glow); }
+}
+
+@keyframes toastSpin {
+  to { transform: rotate(360deg); }
+}

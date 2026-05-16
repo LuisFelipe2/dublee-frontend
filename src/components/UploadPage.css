@@ -59,34 +59,9 @@
   text-overflow: ellipsis;
 }
 
-.video-preview-player {
-  width: 100%;
-  border-radius: 8px;
-  background: #000;
-  max-height: 480px;
-  display: block;
-}
-
-.youtube-iframe-wrapper {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #000;
-}
-
-.youtube-preview-iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 .video-preview-actions {
   margin-top: 20px;
+  margin-bottom: 80px;
   display: flex;
   justify-content: center;
 }
@@ -96,60 +71,6 @@
   padding: 0 40px 52px;
 }
 
-/* ─── File size error modal ───────────────────────────── */
-.size-error-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.size-error-modal {
-  background: #fff;
-  border-radius: 14px;
-  padding: 44px 40px 36px;
-  max-width: 380px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
-  animation: modalIn 0.18s ease;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.size-error-icon {
-  font-size: 44px;
-  line-height: 1;
-  margin-bottom: 18px;
-}
-
-.size-error-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 12px;
-}
-
-.size-error-desc {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.65;
-  margin-bottom: 28px;
-}
-
-.size-error-btn {
-  flex: none;
-  padding: 12px 44px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-}
 
 @media (max-width: 720px) {
   .import-status {

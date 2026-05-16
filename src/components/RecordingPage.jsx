@@ -7,6 +7,7 @@ import VideoPlayer from './shared/VideoPlayer';
 import Footer from './shared/Footer';
 import Button from './shared/Button';
 import PageHeader from './shared/PageHeader';
+import Toast from './shared/Toast';
 import './RecordingPage.css';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
@@ -14,7 +15,8 @@ const storageKey = (id) => `dublee-subtitles-${id}`;
 const RecordingPage = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [toast, setToast] = useState(null);
+  const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [isProcessing, setIsProcessing] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -55,7 +57,7 @@ const RecordingPage = () => {
       const { is_processing, is_complete, error } = data.data;
 
       if (error) {
-        setStatus({ type: 'error', message: `Erro no processamento: ${error}` });
+        showToast('error', `Erro no processamento: ${error}`);
         isProcessingRef.current = false;
         setIsProcessing(false);
         clearInterval(statusCheckIntervalRef.current);
@@ -63,11 +65,11 @@ const RecordingPage = () => {
         isProcessingRef.current = false;
         setIsProcessing(false);
         setProgress(100);
-        setStatus({ type: 'success', message: 'Vídeo pronto! Você pode começar a gravar sua dublagem.' });
+        showToast('success', 'Vídeo pronto! Você pode começar a gravar sua dublagem.');
         clearInterval(statusCheckIntervalRef.current);
       } else if (is_processing) {
         setProgress(50);
-        setStatus({ type: 'loading', message: 'Processando áudio...' });
+        showToast('loading', 'Processando áudio...');
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
@@ -89,7 +91,7 @@ const RecordingPage = () => {
     isRecordingRef.current = false;
     setIsRecording(false);
     setIsPaused(false);
-    setStatus({ type: 'loading', message: 'Processando áudio gravado...' });
+    showToast('loading', 'Processando áudio gravado...');
   };
 
   const pauseRecording = () => {
@@ -97,7 +99,7 @@ const RecordingPage = () => {
       mediaRecorderRef.current.pause();
       videoRef.current?.pause();
       setIsPaused(true);
-      setStatus({ type: '', message: '' });
+      setToast(null);
     }
   };
 
@@ -106,7 +108,7 @@ const RecordingPage = () => {
       mediaRecorderRef.current.resume();
       videoRef.current?.play();
       setIsPaused(false);
-      setStatus({ type: 'loading', message: 'Gravando... Fale em sincronia com o vídeo.' });
+      showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
     }
   };
 
@@ -141,7 +143,7 @@ const RecordingPage = () => {
 
   const saveAndGoToMix = (chunks) => {
     if (chunks.length === 0) {
-      setStatus({ type: 'error', message: 'Nenhum áudio gravado.' });
+      showToast('error', 'Nenhum áudio gravado.');
       return;
     }
     const blob = new Blob(chunks, { type: 'audio/webm' });
@@ -151,7 +153,7 @@ const RecordingPage = () => {
 
   const startRecording = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus({ type: 'error', message: 'Microfone não suportado. Use HTTPS ou um navegador moderno.' });
+      showToast('error', 'Microfone não suportado. Use HTTPS ou um navegador moderno.');
       return;
     }
 
@@ -171,7 +173,7 @@ const RecordingPage = () => {
       recorder.start();
       isRecordingRef.current = true;
       setIsRecording(true);
-      setStatus({ type: 'loading', message: 'Gravando... Fale em sincronia com o vídeo.' });
+      showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
 
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
@@ -185,7 +187,7 @@ const RecordingPage = () => {
       if (error.name === 'NotAllowedError') msg += 'Permissão negada. Permita acesso ao microfone.';
       else if (error.name === 'NotFoundError') msg += 'Microfone não encontrado.';
       else msg += error.message;
-      setStatus({ type: 'error', message: msg });
+      showToast('error', msg);
     }
   };
 
@@ -255,12 +257,6 @@ const RecordingPage = () => {
                 </div>
               )}
 
-              {status.message && (
-                <div className={`status-message show ${status.type}`}>
-                  {status.type === 'loading' && <span className="spinner"></span>}
-                  {status.message}
-                </div>
-              )}
 
             </div>
           </div>
@@ -279,6 +275,15 @@ const RecordingPage = () => {
       </main>
 
       <Footer />
+
+      {toast && (
+        <Toast
+          key={toast.id}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </>
   );
 };

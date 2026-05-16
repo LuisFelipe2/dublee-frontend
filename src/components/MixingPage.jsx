@@ -4,6 +4,7 @@ import { mixAudio } from '../services/api';
 import { getRecordedAudio } from '../store/recordingStore';
 import SubtitleSourceSelector from './SubtitleSourceSelector';
 import Button from './shared/Button';
+import Toast from './shared/Toast';
 
 const subtitlesStorageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -14,7 +15,8 @@ const MixingPage = () => {
 
   const [voiceVolume, setVoiceVolume] = useState(100);
   const [effectsVolume, setEffectsVolume] = useState(100);
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [toast, setToast] = useState(null);
+  const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [subtitles, setSubtitles] = useState(() => {
@@ -33,7 +35,7 @@ const MixingPage = () => {
 
   useEffect(() => {
     if (!getRecordedAudio()) {
-      setStatus({ type: 'error', message: 'Nenhuma gravação encontrada. Volte e grave novamente.' });
+      showToast('error', 'Nenhuma gravação encontrada. Volte e grave novamente.');
     }
     return () => {
       if (lastMixRef.current?.url) URL.revokeObjectURL(lastMixRef.current.url);
@@ -63,14 +65,14 @@ const MixingPage = () => {
 
   const handlePreview = async () => {
     setIsProcessing(true);
-    setStatus({ type: 'loading', message: 'Gerando pré-visualização...' });
+    showToast('loading', 'Gerando pré-visualização...');
     try {
       const mix = await getMix();
       setPreviewUrl(mix.url);
-      setStatus({ type: 'success', message: 'Pré-visualização pronta. Ajuste os volumes e pré-visualize novamente se necessário.' });
+      showToast('success', 'Pré-visualização pronta. Ajuste os volumes e pré-visualize novamente se necessário.');
       setTimeout(() => videoRef.current?.play(), 100);
     } catch (error) {
-      setStatus({ type: 'error', message: 'Erro ao gerar prévia: ' + error.message });
+      showToast('error', 'Erro ao gerar prévia: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -78,7 +80,7 @@ const MixingPage = () => {
 
   const handleDownload = async () => {
     setIsProcessing(true);
-    setStatus({ type: 'loading', message: 'Preparando download...' });
+    showToast('loading', 'Preparando download...');
     try {
       const mix = await getMix();
       const link = document.createElement('a');
@@ -87,9 +89,9 @@ const MixingPage = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setStatus({ type: 'success', message: '✅ Download iniciado!' });
+      showToast('success', 'Download iniciado!');
     } catch (error) {
-      setStatus({ type: 'error', message: 'Erro ao baixar: ' + error.message });
+      showToast('error', 'Erro ao baixar: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -171,12 +173,6 @@ const MixingPage = () => {
             </div>
           )}
 
-          {status.message && (
-            <div className={`status-message show ${status.type}`} style={{ marginTop: '16px' }}>
-              {status.type === 'loading' && <span className="spinner"></span>}
-              {status.message}
-            </div>
-          )}
 
           {/* Action buttons */}
           <div className="button-group" style={{ marginTop: '24px' }}>
@@ -198,6 +194,14 @@ const MixingPage = () => {
           </div>
         </div>
       </div>
+    {toast && (
+      <Toast
+        key={toast.id}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast(null)}
+      />
+    )}
     </div>
   );
 };

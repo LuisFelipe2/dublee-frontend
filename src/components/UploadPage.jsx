@@ -6,6 +6,8 @@ import Footer from './shared/Footer';
 import Button from './shared/Button';
 import SplitLayout from './shared/SplitLayout';
 import PageHeader from './shared/PageHeader';
+import VideoPlayer from './shared/VideoPlayer';
+import Toast from './shared/Toast';
 import './UploadPage.css';
 
 const extractYoutubeId = (url) => {
@@ -17,12 +19,12 @@ const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [toast, setToast] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubePreviewId, setYoutubePreviewId] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [sizeError, setSizeError] = useState(false);
+  const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -30,7 +32,7 @@ const UploadPage = () => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       if (selectedFile.size > 10 * 1024 * 1024) {
-        setSizeError(true);
+        showToast('error', 'Vídeo muito grande para importar. Limite máximo 10 MB.');
         e.target.value = '';
         return;
       }
@@ -40,7 +42,7 @@ const UploadPage = () => {
       setFile(selectedFile);
       setFileName(`${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`);
       setVideoPreviewUrl(URL.createObjectURL(selectedFile));
-      setStatus({ type: '', message: '' });
+      setToast(null);
     }
   };
 
@@ -67,21 +69,19 @@ const UploadPage = () => {
   const uploadVideo = async () => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      setSizeError(true);
+      showToast('error', 'Vídeo muito grande para importar. Limite máximo 10 MB.');
       return;
     }
 
     setIsUploading(true);
-    setStatus({ type: 'loading', message: 'Enviando vídeo...' });
+    showToast('loading', 'Enviando vídeo...');
 
     try {
       const data = await uploadVideoAPI(file);
-      setStatus({ type: 'success', message: 'Vídeo enviado! Redirecionando...' });
-      setTimeout(() => {
-        navigate(`/subtitle/${data.data.id}`);
-      }, 2000);
+      showToast('success', 'Vídeo enviado! Redirecionando...');
+      setTimeout(() => navigate(`/subtitle/${data.data.id}`), 2000);
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      showToast('error', error.message);
     } finally {
       setIsUploading(false);
     }
@@ -99,14 +99,14 @@ const UploadPage = () => {
       setVideoPreviewUrl(null);
       fileInputRef.current.value = '';
     }
-    setStatus({ type: '', message: '' });
+    setToast(null);
   };
 
   const importFromYoutube = async () => {
     if (!youtubeUrl.trim()) return;
 
     setIsImporting(true);
-    setStatus({ type: 'loading', message: 'Baixando vídeo do YouTube...' });
+    showToast('loading', 'Baixando vídeo do YouTube...');
 
     try {
       const data = await importFromUrlAPI(youtubeUrl.trim());
@@ -117,12 +117,10 @@ const UploadPage = () => {
       const msg = subtitles.length > 0
         ? `Vídeo importado com ${subtitles.length} legendas! Redirecionando...`
         : 'Vídeo importado! Redirecionando...';
-      setStatus({ type: 'success', message: msg });
-      setTimeout(() => {
-        navigate(`/subtitle/${data.data.id}`);
-      }, 2000);
+      showToast('success', msg);
+      setTimeout(() => navigate(`/subtitle/${data.data.id}`), 2000);
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      showToast('error', error.message);
     } finally {
       setIsImporting(false);
     }
@@ -200,18 +198,7 @@ const UploadPage = () => {
 
           {youtubePreviewId && (
             <div className="video-preview-section">
-              <h3 className="video-preview-title">
-                <span>▶️</span> Pré-visualização do YouTube
-              </h3>
-              <div className="youtube-iframe-wrapper">
-                <iframe
-                  className="youtube-preview-iframe"
-                  src={`https://www.youtube.com/embed/${youtubePreviewId}`}
-                  title="Pré-visualização do YouTube"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+              <VideoPlayer youtubeId={youtubePreviewId} />
               <div className="video-preview-actions">
                 <Button
                   variant="advance"
@@ -226,14 +213,7 @@ const UploadPage = () => {
 
           {videoPreviewUrl && (
             <div className="video-preview-section">
-              <h3 className="video-preview-title">
-                <span>🎬</span> {fileName}
-              </h3>
-              <video
-                className="video-preview-player"
-                src={videoPreviewUrl}
-                controls
-              />
+              <VideoPlayer src={videoPreviewUrl} />
               <div className="video-preview-actions">
                 <Button
                   variant="advance"
@@ -246,33 +226,18 @@ const UploadPage = () => {
             </div>
           )}
 
-          {status.message && (
-            <div className="import-status">
-              <div className={`status-message show ${status.type}`}>
-                {status.type === 'loading' && <span className="spinner"></span>}
-                {status.message}
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
       <Footer />
 
-      {sizeError && (
-        <div className="size-error-overlay" onClick={() => setSizeError(false)}>
-          <div className="size-error-modal" onClick={e => e.stopPropagation()}>
-            <div className="size-error-icon">⚠️</div>
-            <h3 className="size-error-title">Arquivo muito grande</h3>
-            <p className="size-error-desc">
-              O vídeo selecionado excede o limite de <strong>10 MB</strong>.
-              Por favor, selecione um vídeo menor.
-            </p>
-            <Button variant="primary" className="size-error-btn" onClick={() => setSizeError(false)}>
-              Entendido
-            </Button>
-          </div>
-        </div>
+      {toast && (
+        <Toast
+          key={toast.id}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </>
   );
