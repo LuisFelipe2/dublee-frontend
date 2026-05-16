@@ -2,9 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mixAudio } from '../services/api';
 import { getRecordedAudio } from '../store/recordingStore';
-import SubtitleSourceSelector from './SubtitleSourceSelector';
+import Header from './shared/Header';
+import Footer from './shared/Footer';
+import PageHeader from './shared/PageHeader';
+import VideoPlayer from './shared/VideoPlayer';
 import Button from './shared/Button';
 import Toast from './shared/Toast';
+import './MixingPage.css';
 
 const subtitlesStorageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -19,34 +23,39 @@ const MixingPage = () => {
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [subtitles, setSubtitles] = useState(() => {
+  const [lastMixedVolumes, setLastMixedVolumes] = useState(null);
+
+  const [subtitles] = useState(() => {
     try {
       const saved = localStorage.getItem(subtitlesStorageKey(videoId));
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
-  const subtitlesRef = useRef(subtitles);
-  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
 
-  useEffect(() => { subtitlesRef.current = subtitles; }, [subtitles]);
+  const lastMixRef = useRef(null);
 
-  // Track last mixed params to avoid regenerating on download when nothing changed
-  const lastMixRef = useRef(null); // { voiceVolume, effectsVolume, url, blob }
+  const hasUnsavedChanges = lastMixedVolumes === null
+    || lastMixedVolumes.voice !== voiceVolume
+    || lastMixedVolumes.effects !== effectsVolume;
+
+  const showOverlay = isProcessing || (lastMixedVolumes !== null && hasUnsavedChanges);
 
   useEffect(() => {
     if (!getRecordedAudio()) {
       showToast('error', 'Nenhuma gravação encontrada. Volte e grave novamente.');
+      return;
     }
+    handleReload();
     return () => {
       if (lastMixRef.current?.url) URL.revokeObjectURL(lastMixRef.current.url);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getMix = async () => {
     const audioBlob = getRecordedAudio();
     if (!audioBlob) throw new Error('Áudio gravado não encontrado.');
 
-    // Reuse last mix if volumes haven't changed
     if (
       lastMixRef.current &&
       lastMixRef.current.voiceVolume === voiceVolume &&
@@ -63,16 +72,15 @@ const MixingPage = () => {
     return lastMixRef.current;
   };
 
-  const handlePreview = async () => {
+  const handleReload = async () => {
     setIsProcessing(true);
-    showToast('loading', 'Gerando pré-visualização...');
     try {
       const mix = await getMix();
       setPreviewUrl(mix.url);
-      showToast('success', 'Pré-visualização pronta. Ajuste os volumes e pré-visualize novamente se necessário.');
+      setLastMixedVolumes({ voice: voiceVolume, effects: effectsVolume });
       setTimeout(() => videoRef.current?.play(), 100);
     } catch (error) {
-      showToast('error', 'Erro ao gerar prévia: ' + error.message);
+      showToast('error', 'Erro ao gerar mixagem: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -98,119 +106,114 @@ const MixingPage = () => {
   };
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>🎬 Redublador de Vídeos</h1>
-        <p>Ajuste os volumes antes de baixar o vídeo final</p>
-      </div>
+    <>
+      <Header />
 
-      <div className="content">
-        <div className="section">
-          <h2>
-            <span className="section-number">4</span>
-            Mixagem de Áudio
-          </h2>
+      <main className="page-main">
+        <div className="container">
 
-          <SubtitleSourceSelector
-            videoId={videoId}
-            onSubtitlesLoaded={(subs) => setSubtitles(subs)}
+          <PageHeader
+            title="Mixagem Final"
+            subtitle="Passo 4 de 4"
+            description="Ajuste os volumes da sua voz e do áudio de fundo, pré-visualize o resultado
+              e baixe o vídeo dublado em alta qualidade."
           />
 
-          {/* Volume sliders */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
-            <VolumeSlider
-              label="🎙 Voz gravada"
-              value={voiceVolume}
-              onChange={setVoiceVolume}
-              disabled={isProcessing}
-            />
-            <VolumeSlider
-              label="🎵 Efeitos sonoros"
-              value={effectsVolume}
-              onChange={setEffectsVolume}
-              disabled={isProcessing}
-            />
-          </div>
+          <div className="content">
+            <div className="section">
 
-          {/* Preview button */}
-          <Button
-            variant="primary"
-            style={{ width: '100%' }}
-            onClick={handlePreview}
-            disabled={isProcessing}
-          >
-            {isProcessing ? 'Processando...' : '▶ Pré-visualizar mixagem'}
-          </Button>
-
-          {/* Preview player */}
-          {previewUrl && (
-            <div style={{ marginTop: '20px' }}>
-              <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Pré-visualização:</p>
-              <div style={{ position: 'relative' }}>
-                <video
+              <div className="mix-player-wrapper">
+                <VideoPlayer
                   ref={videoRef}
                   src={previewUrl}
-                  controls
-                  style={{ marginBottom: 0 }}
-                  onTimeUpdate={(e) => {
-                    const t = e.target.currentTime;
-                    const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
-                    setCurrentSubtitleText(found?.text ?? '');
-                  }}
+                  showFsButton
+                  showChrono={false}
                 />
-                {currentSubtitleText && (
-                  <div style={{
-                    position: 'absolute', bottom: '52px', left: '50%',
-                    transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.78)',
-                    color: '#fff', padding: '5px 16px', borderRadius: '4px',
-                    fontSize: '18px', maxWidth: '90%', textAlign: 'center',
-                    pointerEvents: 'none', whiteSpace: 'pre-wrap',
-                  }}>
-                    {currentSubtitleText}
+                {showOverlay && (
+                  <div className="mix-overlay">
+                    <div className="mix-overlay__card">
+                      {isProcessing ? (
+                        <>
+                          <span className="mix-overlay__icon mix-overlay__icon--spin">⏳</span>
+                          <p className="mix-overlay__text">
+                            {previewUrl === null ? 'Preparando vídeo…' : 'Atualizando mixagem…'}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <span className="mix-overlay__icon">⚠️</span>
+                          <p className="mix-overlay__text">
+                            As configurações de áudio foram alteradas.
+                            Recarregue o vídeo para aplicar as mudanças.
+                          </p>
+                          <Button variant="primary" onClick={handleReload}>
+                            ↺ Recarregar Vídeo
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
+
+              <div className="mix-sliders">
+                <VolumeSlider
+                  label="🎙 Voz gravada"
+                  value={voiceVolume}
+                  onChange={setVoiceVolume}
+                  disabled={isProcessing}
+                />
+                <VolumeSlider
+                  label="🎵 Efeitos sonoros"
+                  value={effectsVolume}
+                  onChange={setEffectsVolume}
+                  disabled={isProcessing}
+                />
+              </div>
+
+              <div className="button-group mix-actions">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(`/record/${videoId}`)}
+                  disabled={isProcessing}
+                >
+                  Regravar Voz
+                </Button>
+                <Button
+                  variant="advance"
+                  onClick={handleDownload}
+                  disabled={isProcessing || !previewUrl}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  ⬇ Baixar Vídeo
+                </Button>
+              </div>
+
             </div>
-          )}
-
-
-          {/* Action buttons */}
-          <div className="button-group" style={{ marginTop: '24px' }}>
-            <Button
-              variant="danger"
-              onClick={handleDownload}
-              disabled={isProcessing}
-              style={{ flex: 1 }}
-            >
-              ⬇ Baixar Vídeo
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/record/${videoId}`)}
-              disabled={isProcessing}
-            >
-              Regravar Voz
-            </Button>
           </div>
+
         </div>
-      </div>
-    {toast && (
-      <Toast
-        key={toast.id}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast(null)}
-      />
-    )}
-    </div>
+      </main>
+
+      <Footer />
+
+      {toast && (
+        <Toast
+          key={toast.id}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
   );
 };
 
 const VolumeSlider = ({ label, value, onChange, disabled }) => (
-  <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-      <span style={{ fontSize: '14px', color: '#333', fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: '14px', color: '#667eea', fontWeight: 600 }}>{value}%</span>
+  <div className="mix-slider">
+    <div className="mix-slider__header">
+      <span className="mix-slider__label">{label}</span>
+      <span className="mix-slider__value">{value}%</span>
     </div>
     <input
       type="range"
@@ -220,9 +223,9 @@ const VolumeSlider = ({ label, value, onChange, disabled }) => (
       value={value}
       onChange={e => onChange(Number(e.target.value))}
       disabled={disabled}
-      style={{ width: '100%', accentColor: '#667eea', cursor: disabled ? 'not-allowed' : 'pointer' }}
+      className="mix-slider__input"
     />
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#aaa', marginTop: '2px' }}>
+    <div className="mix-slider__scale">
       <span>0%</span>
       <span>100%</span>
       <span>200%</span>

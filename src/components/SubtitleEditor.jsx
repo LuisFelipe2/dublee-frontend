@@ -45,6 +45,9 @@ const SubtitleEditor = () => {
   const navigate = useNavigate();
   const editingValueRef = useRef('');
 
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+
   const [subtitles, setSubtitles] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey(videoId));
@@ -66,6 +69,23 @@ const SubtitleEditor = () => {
   useEffect(() => {
     localStorage.setItem(storageKey(videoId), JSON.stringify(subtitles));
   }, [subtitles, videoId]);
+
+  useEffect(() => {
+    let objectUrl;
+    setIsVideoLoading(true);
+    fetch(downloadVideo(videoId))
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.blob();
+      })
+      .then(blob => {
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch(err => showToast('error', `Erro ao carregar vídeo: ${err.message}`))
+      .finally(() => setIsVideoLoading(false));
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [videoId]);
 
   // ── Cell editing ──────────────────────────────────────────────────────────
 
@@ -244,11 +264,17 @@ const SubtitleEditor = () => {
 
             {/* ── Seção 1: Vídeo ── */}
             <div className="section">
-              <VideoPlayer
-                src={downloadVideo(videoId)}
-                subtitles={subtitles}
-                showFsButton
-              />
+              {isVideoLoading ? (
+                <div className="video-loading-placeholder">
+                  ⏳ Carregando vídeo…
+                </div>
+              ) : (
+                <VideoPlayer
+                  src={blobUrl}
+                  subtitles={subtitles}
+                  showFsButton
+                />
+              )}
             </div>
 
             {/* ── Seção 2: Métodos ── */}

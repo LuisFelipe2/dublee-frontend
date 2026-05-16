@@ -8,7 +8,7 @@ const formatChrono = (s) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
 };
 
-const VideoPlayer = forwardRef(({ src, youtubeId, muted = false, subtitles = [], showFsButton = false }, ref) => {
+const VideoPlayer = forwardRef(({ src, youtubeId, muted = false, subtitles = [], showFsButton = false, showChrono = true }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const chronoRef = useRef(null);
@@ -125,7 +125,7 @@ const VideoPlayer = forwardRef(({ src, youtubeId, muted = false, subtitles = [],
         muted={muted}
         controlsList={showFsButton ? 'nofullscreen' : undefined}
       />
-      <div ref={chronoRef} className="video-player__chrono">00:00:000</div>
+      {showChrono && <div ref={chronoRef} className="video-player__chrono">00:00:000</div>}
       {currentText && (
         <div className="video-player__subtitle">{currentText}</div>
       )}

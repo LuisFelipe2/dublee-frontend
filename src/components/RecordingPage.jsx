@@ -28,6 +28,11 @@ const RecordingPage = () => {
   const isRecordingRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
+  const monitorAudioRef = useRef(null);
+  const removeVideoListenersRef = useRef(null);
+
+  const [fullscreenOnStart, setFullscreenOnStart] = useState(false);
+  const [audioMonitor, setAudioMonitor] = useState(false);
 
   const [subtitles] = useState(() => {
     try {
@@ -47,6 +52,11 @@ const RecordingPage = () => {
     return () => {
       if (statusCheckIntervalRef.current) clearInterval(statusCheckIntervalRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+      if (monitorAudioRef.current) {
+        monitorAudioRef.current.pause();
+        monitorAudioRef.current.srcObject = null;
+      }
+      removeVideoListenersRef.current?.();
     };
   }, [videoId]);
 
@@ -77,6 +87,9 @@ const RecordingPage = () => {
   };
 
   const stopRecording = () => {
+    isRecordingRef.current = false;
+    removeVideoListenersRef.current?.();
+    removeVideoListenersRef.current = null;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
@@ -84,11 +97,15 @@ const RecordingPage = () => {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
+    if (monitorAudioRef.current) {
+      monitorAudioRef.current.pause();
+      monitorAudioRef.current.srcObject = null;
+      monitorAudioRef.current = null;
+    }
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.onended = null;
     }
-    isRecordingRef.current = false;
     setIsRecording(false);
     setIsPaused(false);
     showToast('loading', 'Processando áudio gravado...');
@@ -112,7 +129,10 @@ const RecordingPage = () => {
     }
   };
 
-  const restartRecording = async () => {
+  const restartRecording = () => {
+    isRecordingRef.current = false;
+    removeVideoListenersRef.current?.();
+    removeVideoListenersRef.current = null;
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.onstop = null;
       if (mediaRecorderRef.current.state !== 'inactive') {
@@ -123,15 +143,22 @@ const RecordingPage = () => {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
+    if (monitorAudioRef.current) {
+      monitorAudioRef.current.pause();
+      monitorAudioRef.current.srcObject = null;
+      monitorAudioRef.current = null;
+    }
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
       videoRef.current.onended = null;
     }
-    isRecordingRef.current = false;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
     setIsRecording(false);
     setIsPaused(false);
-    await startRecording();
+    setToast(null);
   };
 
   const finalizeRecording = () => {
@@ -161,6 +188,13 @@ const RecordingPage = () => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = mediaStream;
 
+      if (audioMonitor) {
+        const monEl = new Audio();
+        monEl.srcObject = mediaStream;
+        monEl.play().catch(() => {});
+        monitorAudioRef.current = monEl;
+      }
+
       const recorder = new MediaRecorder(mediaStream);
       mediaRecorderRef.current = recorder;
 
@@ -180,7 +214,35 @@ const RecordingPage = () => {
         videoRef.current.onended = () => {
           if (isRecordingRef.current) stopRecording();
         };
+
+        const handleVideoPause = () => {
+          if (!isRecordingRef.current) return;
+          if (mediaRecorderRef.current?.state === 'recording') {
+            mediaRecorderRef.current.pause();
+            setIsPaused(true);
+            setToast(null);
+          }
+        };
+        const handleVideoPlay = () => {
+          if (!isRecordingRef.current) return;
+          if (mediaRecorderRef.current?.state === 'paused') {
+            mediaRecorderRef.current.resume();
+            setIsPaused(false);
+            showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
+          }
+        };
+        videoRef.current.addEventListener('pause', handleVideoPause);
+        videoRef.current.addEventListener('play', handleVideoPlay);
+        removeVideoListenersRef.current = () => {
+          videoRef.current?.removeEventListener('pause', handleVideoPause);
+          videoRef.current?.removeEventListener('play', handleVideoPlay);
+        };
+
         await videoRef.current.play();
+      }
+
+      if (fullscreenOnStart && videoRef.current?.parentElement) {
+        videoRef.current.parentElement.requestFullscreen?.().catch(() => {});
       }
     } catch (error) {
       let msg = 'Erro ao acessar microfone: ';
@@ -232,14 +294,37 @@ const RecordingPage = () => {
               />
 
               {!isRecording ? (
-                <Button
-                  variant="advance"
-                  className="recording-btn-main"
-                  onClick={startRecording}
-                  disabled={isProcessing}
-                >
-                  Iniciar Gravação 🎙
-                </Button>
+                <>
+                  {!isProcessing && (
+                    <div className="recording-options">
+                      <label className="recording-option">
+                        <input
+                          type="checkbox"
+                          checked={fullscreenOnStart}
+                          onChange={e => setFullscreenOnStart(e.target.checked)}
+                        />
+                        Gravar em tela cheia
+                      </label>
+                      <label className="recording-option">
+                        <input
+                          type="checkbox"
+                          checked={audioMonitor}
+                          onChange={e => setAudioMonitor(e.target.checked)}
+                        />
+                        Retorno do áudio
+                        <span className="recording-option__hint"> (use fones de ouvido)</span>
+                      </label>
+                    </div>
+                  )}
+                  <Button
+                    variant="advance"
+                    className="recording-btn-main"
+                    onClick={startRecording}
+                    disabled={isProcessing}
+                  >
+                    Iniciar Gravação 🎙
+                  </Button>
+                </>
               ) : (
                 <div className="recording-controls">
                   <Button

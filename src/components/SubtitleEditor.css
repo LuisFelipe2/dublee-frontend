@@ -1,4 +1,18 @@
 
+/* ─── Video loading placeholder ──────────────────────── */
+.video-loading-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* ─── Custom fullscreen button ───────────────────────── */
 .subtitle-fs-btn {
   position: absolute;
