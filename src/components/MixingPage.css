@@ -75,13 +75,13 @@
 
 .mix-slider__value {
   font-size: 14px;
-  color: #667eea;
+  color: #333;
   font-weight: 600;
 }
 
 .mix-slider__input {
   width: 100%;
-  accent-color: #667eea;
+  accent-color: #333;
   cursor: pointer;
   display: block;
 }

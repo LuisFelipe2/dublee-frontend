@@ -15,15 +15,15 @@
 
 /* ─── primary ─────────────────────────────────────────── */
 .btn--primary {
-  background: #667eea;
+  background: #333;
   color: white;
 }
-.btn--primary:hover:not(:disabled) { background: #5568d3; }
+.btn--primary:hover:not(:disabled) { background: #1a1a1a; }
 .btn--primary:disabled { background: #ccc; }
 
 /* ─── advance (CTA que avança o fluxo) ───────────────── */
 .btn--advance {
-  background: #667eea;
+  background: #333;
   color: white;
   padding: 16px 56px;
   font-size: 15px;
@@ -31,7 +31,7 @@
   min-width: 220px;
   border-radius: 8px;
 }
-.btn--advance:hover:not(:disabled) { background: #5568d3; }
+.btn--advance:hover:not(:disabled) { background: #1a1a1a; }
 .btn--advance:disabled { background: #ccc; }
 
 /* ─── ghost (voltar / cancelar) ──────────────────────── */
@@ -59,15 +59,15 @@
 
 /* ─── success (finalizar / confirmar) ────────────────── */
 .btn--success {
-  background: #43a047;
+  background: #333;
   color: white;
 }
-.btn--success:hover:not(:disabled) { background: #388e3c; }
+.btn--success:hover:not(:disabled) { background: #1a1a1a; }
 
 /* ─── danger (ação destrutiva / download final) ──────── */
 .btn--danger {
-  background: #f44336;
+  background: #555;
   color: white;
 }
-.btn--danger:hover:not(:disabled) { background: #da190b; }
+.btn--danger:hover:not(:disabled) { background: #333; }
 .btn--danger:disabled { background: #ccc; }

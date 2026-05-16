@@ -7,7 +7,7 @@
 .page-header__title {
   font-size: 30px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #111;
   margin-bottom: 6px;
   letter-spacing: -0.5px;
 }
@@ -15,7 +15,7 @@
 .page-header__subtitle {
   font-size: 15px;
   font-weight: 500;
-  color: #667eea;
+  color: #555;
   margin-bottom: 20px;
 }
 
