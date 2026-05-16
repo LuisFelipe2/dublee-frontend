@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { mixAudio } from '../services/api';
 import { getRecordedAudio } from '../store/recordingStore';
 import SubtitleSourceSelector from './SubtitleSourceSelector';
+import Button from './shared/Button';
 
 const subtitlesStorageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -130,14 +131,14 @@ const MixingPage = () => {
           </div>
 
           {/* Preview button */}
-          <button
-            className="btn btn-upload"
+          <Button
+            variant="primary"
             style={{ width: '100%' }}
             onClick={handlePreview}
             disabled={isProcessing}
           >
             {isProcessing ? 'Processando...' : '▶ Pré-visualizar mixagem'}
-          </button>
+          </Button>
 
           {/* Preview player */}
           {previewUrl && (
@@ -179,21 +180,21 @@ const MixingPage = () => {
 
           {/* Action buttons */}
           <div className="button-group" style={{ marginTop: '24px' }}>
-            <button
-              className="btn btn-stop"
+            <Button
+              variant="danger"
               onClick={handleDownload}
               disabled={isProcessing}
               style={{ flex: 1 }}
             >
               ⬇ Baixar Vídeo
-            </button>
-            <button
-              className="btn btn-cancel"
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => navigate(`/record/${videoId}`)}
               disabled={isProcessing}
             >
               Regravar Voz
-            </button>
+            </Button>
           </div>
         </div>
       </div>

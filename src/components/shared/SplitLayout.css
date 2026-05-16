@@ -1,0 +1,98 @@
+.split-layout {
+  display: flex;
+  align-items: stretch;
+}
+
+.split-layout--default {
+  min-height: 400px;
+}
+
+.split-layout--bordered {
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.split-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-layout--default .split-panel {
+  padding: 48px 40px;
+}
+
+.split-layout--bordered .split-panel {
+  padding: 32px;
+  gap: 16px;
+}
+
+.split-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.split-layout--default .split-divider {
+  padding: 48px 0;
+}
+
+.split-layout--bordered .split-divider {
+  padding: 32px 0;
+}
+
+.split-divider__line {
+  flex: 1;
+  width: 1px;
+  background: #ebebeb;
+}
+
+.split-divider__label {
+  padding: 14px 0;
+  color: #ccc;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+@media (max-width: 720px) {
+  .split-layout {
+    flex-direction: column;
+  }
+
+  .split-layout--default .split-panel {
+    padding: 32px 28px;
+  }
+
+  .split-layout--bordered .split-panel {
+    padding: 24px 20px;
+  }
+
+  .split-divider {
+    flex-direction: row;
+    width: auto;
+    height: 48px;
+  }
+
+  .split-layout--default .split-divider {
+    padding: 0 28px;
+  }
+
+  .split-layout--bordered .split-divider {
+    padding: 0 24px;
+  }
+
+  .split-divider__line {
+    flex: 1;
+    height: 1px;
+    width: auto;
+  }
+
+  .split-divider__label {
+    padding: 0 16px;
+  }
+}

@@ -1,0 +1,73 @@
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+/* ─── primary ─────────────────────────────────────────── */
+.btn--primary {
+  background: #667eea;
+  color: white;
+}
+.btn--primary:hover:not(:disabled) { background: #5568d3; }
+.btn--primary:disabled { background: #ccc; }
+
+/* ─── advance (CTA que avança o fluxo) ───────────────── */
+.btn--advance {
+  background: #667eea;
+  color: white;
+  padding: 16px 56px;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 220px;
+  border-radius: 8px;
+}
+.btn--advance:hover:not(:disabled) { background: #5568d3; }
+.btn--advance:disabled { background: #ccc; }
+
+/* ─── ghost (voltar / cancelar) ──────────────────────── */
+.btn--ghost {
+  background: transparent;
+  color: #999;
+  border: 1.5px solid #e0e0e0;
+}
+.btn--ghost:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #666;
+  border-color: #ccc;
+}
+
+/* ─── outline (secundário com borda) ─────────────────── */
+.btn--outline {
+  background: #f5f5f5;
+  color: #555;
+  border: 1.5px solid #e0e0e0;
+}
+.btn--outline:hover:not(:disabled) {
+  background: #eaeaea;
+  border-color: #bbb;
+}
+
+/* ─── success (finalizar / confirmar) ────────────────── */
+.btn--success {
+  background: #43a047;
+  color: white;
+}
+.btn--success:hover:not(:disabled) { background: #388e3c; }
+
+/* ─── danger (ação destrutiva / download final) ──────── */
+.btn--danger {
+  background: #f44336;
+  color: white;
+}
+.btn--danger:hover:not(:disabled) { background: #da190b; }
+.btn--danger:disabled { background: #ccc; }

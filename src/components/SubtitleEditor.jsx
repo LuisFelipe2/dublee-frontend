@@ -4,6 +4,9 @@ import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../ser
 import Header from './shared/Header';
 import Footer from './shared/Footer';
 import VideoPlayer from './shared/VideoPlayer';
+import Button from './shared/Button';
+import SplitLayout from './shared/SplitLayout';
+import PageHeader from './shared/PageHeader';
 import './SubtitleEditor.css';
 
 const LANGUAGES = [
@@ -228,14 +231,12 @@ const SubtitleEditor = () => {
       <main className="page-main">
         <div className="container">
 
-          <div className="subtitle-welcome">
-            <h2 className="subtitle-welcome__title">Adicionar Legendas</h2>
-            <p className="subtitle-welcome__subtitle">Passo 2 de 4</p>
-            <p className="subtitle-welcome__desc">
-              Use a IA para gerar legendas automaticamente, ou adicione manualmente
-              consultando o cronômetro do vídeo e preenchendo a tabela abaixo.
-            </p>
-          </div>
+          <PageHeader
+            title="Adicionar Legendas"
+            subtitle="Passo 2 de 4"
+            description="Use a IA para gerar legendas automaticamente, ou adicione manualmente
+              consultando o cronômetro do vídeo e preenchendo a tabela abaixo."
+          />
 
           <div className="content">
 
@@ -250,74 +251,70 @@ const SubtitleEditor = () => {
 
             {/* ── Seção 2: Métodos ── */}
             <div className="section">
-              <div className="subtitle-methods">
-
-                <div className="subtitle-method-panel">
-                  <h3 className="subtitle-method-panel__title">
-                    <span>✍️</span> Manual
-                  </h3>
-                  <p className="subtitle-method-panel__desc">
-                    Adicione legendas consultando o cronômetro do vídeo e preenchendo a tabela abaixo:
-                  </p>
-                  <ol className="subtitle-method-steps">
-                    <li>Reproduza o vídeo e anote os tempos pelo <strong>cronômetro</strong></li>
-                    <li>Clique em <strong>+</strong> na tabela para adicionar uma linha</li>
-                    <li>Clique no campo <strong>Início</strong> e digite o tempo (ex: <code>0:05</code>)</li>
-                    <li>Clique no campo <strong>Legenda</strong> e escreva o texto</li>
-                    <li>Clique em <strong>Fim</strong> e informe quando a fala termina</li>
-                  </ol>
-                </div>
-
-                <div className="subtitle-methods__divider">
-                  <div className="subtitle-methods__divider-line" />
-                  <span className="subtitle-methods__divider-label">ou</span>
-                  <div className="subtitle-methods__divider-line" />
-                </div>
-
-                <div className="subtitle-method-panel">
-                  <h3 className="subtitle-method-panel__title">
-                    <span>🤖</span> IA (Whisper)
-                  </h3>
-                  <p className="subtitle-method-panel__desc">
-                    Gere legendas automaticamente a partir do áudio usando o modelo Whisper.
-                    O processo pode levar alguns instantes dependendo da duração do vídeo.
-                  </p>
-                  <button
-                    className="btn btn-upload"
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas'}
-                  </button>
-                  <label className="subtitle-translate-check">
-                    <input
-                      type="checkbox"
-                      checked={autoTranslate}
-                      onChange={e => setAutoTranslate(e.target.checked)}
+              <SplitLayout
+                variant="bordered"
+                left={
+                  <>
+                    <h3 className="subtitle-method-panel__title">
+                      <span>✍️</span> Manual
+                    </h3>
+                    <p className="subtitle-method-panel__desc">
+                      Adicione legendas consultando o cronômetro do vídeo e preenchendo a tabela abaixo:
+                    </p>
+                    <ol className="subtitle-method-steps">
+                      <li>Reproduza o vídeo e anote os tempos pelo <strong>cronômetro</strong></li>
+                      <li>Clique em <strong>+</strong> na tabela para adicionar uma linha</li>
+                      <li>Clique no campo <strong>Início</strong> e digite o tempo (ex: <code>0:05</code>)</li>
+                      <li>Clique no campo <strong>Legenda</strong> e escreva o texto</li>
+                      <li>Clique em <strong>Fim</strong> e informe quando a fala termina</li>
+                    </ol>
+                  </>
+                }
+                right={
+                  <>
+                    <h3 className="subtitle-method-panel__title">
+                      <span>🤖</span> IA (Whisper)
+                    </h3>
+                    <p className="subtitle-method-panel__desc">
+                      Gere legendas automaticamente a partir do áudio usando o modelo Whisper.
+                      O processo pode levar alguns instantes dependendo da duração do vídeo.
+                    </p>
+                    <Button
+                      variant="primary"
+                      onClick={handleGenerate}
                       disabled={isGenerating}
-                    />
-                    Traduzir automaticamente após gerar
-                  </label>
-                  {autoTranslate && (
-                    <select
-                      value={targetLang}
-                      onChange={e => setTargetLang(e.target.value)}
-                      disabled={isGenerating}
-                      className="subtitle-lang-select"
                     >
-                      {LANGUAGES.map(l => (
-                        <option key={l.code} value={l.code}>{l.label}</option>
-                      ))}
-                    </select>
-                  )}
-                  {generateMsg.text && (
-                    <span className={`subtitle-method-msg${generateMsg.error ? ' subtitle-method-msg--error' : ''}`}>
-                      {generateMsg.text}
-                    </span>
-                  )}
-                </div>
-
-              </div>
+                      {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas'}
+                    </Button>
+                    <label className="subtitle-translate-check">
+                      <input
+                        type="checkbox"
+                        checked={autoTranslate}
+                        onChange={e => setAutoTranslate(e.target.checked)}
+                        disabled={isGenerating}
+                      />
+                      Traduzir automaticamente após gerar
+                    </label>
+                    {autoTranslate && (
+                      <select
+                        value={targetLang}
+                        onChange={e => setTargetLang(e.target.value)}
+                        disabled={isGenerating}
+                        className="subtitle-lang-select"
+                      >
+                        {LANGUAGES.map(l => (
+                          <option key={l.code} value={l.code}>{l.label}</option>
+                        ))}
+                      </select>
+                    )}
+                    {generateMsg.text && (
+                      <span className={`subtitle-method-msg${generateMsg.error ? ' subtitle-method-msg--error' : ''}`}>
+                        {generateMsg.text}
+                      </span>
+                    )}
+                  </>
+                }
+              />
             </div>
 
             {/* ── Seção 3: Tabela ── */}
@@ -457,12 +454,12 @@ const SubtitleEditor = () => {
 
             {/* ── Seção 4: Navegação ── */}
             <div className="subtitle-nav">
-              <button className="btn btn-cancel subtitle-nav__back" onClick={() => navigate('/')}>
+              <Button variant="ghost" onClick={() => navigate('/')}>
                 ← Importar outro vídeo
-              </button>
-              <button className="btn btn-upload subtitle-nav__next" onClick={() => navigate(`/record/${videoId}`)}>
+              </Button>
+              <Button variant="advance" onClick={() => navigate(`/record/${videoId}`)}>
                 Iniciar Gravação 🎙
-              </button>
+              </Button>
             </div>
 
           </div>

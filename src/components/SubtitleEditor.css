@@ -1,29 +1,3 @@
-/* ─── Welcome ─────────────────────────────────────────── */
-.subtitle-welcome {
-  padding: 52px 40px 40px;
-  text-align: center;
-  border-bottom: 1px solid #ebebeb;
-}
-.subtitle-welcome__title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 6px;
-  letter-spacing: -0.5px;
-}
-.subtitle-welcome__subtitle {
-  font-size: 15px;
-  font-weight: 500;
-  color: #667eea;
-  margin-bottom: 20px;
-}
-.subtitle-welcome__desc {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.75;
-  max-width: 580px;
-  margin: 0 auto;
-}
 
 /* ─── Custom fullscreen button ───────────────────────── */
 .subtitle-fs-btn {
@@ -94,21 +68,7 @@
   z-index: 2;
 }
 
-/* ─── Methods layout ──────────────────────────────────── */
-.subtitle-methods {
-  display: flex;
-  align-items: stretch;
-  border: 1px solid #ebebeb;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.subtitle-method-panel {
-  flex: 1;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ─── Methods panel content ───────────────────────────── */
 .subtitle-method-panel__title {
   font-size: 16px;
   font-weight: 600;
@@ -137,28 +97,6 @@
   border-radius: 3px;
   font-size: 12px;
 }
-.subtitle-methods__divider {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32px 0;
-  width: 48px;
-  flex-shrink: 0;
-}
-.subtitle-methods__divider-line {
-  flex: 1;
-  width: 1px;
-  background: #ebebeb;
-}
-.subtitle-methods__divider-label {
-  padding: 14px 0;
-  color: #ccc;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
 /* ─── AI panel controls ───────────────────────────────── */
 .subtitle-translate-check {
   display: flex;
@@ -482,56 +420,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding: 24px 40px 32px;
+  padding: 24px 40px 52px;
   border-top: 1px solid #ebebeb;
 }
-.subtitle-nav__back {
-  background: transparent;
-  color: #999;
-  border: 1.5px solid #e0e0e0;
-  padding: 10px 20px;
-}
-.subtitle-nav__back:hover {
-  background: #f5f5f5;
-  color: #666;
-  border-color: #ccc;
-}
-.subtitle-nav__next {
-  flex: none;
-  background: #667eea;
-  padding: 10px 20px;
-  font-size: 14px;
-}
-.subtitle-nav__next:hover:not(:disabled) {
-  background: #5568d3;
-}
 
-/* ─── Responsive ──────────────────────────────────────── */
-@media (max-width: 720px) {
-  .subtitle-welcome {
-    padding: 36px 28px 28px;
-  }
-  .subtitle-welcome__title {
-    font-size: 24px;
-  }
-  .subtitle-methods {
-    flex-direction: column;
-  }
-  .subtitle-method-panel {
-    padding: 24px 20px;
-  }
-  .subtitle-methods__divider {
-    flex-direction: row;
-    width: auto;
-    padding: 0 24px;
-    height: 48px;
-  }
-  .subtitle-methods__divider-line {
-    flex: 1;
-    height: 1px;
-    width: auto;
-  }
-  .subtitle-methods__divider-label {
-    padding: 0 16px;
-  }
-}

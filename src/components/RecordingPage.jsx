@@ -5,6 +5,8 @@ import { setRecordedAudio } from '../store/recordingStore';
 import Header from './shared/Header';
 import VideoPlayer from './shared/VideoPlayer';
 import Footer from './shared/Footer';
+import Button from './shared/Button';
+import PageHeader from './shared/PageHeader';
 import './RecordingPage.css';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
@@ -200,14 +202,12 @@ const RecordingPage = () => {
       <main className="page-main">
         <div className="container">
 
-          <div className="recording-welcome">
-            <h2 className="recording-welcome__title">Gravar Dublagem</h2>
-            <p className="recording-welcome__subtitle">Passo 3 de 4</p>
-            <p className="recording-welcome__desc">
-              Aguarde o processamento do vídeo e em seguida grave sua dublagem
-              em sincronia com as legendas e o áudio original.
-            </p>
-          </div>
+          <PageHeader
+            title="Gravar Dublagem"
+            subtitle="Passo 3 de 4"
+            description="Aguarde o processamento do vídeo e em seguida grave sua dublagem
+              em sincronia com as legendas e o áudio original."
+          />
 
           <div className="content">
             <div className="section">
@@ -230,33 +230,28 @@ const RecordingPage = () => {
               />
 
               {!isRecording ? (
-                <button
-                  className="btn recording-btn-main"
+                <Button
+                  variant="advance"
+                  className="recording-btn-main"
                   onClick={startRecording}
                   disabled={isProcessing}
                 >
                   Iniciar Gravação 🎙
-                </button>
+                </Button>
               ) : (
                 <div className="recording-controls">
-                  <button
-                    className={`btn ${isPaused ? 'recording-btn-continue' : 'recording-btn-pause'}`}
+                  <Button
+                    variant={isPaused ? 'primary' : 'ghost'}
                     onClick={isPaused ? resumeRecording : pauseRecording}
                   >
                     {isPaused ? 'Continuar' : 'Pausar'}
-                  </button>
-                  <button
-                    className="btn recording-btn-restart"
-                    onClick={restartRecording}
-                  >
+                  </Button>
+                  <Button variant="outline" onClick={restartRecording}>
                     Recomeçar
-                  </button>
-                  <button
-                    className="btn recording-btn-finish"
-                    onClick={finalizeRecording}
-                  >
+                  </Button>
+                  <Button variant="success" onClick={finalizeRecording}>
                     Finalizar ✓
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -271,13 +266,13 @@ const RecordingPage = () => {
           </div>
 
           <div className="recording-nav">
-            <button
-              className="btn btn-cancel recording-nav__back"
+            <Button
+              variant="ghost"
               onClick={() => navigate(`/subtitle/${videoId}`)}
               disabled={isRecording}
             >
               ← Reeditar Legendas
-            </button>
+            </Button>
           </div>
 
         </div>
