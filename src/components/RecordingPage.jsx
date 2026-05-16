@@ -20,7 +20,6 @@ const RecordingPage = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   const videoRef = useRef(null);
   const statusCheckIntervalRef = useRef(null);
@@ -74,12 +73,8 @@ const RecordingPage = () => {
       } else if (is_complete) {
         isProcessingRef.current = false;
         setIsProcessing(false);
-        setProgress(100);
         showToast('success', 'Vídeo pronto! Você pode começar a gravar sua dublagem.');
         clearInterval(statusCheckIntervalRef.current);
-      } else if (is_processing) {
-        setProgress(50);
-        showToast('loading', 'Processando áudio...');
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
@@ -276,22 +271,26 @@ const RecordingPage = () => {
           <div className="content">
             <div className="section">
 
-              {isProcessing && (
-                <div className="processing-status">
-                  <div style={{ marginBottom: '10px' }}>⚙️ Preparando vídeo...</div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+              <div className="recording-player-wrapper">
+                <VideoPlayer
+                  ref={videoRef}
+                  src={downloadVideo(videoId)}
+                  muted
+                  subtitles={subtitles}
+                  showFsButton
+                />
+                {isProcessing && (
+                  <div className="recording-overlay">
+                    <div className="recording-overlay__card">
+                      <span className="recording-overlay__icon">⚙️</span>
+                      <p className="recording-overlay__text">
+                        Preparando vídeo<span className="recording-overlay__dots" /><br />
+                        aguarde enquanto processamos o áudio.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              <VideoPlayer
-                ref={videoRef}
-                src={downloadVideo(videoId)}
-                muted
-                subtitles={subtitles}
-                showFsButton
-              />
+                )}
+              </div>
 
               {!isRecording ? (
                 <>

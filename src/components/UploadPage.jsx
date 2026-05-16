@@ -171,6 +171,7 @@ const UploadPage = () => {
                       <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
                         MP4, MOV, AVI e outros formatos
                       </div>
+                      <div className="import-panel__limit">Máximo 10 MB</div>
                     </div>
                   </label>
                 </div>
@@ -191,6 +192,7 @@ const UploadPage = () => {
                   onChange={handleYoutubeUrlChange}
                   disabled={isImporting}
                 />
+                <p className="import-panel__limit">Máximo 2 minutos · Qualidade limitada a 1080p</p>
               </>
             }
             rightProps={{ style: { justifyContent: 'center', gap: '14px' } }}
