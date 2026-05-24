@@ -1,6 +1,6 @@
 // API service functions for interacting with the backend
 
-const API_BASE_URL = 'http://localhost:7860/api';
+const API_BASE_URL = 'https://dublee-image-558237336336.southamerica-east1.run.app/api';
 
 export const uploadVideo = async (file) => {
   const formData = new FormData();
