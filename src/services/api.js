@@ -1,6 +1,6 @@
 // API service functions for interacting with the backend
 
-const API_BASE_URL = 'https://dublee-image-558237336336.southamerica-east1.run.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'https://dublee-image-558237336336.southamerica-east1.run.app/api';
 
 export const uploadVideo = async (file) => {
   const formData = new FormData();
