@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mixAudio } from '../services/api';
+import { mixAudio, checkVoiceRemovalStatus as checkStatusAPI } from '../services/api';
 import { getRecordedAudio } from '../store/recordingStore';
 import Header from './shared/Header';
 import Footer from './shared/Footer';
@@ -14,34 +14,66 @@ const MixingPage = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const pollRef = useRef(null);
+  const lastMixRef = useRef(null);
 
   const [voiceVolume, setVoiceVolume] = useState(100);
   const [effectsVolume, setEffectsVolume] = useState(100);
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isWaitingDemucs, setIsWaitingDemucs] = useState(true);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [lastMixedVolumes, setLastMixedVolumes] = useState(null);
-
-  const lastMixRef = useRef(null);
 
   const hasUnsavedChanges = lastMixedVolumes === null
     || lastMixedVolumes.voice !== voiceVolume
     || lastMixedVolumes.effects !== effectsVolume;
 
-  const showOverlay = isProcessing || (lastMixedVolumes !== null && hasUnsavedChanges);
+  const showOverlay = isWaitingDemucs || isProcessing || (lastMixedVolumes !== null && hasUnsavedChanges);
 
+  // Polling: aguarda o Demucs terminar antes de liberar a mixagem
   useEffect(() => {
     if (!getRecordedAudio()) {
       showToast('error', 'Nenhuma gravação encontrada. Volte e grave novamente.');
       return;
     }
-    handleReload();
+
+    const check = async () => {
+      try {
+        const data = await checkStatusAPI(videoId);
+        const { is_complete, error } = data.data;
+        if (error) {
+          showToast('error', `Erro no processamento: ${error}`);
+          clearInterval(pollRef.current);
+          return;
+        }
+        if (is_complete) {
+          clearInterval(pollRef.current);
+          setIsWaitingDemucs(false);
+        }
+      } catch {
+        // ignora falhas de rede durante o polling
+      }
+    };
+
+    check();
+    pollRef.current = setInterval(check, 2000);
+
     return () => {
+      clearInterval(pollRef.current);
       if (lastMixRef.current?.url) URL.revokeObjectURL(lastMixRef.current.url);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Quando Demucs termina, dispara a mixagem automaticamente
+  useEffect(() => {
+    if (!isWaitingDemucs && getRecordedAudio()) {
+      handleReload();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWaitingDemucs]);
 
   const getMix = async () => {
     const audioBlob = getRecordedAudio();
@@ -123,7 +155,15 @@ const MixingPage = () => {
                 {showOverlay && (
                   <div className="mix-overlay">
                     <div className="mix-overlay__card">
-                      {isProcessing ? (
+                      {isWaitingDemucs ? (
+                        <>
+                          <span className="mix-overlay__icon mix-overlay__icon--spin">⚙️</span>
+                          <p className="mix-overlay__text">
+                            Finalizando processamento do vídeo…<br />
+                            Aguarde, quase pronto!
+                          </p>
+                        </>
+                      ) : isProcessing ? (
                         <>
                           <span className="mix-overlay__icon mix-overlay__icon--spin">⏳</span>
                           <p className="mix-overlay__text">
@@ -152,13 +192,13 @@ const MixingPage = () => {
                   label="🎙 Voz gravada"
                   value={voiceVolume}
                   onChange={setVoiceVolume}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isWaitingDemucs}
                 />
                 <VolumeSlider
                   label="🎵 Efeitos sonoros"
                   value={effectsVolume}
                   onChange={setEffectsVolume}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isWaitingDemucs}
                 />
               </div>
 
@@ -173,7 +213,7 @@ const MixingPage = () => {
                 <Button
                   variant="advance"
                   onClick={handleDownload}
-                  disabled={isProcessing || !previewUrl}
+                  disabled={isProcessing || isWaitingDemucs || !previewUrl}
                   style={{ marginLeft: 'auto' }}
                 >
                   ⬇ Baixar Vídeo

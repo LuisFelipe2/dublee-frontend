@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { checkVoiceRemovalStatus as checkStatusAPI, downloadVideo } from '../services/api';
+import { downloadVideo } from '../services/api';
 import { setRecordedAudio } from '../store/recordingStore';
 import Header from './shared/Header';
 import VideoPlayer from './shared/VideoPlayer';
@@ -17,13 +17,10 @@ const RecordingPage = () => {
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
-  const [isProcessing, setIsProcessing] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
   const videoRef = useRef(null);
-  const statusCheckIntervalRef = useRef(null);
-  const isProcessingRef = useRef(true);
   const isRecordingRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -43,13 +40,7 @@ const RecordingPage = () => {
   });
 
   useEffect(() => {
-    if (videoId) {
-      checkVoiceRemovalStatus();
-      statusCheckIntervalRef.current = setInterval(checkVoiceRemovalStatus, 2000);
-    }
-
     return () => {
-      if (statusCheckIntervalRef.current) clearInterval(statusCheckIntervalRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (monitorAudioRef.current) {
         monitorAudioRef.current.pause();
@@ -57,29 +48,7 @@ const RecordingPage = () => {
       }
       removeVideoListenersRef.current?.();
     };
-  }, [videoId]);
-
-  const checkVoiceRemovalStatus = async () => {
-    if (!videoId || !isProcessingRef.current) return;
-    try {
-      const data = await checkStatusAPI(videoId);
-      const { is_processing, is_complete, error } = data.data;
-
-      if (error) {
-        showToast('error', `Erro no processamento: ${error}`);
-        isProcessingRef.current = false;
-        setIsProcessing(false);
-        clearInterval(statusCheckIntervalRef.current);
-      } else if (is_complete) {
-        isProcessingRef.current = false;
-        setIsProcessing(false);
-        showToast('success', 'Vídeo pronto! Você pode começar a gravar sua dublagem.');
-        clearInterval(statusCheckIntervalRef.current);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
-    }
-  };
+  }, []);
 
   const stopRecording = () => {
     isRecordingRef.current = false;
@@ -248,12 +217,6 @@ const RecordingPage = () => {
     }
   };
 
-  const resetAll = () => {
-    if (statusCheckIntervalRef.current) clearInterval(statusCheckIntervalRef.current);
-    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
-    navigate('/');
-  };
-
   return (
     <>
       <Header />
@@ -264,8 +227,8 @@ const RecordingPage = () => {
           <PageHeader
             title="Gravar Dublagem"
             subtitle="Passo 3 de 4"
-            description="Aguarde o processamento do vídeo e em seguida grave sua dublagem
-              em sincronia com as legendas e o áudio original."
+            description="Grave sua dublagem em sincronia com as legendas e o áudio original.
+              O processamento do vídeo ocorre em paralelo e será concluído até a etapa de mixagem."
           />
 
           <div className="content">
@@ -279,47 +242,33 @@ const RecordingPage = () => {
                   subtitles={subtitles}
                   showFsButton
                 />
-                {isProcessing && (
-                  <div className="recording-overlay">
-                    <div className="recording-overlay__card">
-                      <span className="recording-overlay__icon">⚙️</span>
-                      <p className="recording-overlay__text">
-                        Preparando vídeo<span className="recording-overlay__dots" /><br />
-                        aguarde enquanto processamos o áudio.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {!isRecording ? (
                 <>
-                  {!isProcessing && (
-                    <div className="recording-options">
-                      <label className="recording-option">
-                        <input
-                          type="checkbox"
-                          checked={fullscreenOnStart}
-                          onChange={e => setFullscreenOnStart(e.target.checked)}
-                        />
-                        Gravar em tela cheia
-                      </label>
-                      <label className="recording-option">
-                        <input
-                          type="checkbox"
-                          checked={audioMonitor}
-                          onChange={e => setAudioMonitor(e.target.checked)}
-                        />
-                        Retorno do áudio
-                        <span className="recording-option__hint"> (use fones de ouvido)</span>
-                      </label>
-                    </div>
-                  )}
+                  <div className="recording-options">
+                    <label className="recording-option">
+                      <input
+                        type="checkbox"
+                        checked={fullscreenOnStart}
+                        onChange={e => setFullscreenOnStart(e.target.checked)}
+                      />
+                      Gravar em tela cheia
+                    </label>
+                    <label className="recording-option">
+                      <input
+                        type="checkbox"
+                        checked={audioMonitor}
+                        onChange={e => setAudioMonitor(e.target.checked)}
+                      />
+                      Retorno do áudio
+                      <span className="recording-option__hint"> (use fones de ouvido)</span>
+                    </label>
+                  </div>
                   <Button
                     variant="advance"
                     className="recording-btn-main"
                     onClick={startRecording}
-                    disabled={isProcessing}
                   >
                     Iniciar Gravação 🎙
                   </Button>
@@ -340,7 +289,6 @@ const RecordingPage = () => {
                   </Button>
                 </div>
               )}
-
 
             </div>
           </div>
