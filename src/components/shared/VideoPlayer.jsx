@@ -8,7 +8,7 @@ const formatChrono = (s) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
 };
 
-const VideoPlayer = forwardRef(({ src, youtubeId, muted = false, subtitles = [], showFsButton = false, showChrono = true }, ref) => {
+const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButton = false, showChrono = true }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const chronoRef = useRef(null);
@@ -102,20 +102,6 @@ const VideoPlayer = forwardRef(({ src, youtubeId, muted = false, subtitles = [],
       document.removeEventListener('webkitfullscreenchange', onWebkitFsChange);
     };
   }, []);
-
-  if (youtubeId) {
-    return (
-      <div className="video-player video-player--youtube">
-        <iframe
-          className="video-player__youtube"
-          src={`https://www.youtube.com/embed/${youtubeId}`}
-          title="Pré-visualização do YouTube"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    );
-  }
 
   return (
     <div ref={wrapperRef} className="video-player">

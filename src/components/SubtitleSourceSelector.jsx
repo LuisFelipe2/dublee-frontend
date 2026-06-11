@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { fetchYoutubeSubtitles, transcribeWithWhisper } from '../services/api';
+import { transcribeWithWhisper } from '../services/api';
 
 const SUBTITLES_KEY = (id) => `dublee-subtitles-${id}`;
-const SOURCE_KEY = (id) => `dublee-subtitle-source-${id}`;
 
 const btnBase = {
   padding: '5px 14px',
@@ -13,37 +12,19 @@ const btnBase = {
   fontWeight: 500,
   transition: 'background 0.15s',
 };
-const btnActive = { ...btnBase, background: '#667eea', color: '#fff' };
-const btnInactive = { ...btnBase, background: '#e8e8e8', color: '#555' };
 const btnReload = { ...btnBase, background: '#f0f0f0', color: '#333', border: '1px solid #ccc' };
 
 const SubtitleSourceSelector = ({ videoId, onSubtitlesLoaded }) => {
-  const [source, setSource] = useState(
-    () => localStorage.getItem(SOURCE_KEY(videoId)) || 'youtube'
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  const changeSource = (newSource) => {
-    setSource(newSource);
-    localStorage.setItem(SOURCE_KEY(videoId), newSource);
-    setMessage('');
-    setIsError(false);
-  };
-
   const reload = async () => {
     setIsLoading(true);
     setIsError(false);
-    setMessage(
-      source === 'youtube'
-        ? 'Buscando legendas do YouTube...'
-        : 'Transcrevendo com IA... (primeira vez pode levar mais tempo)'
-    );
+    setMessage('Transcrevendo com IA... (primeira vez pode levar mais tempo)');
     try {
-      const data = source === 'youtube'
-        ? await fetchYoutubeSubtitles(videoId)
-        : await transcribeWithWhisper(videoId);
+      const data = await transcribeWithWhisper(videoId);
       const subtitles = data.subtitles ?? [];
       localStorage.setItem(SUBTITLES_KEY(videoId), JSON.stringify(subtitles));
       onSubtitlesLoaded?.(subtitles);
@@ -72,25 +53,11 @@ const SubtitleSourceSelector = ({ videoId, onSubtitlesLoaded }) => {
           Legendas:
         </span>
         <button
-          style={source === 'youtube' ? btnActive : btnInactive}
-          onClick={() => changeSource('youtube')}
-          disabled={isLoading}
-        >
-          YouTube
-        </button>
-        <button
-          style={source === 'whisper' ? btnActive : btnInactive}
-          onClick={() => changeSource('whisper')}
-          disabled={isLoading}
-        >
-          IA (Whisper)
-        </button>
-        <button
           style={{ ...btnReload, opacity: isLoading ? 0.6 : 1 }}
           onClick={reload}
           disabled={isLoading}
         >
-          {isLoading ? '⏳' : '🔄'} Recarregar
+          {isLoading ? '⏳' : '🔄'} Transcrever com IA (Whisper)
         </button>
       </div>
       {message && (

@@ -69,15 +69,6 @@ export const deleteVideo = async (videoId) => {
   return data;
 };
 
-export const fetchYoutubeSubtitles = async (videoId) => {
-  const response = await fetch(`${API_BASE_URL}/videos/${videoId}/subtitles/youtube`, {
-    method: 'POST',
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Falha ao buscar legendas do YouTube');
-  return data.data;
-};
-
 export const transcribeWithWhisper = async (videoId) => {
   const response = await fetch(`${API_BASE_URL}/videos/${videoId}/subtitles/whisper`, {
     method: 'POST',
@@ -85,20 +76,6 @@ export const transcribeWithWhisper = async (videoId) => {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Falha na transcrição');
   return data.data;
-};
-
-export const importFromUrl = async (url) => {
-  const response = await fetch(`${API_BASE_URL}/videos/import-url`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Falha ao importar vídeo');
-  }
-  return data;
 };
 
 export const translateSubtitles = async (videoId, subtitles, targetLang) => {
