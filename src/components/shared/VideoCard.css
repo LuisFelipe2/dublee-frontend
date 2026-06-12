@@ -1,0 +1,143 @@
+/* ── Card base ─────────────────────────────────────────── */
+.video-card {
+  flex: 0 0 150px;
+  width: 150px;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-1);
+  border: 2px solid transparent;
+  user-select: none;
+  position: relative;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.22s ease, border-color 0.15s;
+}
+
+.video-card:focus { outline: none; }
+.video-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ghost: card in-row quando o portal está ativo */
+.video-card--ghost { opacity: 0.12; }
+
+/* floating: portal que sobrepõe tudo, escapa de overflow:hidden */
+.video-card--floating {
+  position: fixed;
+  z-index: var(--z-portal);
+  transform: scale(1.08) translateY(-8px);
+  transform-origin: center center;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.9);
+  animation: card-pop-in 0.18s ease forwards;
+}
+
+@keyframes card-pop-in {
+  from { transform: scale(1) translateY(0);        box-shadow: 0 6px 20px rgba(0,0,0,0.55); }
+  to   { transform: scale(1.08) translateY(-8px);  box-shadow: 0 24px 56px rgba(0,0,0,0.9); }
+}
+
+.video-card--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-border), 0 20px 48px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Thumbnail — portrait 2:3 ──────────────────────────── */
+.video-card__thumb-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 150%;
+  background: #111;
+  overflow: hidden;
+}
+
+.video-card__thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.video-card--floating .video-card__thumb { transform: scale(1.05); }
+
+.video-card__thumb-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #444;
+  background: var(--surface-1);
+}
+
+.video-card__duration {
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+  z-index: 2;
+}
+
+/* ── Hover overlay ─────────────────────────────────────── */
+.video-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  z-index: 1;
+}
+
+.video-card--floating .video-card__overlay,
+.video-card--selected .video-card__overlay {
+  opacity: 1;
+}
+
+.video-card__play-icon {
+  color: #fff;
+  font-size: 32px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
+  margin-top: -20px;
+}
+
+/* ── Info ──────────────────────────────────────────────── */
+.video-card__info { padding: 8px 10px 10px; }
+
+.video-card__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #eee;
+  line-height: 1.35;
+  margin-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.video-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.video-card__tag {
+  font-size: 9px;
+  font-weight: 500;
+  color: #999;
+  background: var(--surface-4);
+  border-radius: 3px;
+  padding: 2px 5px;
+  white-space: nowrap;
+  text-transform: lowercase;
+}

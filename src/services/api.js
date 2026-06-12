@@ -78,6 +78,32 @@ export const transcribeWithWhisper = async (videoId) => {
   return data.data;
 };
 
+export const getCatalog = async (search = '', tags = []) => {
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  tags.forEach(t => params.append('tags', t));
+  const response = await fetch(`${API_BASE_URL}/catalog?${params}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Falha ao carregar catálogo');
+  return data.data.items;
+};
+
+export const getCatalogPreview = async (catalogId) => {
+  const response = await fetch(`${API_BASE_URL}/catalog/${catalogId}/preview`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Falha ao gerar preview');
+  return data.data.previewUrl;
+};
+
+export const importCatalogVideo = async (catalogId) => {
+  const response = await fetch(`${API_BASE_URL}/catalog/${catalogId}/import`, {
+    method: 'POST',
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Falha ao importar vídeo do catálogo');
+  return data.data;
+};
+
 export const translateSubtitles = async (videoId, subtitles, targetLang) => {
   const response = await fetch(`${API_BASE_URL}/videos/${videoId}/subtitles/translate`, {
     method: 'POST',
