@@ -83,6 +83,12 @@
 }
 
 /* ─── Methods panel content ───────────────────────────── */
+.subtitle-method-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .subtitle-method-panel__title {
   font-size: 16px;
   font-weight: 600;
@@ -296,6 +302,9 @@
   color: #ccc;
   font-style: italic;
   font-size: 12px;
+}
+.subtitle-row--invalid {
+  background: rgba(220, 38, 38, 0.1);
 }
 .subtitle-cell__value--ooo {
   color: #888 !important;

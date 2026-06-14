@@ -3,11 +3,13 @@ import CatalogPage from './components/CatalogPage';
 import SubtitleEditor from './components/SubtitleEditor';
 import RecordingPage from './components/RecordingPage';
 import MixingPage from './components/MixingPage';
+import ScrollToTop from './components/shared/ScrollToTop';
 import './App.css';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="App">
         <Routes>
           <Route path="/"                  element={<CatalogPage />} />

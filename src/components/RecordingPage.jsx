@@ -29,6 +29,7 @@ const RecordingPage = () => {
 
   const [fullscreenOnStart, setFullscreenOnStart] = useState(false);
   const [audioMonitor, setAudioMonitor] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [subtitles] = useState(() => {
     try {
@@ -225,10 +226,9 @@ const RecordingPage = () => {
         <div className="container">
 
           <PageHeader
-            title="Gravar Dublagem"
-            subtitle="Passo 3 de 4"
-            description="Grave sua dublagem em sincronia com as legendas e o áudio original.
-              O processamento do vídeo ocorre em paralelo e será concluído até a etapa de mixagem."
+            title="Tela de gravação"
+            subtitle="Passo 2 de 2"
+            description="Clique para iniciar gravação e fale em sincronia com o vídeo."
           />
 
           <div className="content">
@@ -241,51 +241,87 @@ const RecordingPage = () => {
                   muted
                   subtitles={subtitles}
                   showFsButton
+                  disableControls
+                  badge={isRecording && (
+                    <div className={`rec-badge${isPaused ? ' rec-badge--paused' : ''}`}>
+                      <span className="rec-badge__dot" />
+                      {isPaused ? 'PAUSADO' : 'REC'}
+                    </div>
+                  )}
                 />
               </div>
 
               {!isRecording ? (
-                <>
-                  <div className="recording-options">
-                    <label className="recording-option">
-                      <input
-                        type="checkbox"
-                        checked={fullscreenOnStart}
-                        onChange={e => setFullscreenOnStart(e.target.checked)}
-                      />
-                      Gravar em tela cheia
-                    </label>
-                    <label className="recording-option">
-                      <input
-                        type="checkbox"
-                        checked={audioMonitor}
-                        onChange={e => setAudioMonitor(e.target.checked)}
-                      />
-                      Retorno do áudio
-                      <span className="recording-option__hint"> (use fones de ouvido)</span>
-                    </label>
+                <div className="recording-start-area">
+                  <div className="recording-start-row">
+                    <Button variant="advance" onClick={startRecording}>
+                      <span className="rec-btn-content">
+                        <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="10" fill="#ff3b30"/></svg>
+                        Iniciar Gravação
+                      </span>
+                    </Button>
+
+                    <button
+                      className={`recording-settings-btn${isSettingsOpen ? ' recording-settings-btn--open' : ''}`}
+                      onClick={() => setIsSettingsOpen(o => !o)}
+                      aria-label="Preferências de gravação"
+                      title="Preferências"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                      </svg>
+                    </button>
                   </div>
-                  <Button
-                    variant="advance"
-                    className="recording-btn-main"
-                    onClick={startRecording}
-                  >
-                    Iniciar Gravação 🎙
-                  </Button>
-                </>
+
+                  {isSettingsOpen && (
+                    <div className="recording-settings-panel">
+                      <label className="recording-option">
+                        <input
+                          type="checkbox"
+                          checked={fullscreenOnStart}
+                          onChange={e => setFullscreenOnStart(e.target.checked)}
+                        />
+                        Gravar em tela cheia
+                      </label>
+                      <label className="recording-option">
+                        <input
+                          type="checkbox"
+                          checked={audioMonitor}
+                          onChange={e => setAudioMonitor(e.target.checked)}
+                        />
+                        Retorno do áudio
+                        <span className="recording-option__hint"> (use fones de ouvido)</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="recording-controls">
                   <Button
                     variant={isPaused ? 'primary' : 'ghost'}
                     onClick={isPaused ? resumeRecording : pauseRecording}
                   >
-                    {isPaused ? 'Continuar' : 'Pausar'}
+                    <span className="rec-btn-content">
+                      {isPaused ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><polygon points="5,3 19,12 5,21"/></svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                      )}
+                      {isPaused ? 'Continuar' : 'Pausar'}
+                    </span>
+                  </Button>
+                  <Button variant="danger" onClick={finalizeRecording}>
+                    <span className="rec-btn-content">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                      Finalizar
+                    </span>
                   </Button>
                   <Button variant="outline" onClick={restartRecording}>
-                    Recomeçar
-                  </Button>
-                  <Button variant="success" onClick={finalizeRecording}>
-                    Finalizar ✓
+                    <span className="rec-btn-content">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.32"/></svg>
+                      Recomeçar
+                    </span>
                   </Button>
                 </div>
               )}
@@ -299,7 +335,7 @@ const RecordingPage = () => {
               onClick={() => navigate(`/subtitle/${videoId}`)}
               disabled={isRecording}
             >
-              ← Reeditar Legendas
+              Voltar
             </Button>
           </div>
 

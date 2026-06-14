@@ -66,8 +66,8 @@
 
 /* ─── danger (ação destrutiva / download final) ──────── */
 .btn--danger {
-  background: #555;
+  background: #dc2626;
   color: white;
 }
-.btn--danger:hover:not(:disabled) { background: #333; }
+.btn--danger:hover:not(:disabled) { background: #b91c1c; }
 .btn--danger:disabled { background: #ccc; }

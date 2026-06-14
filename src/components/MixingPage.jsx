@@ -136,10 +136,8 @@ const MixingPage = () => {
         <div className="container">
 
           <PageHeader
-            title="Mixagem Final"
-            subtitle="Passo 4 de 4"
-            description="Ajuste os volumes da sua voz e do áudio de fundo, pré-visualize o resultado
-              e baixe o vídeo dublado em alta qualidade."
+            title="Tudo pronto!"
+            description="Ajuste os volumes caso necessário. Já pode baixar seu vídeo dublado."
           />
 
           <div className="content">
@@ -208,7 +206,7 @@ const MixingPage = () => {
                   onClick={() => navigate(`/record/${videoId}`)}
                   disabled={isProcessing}
                 >
-                  Regravar Voz
+                  Voltar
                 </Button>
                 <Button
                   variant="advance"

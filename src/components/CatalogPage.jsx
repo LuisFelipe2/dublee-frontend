@@ -124,7 +124,7 @@ const CatalogPage = () => {
         localStorage.setItem(`dublee-subtitles-${data.id}`, JSON.stringify(data.subtitles));
       }
       showToast('success', 'Cena importada! Redirecionando...');
-      setTimeout(() => navigate(`/subtitle/${data.id}`), 1500);
+      setTimeout(() => navigate(`/subtitle/${data.id}?from=catalog`), 1500);
     } catch (err) {
       showToast('error', err.message);
       setIsImporting(false);
@@ -176,26 +176,29 @@ const CatalogPage = () => {
         <div className="home-container">
 
           <div className="home-hero">
-            <h1 className="home-hero__title">Bem-vindo ao Dublee</h1>
-            <p className="home-hero__subtitle">Sua plataforma de DUBLAGEM de vídeos</p>
+            <h1 className="home-hero__title">O app de DUBLAGEM mais RÁPIDO da internet</h1>
+            <p className="home-hero__subtitle">Treine dublagem de forma rápida e se profissionalize</p>
             <p className="home-hero__desc">
               Escolha uma cena do catálogo ou importe seu próprio vídeo, Tudo pronto para
-              gravar a sua dublagem e baixar o resultado.
+              gravar a sua dublagem!
             </p>
           </div>
 
           <section className="catalog-section">
-            <h2 className="section-title">🎬 Escolha uma cena</h2>
-
             <div className="catalog-filters">
               <div className="catalog-filter-row">
-                <input
-                  className="catalog-search"
-                  type="search"
-                  placeholder="Buscar cenas..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
+                <div className="catalog-search-wrapper">
+                  <svg className="catalog-search-icon" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <circle cx="9" cy="9" r="6"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
+                  </svg>
+                  <input
+                    className="catalog-search"
+                    type="search"
+                    placeholder="Buscar cenas..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
 
                 {allTags.length > 0 && (
                   <button
@@ -317,7 +320,7 @@ const CatalogPage = () => {
                     onClick={handleImport}
                     disabled={isImporting || isLoadingPreview || !previewUrl}
                   >
-                    {isImporting ? 'Importando...' : 'Começar Dublagem'}
+                    {isImporting ? 'Selecionando...' : 'Selecionar esta cena'}
                   </Button>
                 </div>
               </div>
