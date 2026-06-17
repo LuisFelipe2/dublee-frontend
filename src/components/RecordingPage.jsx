@@ -234,7 +234,7 @@ const RecordingPage = () => {
           <div className="content">
             <div className="section">
 
-              <div className="recording-player-wrapper">
+              <div className="player-wrapper">
                 <VideoPlayer
                   ref={videoRef}
                   src={downloadVideo(videoId)}
@@ -329,7 +329,7 @@ const RecordingPage = () => {
             </div>
           </div>
 
-          <div className="recording-nav">
+          <div className="page-nav">
             <Button
               variant="ghost"
               onClick={() => navigate(`/subtitle/${videoId}`)}

@@ -1,0 +1,70 @@
+/*
+ * margin-top negativo + padding-top positivo criam área invisível
+ * acima dos cards para que o portal de hover não seja cortado.
+ */
+.catalog-row-outer {
+  position: relative;
+  overflow: hidden;
+  margin: -14px var(--content-px) 0;
+  padding-top: 14px;
+}
+
+.catalog-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 0 24px;
+  scrollbar-width: none;
+}
+
+.catalog-row::-webkit-scrollbar { display: none; }
+
+.catalog-empty {
+  padding: 48px var(--content-px);
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+}
+
+/* ── Scroll buttons ──────────────────────────────────────── */
+.catalog-scroll-btn {
+  position: absolute;
+  top: 14px;
+  bottom: 24px;
+  width: var(--scroll-btn-w);
+  z-index: var(--z-scroll);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: opacity 0.2s;
+  opacity: 0.85;
+}
+
+.catalog-scroll-btn:hover { opacity: 1; }
+
+.catalog-scroll-btn--left {
+  left: 0;
+  background: linear-gradient(to right, rgba(20, 20, 20, 0.9) 30%, transparent 100%);
+  justify-content: flex-start;
+  padding-left: 10px;
+}
+
+.catalog-scroll-btn--right {
+  right: 0;
+  background: linear-gradient(to left, rgba(20, 20, 20, 0.9) 30%, transparent 100%);
+  justify-content: flex-end;
+  padding-right: 10px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .catalog-row-outer {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .catalog-row { padding-bottom: 20px; }
+}

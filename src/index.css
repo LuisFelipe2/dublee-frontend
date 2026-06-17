@@ -1,3 +1,29 @@
+/* ── Design tokens ───────────────────────────────────────── */
+:root {
+  --accent:        #667eea;
+  --accent-subtle: rgba(102, 126, 234, 0.15);
+  --accent-border: rgba(102, 126, 234, 0.35);
+
+  --content-px:    48px;
+  --scroll-btn-w:  75px;
+
+  --bg-app:      #141414;
+  --surface-1:   #1a1a1a;
+  --surface-2:   #1c1c1c;
+  --surface-3:   #1e1e1e;
+  --surface-4:   #252525;
+
+  --border:        #2e2e2e;
+  --border-mid:    #333;
+  --border-subtle: #282828;
+  --border-faint:  #222;
+  --border-div:    #2a2a2a;
+
+  --z-filter: 50;
+  --z-scroll: 20;
+  --z-portal: 9999;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -120,12 +146,32 @@ body {
   margin-top: 20px;
 }
 
+/* ── Shared structural utilities ─────────────────────────── */
+.player-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 40px 52px;
+  border-top: 1px solid #ebebeb;
+}
+
+.page-nav--end { justify-content: flex-end; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 
 video {
   width: 100%;
   border-radius: 8px;
   background: #000;
-  margin-bottom: 15px;
 }
 
 .chronometer {

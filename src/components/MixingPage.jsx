@@ -143,7 +143,7 @@ const MixingPage = () => {
           <div className="content">
             <div className="section">
 
-              <div className="mix-player-wrapper">
+              <div className="player-wrapper">
                 <VideoPlayer
                   ref={videoRef}
                   src={previewUrl}

@@ -496,7 +496,7 @@ const SubtitleEditor = () => {
             </div>
 
             {/* ── Seção 4: Navegação ── */}
-            <div className="subtitle-nav">
+            <div className="page-nav page-nav--end">
               <Button variant="ghost" onClick={() => navigate('/')}>
                 Voltar
               </Button>
