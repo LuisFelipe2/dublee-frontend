@@ -36,7 +36,7 @@
 }
 
 .section-divider span {
-  color: #555;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 

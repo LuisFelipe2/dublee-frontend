@@ -22,7 +22,7 @@
 .catalog-empty {
   padding: 48px var(--content-px);
   text-align: center;
-  color: #555;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--white);
   transition: opacity 0.2s;
   opacity: 0.85;
 }

@@ -8,7 +8,7 @@
 }
 
 .split-layout--bordered {
-  border: 1px solid #ebebeb;
+  border: 1px solid var(--surface-muted);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -47,12 +47,12 @@
 .split-divider__line {
   flex: 1;
   width: 1px;
-  background: #ebebeb;
+  background: var(--surface-muted);
 }
 
 .split-divider__label {
   padding: 14px 0;
-  color: #ccc;
+  color: var(--text-disabled);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;

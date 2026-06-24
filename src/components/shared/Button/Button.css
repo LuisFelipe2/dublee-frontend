@@ -15,16 +15,16 @@
 
 /* ─── primary ─────────────────────────────────────────── */
 .btn--primary {
-  background: #333;
-  color: white;
+  background: var(--text-primary);
+  color: var(--white);
 }
 .btn--primary:hover:not(:disabled) { background: #1a1a1a; }
-.btn--primary:disabled { background: #ccc; }
+.btn--primary:disabled { background: var(--text-disabled); }
 
 /* ─── advance (CTA que avança o fluxo) ───────────────── */
 .btn--advance {
-  background: #333;
-  color: white;
+  background: var(--text-primary);
+  color: var(--white);
   padding: 16px 56px;
   font-size: 15px;
   font-weight: 600;
@@ -32,42 +32,42 @@
   border-radius: 8px;
 }
 .btn--advance:hover:not(:disabled) { background: #1a1a1a; }
-.btn--advance:disabled { background: #ccc; }
+.btn--advance:disabled { background: var(--text-disabled); }
 
 /* ─── ghost (voltar / cancelar) ──────────────────────── */
 .btn--ghost {
   background: transparent;
-  color: #999;
-  border: 1.5px solid #e0e0e0;
+  color: var(--text-placeholder);
+  border: 1.5px solid var(--border-default);
 }
 .btn--ghost:hover:not(:disabled) {
-  background: #f5f5f5;
-  color: #666;
-  border-color: #ccc;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border-color: var(--text-disabled);
 }
 
 /* ─── outline (secundário com borda) ─────────────────── */
 .btn--outline {
-  background: #f5f5f5;
-  color: #555;
-  border: 1.5px solid #e0e0e0;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-default);
 }
 .btn--outline:hover:not(:disabled) {
   background: #eaeaea;
-  border-color: #bbb;
+  border-color: var(--text-hint);
 }
 
 /* ─── success (finalizar / confirmar) ────────────────── */
 .btn--success {
-  background: #333;
-  color: white;
+  background: var(--text-primary);
+  color: var(--white);
 }
 .btn--success:hover:not(:disabled) { background: #1a1a1a; }
 
 /* ─── danger (ação destrutiva / download final) ──────── */
 .btn--danger {
   background: #dc2626;
-  color: white;
+  color: var(--white);
 }
 .btn--danger:hover:not(:disabled) { background: #b91c1c; }
-.btn--danger:disabled { background: #ccc; }
+.btn--danger:disabled { background: var(--text-disabled); }

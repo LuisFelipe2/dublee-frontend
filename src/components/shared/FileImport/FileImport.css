@@ -5,7 +5,7 @@
 .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: #fff;
+  color: var(--white);
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -14,12 +14,12 @@
 
 .upload-label-content { text-align: center; }
 .upload-label-icon { font-size: 36px; margin-bottom: 12px; }
-.upload-label-hint { color: #ccc; font-size: 14px; }
-.upload-label-formats { font-size: 12px; color: #666; margin-top: 8px; }
+.upload-label-hint { color: var(--text-disabled); font-size: 14px; }
+.upload-label-formats { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
 .upload-limit {
   font-size: 11px;
-  color: #555;
+  color: var(--text-secondary);
   margin-top: 10px;
   padding: 4px 10px;
   background: var(--border-faint);

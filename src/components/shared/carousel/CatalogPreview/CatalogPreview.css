@@ -17,13 +17,13 @@
 .catalog-preview__title {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--white);
 }
 
 .catalog-preview__close {
   background: none;
   border: none;
-  color: #666;
+  color: var(--text-muted);
   font-size: 17px;
   cursor: pointer;
   padding: 0 4px;
@@ -31,14 +31,14 @@
   transition: color 0.15s;
 }
 
-.catalog-preview__close:hover { color: #fff; }
+.catalog-preview__close:hover { color: var(--white); }
 
 .catalog-preview__player { padding: 20px; }
 
 .catalog-preview__loading {
   text-align: center;
   padding: 36px;
-  color: #555;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 

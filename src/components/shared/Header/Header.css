@@ -1,7 +1,7 @@
 .app-header {
   width: 100%;
   background: rgba(0, 0, 0, 0.25);
-  color: white;
+  color: var(--white);
   padding: 16px 40px;
   display: flex;
   align-items: center;

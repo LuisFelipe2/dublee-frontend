@@ -7,7 +7,7 @@
 .home-hero__title {
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--white);
   margin-bottom: 6px;
   letter-spacing: -0.4px;
 }
@@ -15,13 +15,13 @@
 .home-hero__subtitle {
   font-size: 15px;
   font-weight: 500;
-  color: #888;
+  color: var(--text-subtle);
   margin-bottom: 16px;
 }
 
 .home-hero__desc {
   font-size: 14px;
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.75;
   max-width: 560px;
   margin: 0 auto;

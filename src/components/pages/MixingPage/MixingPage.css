@@ -36,7 +36,7 @@
 
 .mix-overlay__text {
   font-size: 14px;
-  color: #444;
+  color: var(--text-body);
   line-height: 1.65;
   margin: 0;
 }
@@ -58,19 +58,19 @@
 
 .mix-slider__label {
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .mix-slider__value {
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .mix-slider__input {
   width: 100%;
-  accent-color: #333;
+  accent-color: var(--text-primary);
   cursor: pointer;
   display: block;
 }
@@ -84,7 +84,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #aaa;
+  color: var(--text-ghost);
   margin-top: 2px;
 }
 

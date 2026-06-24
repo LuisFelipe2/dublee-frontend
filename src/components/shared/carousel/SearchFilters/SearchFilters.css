@@ -23,7 +23,7 @@
 .catalog-search-icon {
   position: absolute;
   left: 13px;
-  color: #555;
+  color: var(--text-secondary);
   pointer-events: none;
   transition: color 0.2s;
   flex-shrink: 0;
@@ -64,7 +64,7 @@
   background: var(--surface-3);
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  color: #888;
+  color: var(--text-subtle);
   cursor: pointer;
   font-size: 13px;
   white-space: nowrap;
@@ -79,7 +79,7 @@
 
 .filter-btn__count {
   background: var(--accent);
-  color: #fff;
+  color: var(--white);
   border-radius: 10px;
   font-size: 10px;
   font-weight: 700;
@@ -118,7 +118,7 @@
   border-radius: 20px;
   border: 1.5px solid var(--border-mid);
   background: transparent;
-  color: #999;
+  color: var(--text-placeholder);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
@@ -126,12 +126,12 @@
   transition: all 0.15s;
 }
 
-.filter-option:hover { border-color: var(--accent); color: #fff; }
+.filter-option:hover { border-color: var(--accent); color: var(--white); }
 
 .filter-option--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--white);
 }
 
 .filter-option__check { font-size: 10px; }

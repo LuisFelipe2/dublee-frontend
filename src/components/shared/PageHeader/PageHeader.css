@@ -1,13 +1,13 @@
 .page-header {
   padding: 52px 40px 40px;
   text-align: center;
-  border-bottom: 1px solid #ebebeb;
+  border-bottom: 1px solid var(--surface-muted);
 }
 
 .page-header__title {
   font-size: 30px;
   font-weight: 700;
-  color: #111;
+  color: var(--text-primary);
   margin-bottom: 6px;
   letter-spacing: -0.5px;
 }
@@ -15,13 +15,13 @@
 .page-header__subtitle {
   font-size: 15px;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
   margin-bottom: 20px;
 }
 
 .page-header__desc {
   font-size: 14px;
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.75;
   max-width: 580px;
   margin: 0 auto;
@@ -29,7 +29,7 @@
 
 .page-header__cta {
   font-size: 13px;
-  color: #aaa;
+  color: var(--text-ghost);
   font-weight: 500;
   margin-top: 20px;
 }
