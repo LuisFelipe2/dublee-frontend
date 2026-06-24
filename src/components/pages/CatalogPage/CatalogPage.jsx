@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCatalog, importCatalogVideo, uploadVideo as uploadVideoAPI } from '../services/api';
-import Header from './shared/Header';
-import Footer from './shared/Footer';
-import Toast from './shared/Toast';
-import HomeHero from './HomeHero';
-import CatalogCarousel from './CatalogCarousel';
-import FileImport from './FileImport';
+import { getCatalog, importCatalogVideo, uploadVideo as uploadVideoAPI } from '../../../services/api';
+import Header from '../../shared/Header/Header';
+import Footer from '../../shared/Footer/Footer';
+import Toast from '../../shared/Toast/Toast';
+import HomeHero from '../../shared/HomeHero/HomeHero';
+import CatalogCarousel from '../../shared/carousel/CatalogCarousel/CatalogCarousel';
+import FileImport from '../../shared/FileImport/FileImport';
 import './CatalogPage.css';
 
 const CatalogPage = () => {

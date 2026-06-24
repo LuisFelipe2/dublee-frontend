@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import CatalogPage from './components/CatalogPage';
-import SubtitleEditor from './components/SubtitleEditor';
-import RecordingPage from './components/RecordingPage';
-import MixingPage from './components/MixingPage';
-import ScrollToTop from './components/shared/ScrollToTop';
+import CatalogPage from './components/pages/CatalogPage/CatalogPage';
+import SubtitleEditor from './components/pages/SubtitleEditor/SubtitleEditor';
+import RecordingPage from './components/pages/RecordingPage/RecordingPage';
+import MixingPage from './components/pages/MixingPage/MixingPage';
+import ScrollToTop from './components/shared/ScrollToTop/ScrollToTop';
 import './App.css';
 
 function App() {

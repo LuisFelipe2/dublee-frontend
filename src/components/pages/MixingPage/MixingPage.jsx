@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mixAudio, checkVoiceRemovalStatus as checkStatusAPI } from '../services/api';
-import { getRecordedAudio } from '../store/recordingStore';
-import Header from './shared/Header';
-import Footer from './shared/Footer';
-import PageHeader from './shared/PageHeader';
-import VideoPlayer from './shared/VideoPlayer';
-import Button from './shared/Button';
-import Toast from './shared/Toast';
+import { mixAudio, checkVoiceRemovalStatus as checkStatusAPI } from '../../../services/api';
+import { getRecordedAudio } from '../../../store/recordingStore';
+import Header from '../../shared/Header/Header';
+import Footer from '../../shared/Footer/Footer';
+import PageHeader from '../../shared/PageHeader/PageHeader';
+import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
+import Button from '../../shared/Button/Button';
+import Toast from '../../shared/Toast/Toast';
 import './MixingPage.css';
 
 const MixingPage = () => {

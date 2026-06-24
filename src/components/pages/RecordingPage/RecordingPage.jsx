@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { downloadVideo } from '../services/api';
-import { setRecordedAudio } from '../store/recordingStore';
-import Header from './shared/Header';
-import VideoPlayer from './shared/VideoPlayer';
-import Footer from './shared/Footer';
-import Button from './shared/Button';
-import PageHeader from './shared/PageHeader';
-import Toast from './shared/Toast';
+import { downloadVideo } from '../../../services/api';
+import { setRecordedAudio } from '../../../store/recordingStore';
+import Header from '../../shared/Header/Header';
+import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
+import Footer from '../../shared/Footer/Footer';
+import Button from '../../shared/Button/Button';
+import PageHeader from '../../shared/PageHeader/PageHeader';
+import Toast from '../../shared/Toast/Toast';
 import './RecordingPage.css';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;

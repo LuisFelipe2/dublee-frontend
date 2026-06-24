@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
-import VideoPlayer from './shared/VideoPlayer';
-import Button from './shared/Button';
+import VideoPlayer from '../../VideoPlayer/VideoPlayer';
+import Button from '../../Button/Button';
 import './CatalogPreview.css';
 
 const CatalogPreview = ({ selected, previewUrl, isLoadingPreview, isImporting, onClose, onImport }) => {

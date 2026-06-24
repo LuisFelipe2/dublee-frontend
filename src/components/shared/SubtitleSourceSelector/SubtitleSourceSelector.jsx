@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { transcribeWithWhisper } from '../services/api';
+import { transcribeWithWhisper } from '../../../services/api';
 
 const SUBTITLES_KEY = (id) => `dublee-subtitles-${id}`;
 

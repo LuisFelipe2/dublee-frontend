@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { getCatalogPreview } from '../services/api';
-import SearchFilters from './SearchFilters';
-import CatalogRow from './CatalogRow';
-import CatalogPreview from './CatalogPreview';
+import { getCatalogPreview } from '../../../../services/api';
+import SearchFilters from '../SearchFilters/SearchFilters';
+import CatalogRow from '../CatalogRow/CatalogRow';
+import CatalogPreview from '../CatalogPreview/CatalogPreview';
 import './CatalogCarousel.css';
 
 const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => {

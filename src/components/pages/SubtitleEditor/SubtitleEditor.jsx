@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../services/api';
-import Header from './shared/Header';
-import Footer from './shared/Footer';
-import VideoPlayer from './shared/VideoPlayer';
-import Button from './shared/Button';
-import SplitLayout from './shared/SplitLayout';
-import PageHeader from './shared/PageHeader';
-import Toast from './shared/Toast';
+import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../../../services/api';
+import Header from '../../shared/Header/Header';
+import Footer from '../../shared/Footer/Footer';
+import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
+import Button from '../../shared/Button/Button';
+import SplitLayout from '../../shared/SplitLayout/SplitLayout';
+import PageHeader from '../../shared/PageHeader/PageHeader';
+import Toast from '../../shared/Toast/Toast';
 import './SubtitleEditor.css';
 
 const LANGUAGES = [

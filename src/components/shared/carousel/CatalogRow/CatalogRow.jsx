@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import VideoCard from './shared/VideoCard';
+import VideoCard from '../../VideoCard/VideoCard';
 import './CatalogRow.css';
 
 const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
