@@ -23,7 +23,13 @@
 
 @media (max-width: 768px) {
   .catalog-preview {
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .catalog-preview__player {
+    padding: 0;
+  }
+  .catalog-preview__actions {
+    padding: 16px 0;
   }
 }
