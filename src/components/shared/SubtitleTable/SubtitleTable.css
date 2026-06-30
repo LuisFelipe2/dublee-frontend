@@ -214,17 +214,8 @@
   background: var(--surface-subtle);
 }
 .subtitle-row--add__icon {
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--text-primary);
-  border-radius: 50%;
-  font-size: 18px;
-  line-height: 1;
   flex-shrink: 0;
-  padding-bottom: 1px;
+  color: var(--text-primary);
 }
 .subtitle-row--add__label {
   line-height: 1;

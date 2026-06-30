@@ -11,27 +11,6 @@
   margin-bottom: 0;
 }
 
-/* ─── Chronometer ─────────────────────────────────────── */
-.video-player__chrono {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: var(--white);
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 18px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  padding: 4px 14px;
-  border-radius: 4px;
-  pointer-events: none;
-  user-select: none;
-  z-index: 2;
-}
-
 /* ─── Subtitle (WebVTT via <track>) ───────────────────── */
 ::cue {
   background-color: rgba(0, 0, 0, 0.78);
@@ -57,10 +36,9 @@
   border-radius: 0;
   margin-bottom: 0;
 }
-.video-player:fullscreen .video-player__chrono,
-.video-player:-webkit-full-screen .video-player__chrono {
-  z-index: 10;
+.video-player:fullscreen video::cue,
+.video-player:-webkit-full-screen video::cue,
+video:fullscreen::cue,
+video:-webkit-full-screen::cue {
   font-size: 32px;
-  padding: 6px 20px;
-  letter-spacing: 3px;
 }

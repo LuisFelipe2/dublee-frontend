@@ -11,10 +11,11 @@ const formatChrono = (s) => {
 const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButton = false, showChrono = true, disableControls = false, badge = null }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
-  const chronoRef = useRef(null);
   const fsPendingRef = useRef(false);
   const rafRef = useRef(null);
   const textTrackRef = useRef(null);
+  const chronoCueRef = useRef(null);
+  const chronoTrackRef = useRef(null);
   const [isFs, setIsFs] = useState(false);
 
   useImperativeHandle(ref, () => videoRef.current);
@@ -37,34 +38,59 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
     video.src = src;
   }, [src]);
 
-  // Chronometer
+  // Chronometer track
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !showChrono) return;
+    const track = video.addTextTrack('subtitles', 'Chrono', 'pt');
+    track.mode = 'showing';
+    const cue = new VTTCue(0, 999999, formatChrono(0));
+    cue.line = 0;
+    cue.position = 50;
+    cue.align = 'center';
+    track.addCue(cue);
+    chronoCueRef.current = cue;
+    chronoTrackRef.current = track;
+    return () => {
+      track.mode = 'hidden';
+      chronoCueRef.current = null;
+      chronoTrackRef.current = null;
+    };
+  }, [showChrono]);
+
+  // Chronometer RAF
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const tick = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+      if (chronoCueRef.current) chronoCueRef.current.text = formatChrono(video.currentTime);
       rafRef.current = requestAnimationFrame(tick);
     };
     const startTick = () => { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); };
     const stopTick = () => {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+      if (chronoCueRef.current) chronoCueRef.current.text = formatChrono(video.currentTime);
     };
-    const onSeeked = () => {
-      if (chronoRef.current) chronoRef.current.textContent = formatChrono(video.currentTime);
+    const refreshChrono = () => {
+      const cue = chronoCueRef.current;
+      const track = chronoTrackRef.current;
+      if (!cue || !track) return;
+      cue.text = formatChrono(video.currentTime);
+      track.mode = 'hidden';
+      track.mode = 'showing';
     };
 
     video.addEventListener('play', startTick);
     video.addEventListener('pause', stopTick);
     video.addEventListener('ended', stopTick);
-    video.addEventListener('seeked', onSeeked);
+    video.addEventListener('seeked', refreshChrono);
     return () => {
       video.removeEventListener('play', startTick);
       video.removeEventListener('pause', stopTick);
       video.removeEventListener('ended', stopTick);
-      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('seeked', refreshChrono);
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
@@ -131,7 +157,6 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
         muted={muted}
       />
       {badge}
-      {showChrono && <div ref={chronoRef} className="video-player__chrono">00:00:000</div>}
     </div>
   );
 });
