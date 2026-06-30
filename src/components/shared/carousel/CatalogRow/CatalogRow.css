@@ -38,21 +38,21 @@
   justify-content: center;
   color: var(--white);
   transition: opacity 0.2s;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
 .catalog-scroll-btn:hover { opacity: 1; }
 
 .catalog-scroll-btn--left {
   left: 0;
-  background: linear-gradient(to right, rgba(20, 20, 20, 0.9) 30%, transparent 100%);
+  background: linear-gradient(to right, rgba(20, 20, 20, 1) 30%, rgba(20, 20, 20, 0.9) 80%, transparent 100%);
   justify-content: flex-start;
   padding-left: 10px;
 }
 
 .catalog-scroll-btn--right {
   right: 0;
-  background: linear-gradient(to left, rgba(20, 20, 20, 0.9) 30%, transparent 100%);
+  background: linear-gradient(to left, rgba(20, 20, 20, 1) 30%, rgba(20, 20, 20, 0.9) 80%, transparent 100%);
   justify-content: flex-end;
   padding-right: 10px;
 }

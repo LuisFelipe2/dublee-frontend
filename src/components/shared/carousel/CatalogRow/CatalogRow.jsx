@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import VideoCard from '../../VideoCard/VideoCard';
+import CatalogSkeleton from '../CatalogSkeleton/CatalogSkeleton';
 import './CatalogRow.css';
 
 const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
@@ -27,7 +28,7 @@ const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
     rowRef.current?.scrollBy({ left: dir * 3 * 162, behavior: 'smooth' });
   }, []);
 
-  if (isLoading) return <div className="catalog-empty">Carregando catálogo...</div>;
+  if (isLoading) return <CatalogSkeleton />;
   if (items.length === 0) return <div className="catalog-empty">Nenhuma cena encontrada.</div>;
 
   return (

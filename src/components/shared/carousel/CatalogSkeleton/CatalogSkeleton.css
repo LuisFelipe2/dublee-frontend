@@ -1,0 +1,173 @@
+/* ── Per-element shimmer: luz estreita viajando de fora-esq a fora-dir ─── */
+/* background-color = base; background-image = faixa de luz transparente.   */
+/* linear + extremos idênticos = loop verdadeiramente sem fim.               */
+.skeleton-thumb,
+.skeleton-line,
+.skeleton-tag,
+.skeleton-badge {
+  background-color: var(--surface-3);
+  background-image: linear-gradient(
+    90deg,
+    transparent           0%,
+    rgba(255,255,255,0.06) 50%,
+    transparent           100%
+  );
+  background-size: 60px 100%;
+  background-repeat: no-repeat;
+  background-position: -60px 0;
+  animation: sk-shimmer 2.8s linear infinite;
+}
+
+@keyframes sk-shimmer {
+  to { background-position: calc(100% + 60px) 0; }
+}
+
+/* ── Spotlight unificado: varre toda a fileira de cards ─────────────────── */
+/* Mesma técnica: faixa larga parte de fora-esq e sai por fora-dir.         */
+.catalog-skeleton-row {
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-skeleton-row::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 24px 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent            0%,
+    rgba(255,255,255,0.04) 50%,
+    transparent            100%
+  );
+  background-size: 280px 100%;
+  background-repeat: no-repeat;
+  background-position: -280px 0;
+  animation: sk-spotlight 3.5s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes sk-spotlight {
+  to { background-position: calc(100% + 280px) 0; }
+}
+
+/* ── "Carregando..." heading ────────────────────────────────────────────── */
+.skeleton-heading {
+  position: absolute;
+  inset: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-subtle);
+  letter-spacing: -0.5px;
+  pointer-events: none;
+  z-index: 20;
+  animation: sk-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes sk-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.75; }
+}
+
+/* ── Card entrance (staggered via inline animation-delay) ────────────────── */
+.skeleton-card {
+  flex: 0 0 150px;
+  width: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  animation: sk-card-in 0.45s ease both;
+}
+
+@keyframes sk-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Thumbnail (portrait 2:3 — espelha VideoCard) ───────────────────────── */
+.skeleton-thumb {
+  position: relative;
+  width: 100%;
+  padding-bottom: 150%;
+}
+
+/* ghost play icon — sem herdar shimmer */
+.skeleton-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none !important;
+  background-image: none !important;
+  animation: none !important;
+}
+
+.skeleton-play-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+}
+
+.skeleton-play-circle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 55%;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-width: 5px 0 5px 9px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.09);
+}
+
+/* ghost duration badge */
+.skeleton-badge {
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  width: 28px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* ── Info section ────────────────────────────────────────────────────────── */
+.skeleton-info {
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 4px;
+}
+
+.skeleton-line--a { width: 80%; }
+.skeleton-line--b { width: 55%; }
+
+.skeleton-tags-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.skeleton-tag {
+  height: 14px;
+  border-radius: 3px;
+}
+
+.skeleton-tag--a { width: 30px; }
+.skeleton-tag--b { width: 40px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .skeleton-heading { font-size: 22px; }
+}
