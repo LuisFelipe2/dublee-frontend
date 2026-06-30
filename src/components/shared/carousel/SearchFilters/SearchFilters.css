@@ -1,5 +1,4 @@
 .catalog-filters {
-  padding: 32px var(--content-px) 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;

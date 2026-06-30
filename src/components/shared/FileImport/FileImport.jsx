@@ -2,6 +2,7 @@ import { useState } from 'react';
 import VideoPlayer from '../VideoPlayer/VideoPlayer';
 import Button from '../Button/Button';
 import './FileImport.css';
+import CatalogPreview from '../carousel/CatalogPreview/CatalogPreview';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -47,7 +48,7 @@ const FileImport = ({ onUpload, showToast }) => {
   };
 
   return (
-    <section className="upload-section">
+    <section className="catalog-section">
       <h2 className="section-title">📁 Arquivo local</h2>
 
       <div className="file-input-wrapper">
@@ -74,14 +75,7 @@ const FileImport = ({ onUpload, showToast }) => {
       </div>
 
       {previewUrl && (
-        <div className="upload-preview">
-          <VideoPlayer src={previewUrl} />
-          <div className="upload-preview__actions">
-            <Button variant="advance" onClick={handleUpload} disabled={isUploading}>
-              {isUploading ? 'Enviando...' : 'Enviar Vídeo'}
-            </Button>
-          </div>
-        </div>
+        <CatalogPreview selected={file} onImport={handleUpload} isImporting={isUploading} previewUrl={previewUrl} />
       )}
     </section>
   );

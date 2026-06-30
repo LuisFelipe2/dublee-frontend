@@ -72,7 +72,6 @@ const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => 
         previewUrl={previewUrl}
         isLoadingPreview={isLoadingPreview}
         isImporting={isImporting}
-        onClose={() => { setSelected(null); setPreviewUrl(null); }}
         onImport={handleImport}
       />
     </section>

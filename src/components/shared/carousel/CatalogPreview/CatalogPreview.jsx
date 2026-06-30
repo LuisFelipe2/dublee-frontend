@@ -3,7 +3,7 @@ import VideoPlayer from '../../VideoPlayer/VideoPlayer';
 import Button from '../../Button/Button';
 import './CatalogPreview.css';
 
-const CatalogPreview = ({ selected, previewUrl, isLoadingPreview, isImporting, onClose, onImport }) => {
+const CatalogPreview = ({ selected, previewUrl, isLoadingPreview, isImporting, onImport }) => {
   const previewRef = useRef(null);
 
   useEffect(() => {
@@ -19,10 +19,6 @@ const CatalogPreview = ({ selected, previewUrl, isLoadingPreview, isImporting, o
 
   return (
     <div className="catalog-preview" ref={previewRef}>
-      <div className="catalog-preview__header">
-        <h3 className="catalog-preview__title">{selected.title}</h3>
-        <button className="catalog-preview__close" onClick={onClose}>✕</button>
-      </div>
       <div className="catalog-preview__player">
         {isLoadingPreview ? (
           <div className="catalog-preview__loading">Carregando preview...</div>

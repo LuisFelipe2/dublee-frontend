@@ -27,9 +27,22 @@
   letter-spacing: 1px;
 }
 
+.catalog-section {
+  padding: 32px var(--content-px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .section-divider {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .catalog-section {
     padding-left: 20px;
     padding-right: 20px;
   }
