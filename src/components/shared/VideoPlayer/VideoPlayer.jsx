@@ -12,15 +12,24 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const chronoRef = useRef(null);
-  const subtitlesRef = useRef(subtitles);
   const fsPendingRef = useRef(false);
   const rafRef = useRef(null);
-  const [currentText, setCurrentText] = useState('');
+  const textTrackRef = useRef(null);
   const [isFs, setIsFs] = useState(false);
 
   useImperativeHandle(ref, () => videoRef.current);
 
-  useEffect(() => { subtitlesRef.current = subtitles; }, [subtitles]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!textTrackRef.current) {
+      textTrackRef.current = video.addTextTrack('subtitles', 'Legendas', 'pt');
+      textTrackRef.current.mode = 'showing';
+    }
+    const track = textTrackRef.current;
+    while (track.cues?.length) track.removeCue(track.cues[0]);
+    subtitles.forEach(sub => track.addCue(new VTTCue(sub.startTime, sub.endTime, sub.text)));
+  }, [subtitles]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -61,36 +70,11 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
     };
   }, []);
 
-  // Subtitle overlay
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const onTimeUpdate = () => {
-      const t = video.currentTime;
-      const found = subtitlesRef.current.find(s => t >= s.startTime && t <= s.endTime);
-      setCurrentText(found?.text ?? '');
-    };
-    video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, []);
-
-  // Fullscreen redirect: video → wrapper so overlays stay visible
   useEffect(() => {
     const video = videoRef.current;
     const wrapper = wrapperRef.current;
     if (!video || !wrapper) return;
 
-    const onFsChange = () => {
-      if (document.fullscreenElement === video) {
-        fsPendingRef.current = true;
-        document.exitFullscreen().catch(() => { fsPendingRef.current = false; });
-      } else if (!document.fullscreenElement && fsPendingRef.current) {
-        fsPendingRef.current = false;
-        wrapper.requestFullscreen?.().catch(() => {});
-      } else {
-        setIsFs(document.fullscreenElement === wrapper);
-      }
-    };
     const onWebkitFsChange = () => {
       if (document.webkitFullscreenElement === video) {
         document.webkitExitFullscreen?.();
@@ -100,10 +84,8 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
       }
     };
 
-    document.addEventListener('fullscreenchange', onFsChange);
     document.addEventListener('webkitfullscreenchange', onWebkitFsChange);
     return () => {
-      document.removeEventListener('fullscreenchange', onFsChange);
       document.removeEventListener('webkitfullscreenchange', onWebkitFsChange);
     };
   }, []);
@@ -141,45 +123,15 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
     };
   }, [disableControls]);
 
-  const toggleFs = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      wrapperRef.current?.requestFullscreen?.().catch(() => {});
-    }
-  };
-
   return (
     <div ref={wrapperRef} className="video-player">
       <video
         ref={videoRef}
         controls={!disableControls}
         muted={muted}
-        controlsList={showFsButton && !disableControls ? 'nofullscreen' : undefined}
       />
-      {disableControls && <div className="video-player__blocker" />}
       {badge}
       {showChrono && <div ref={chronoRef} className="video-player__chrono">00:00:000</div>}
-      {currentText && (
-        <div className="video-player__subtitle">{currentText}</div>
-      )}
-      {showFsButton && (
-        <button
-          className="video-player__fs-btn"
-          title={isFs ? 'Sair da tela cheia' : 'Tela cheia'}
-          onClick={toggleFs}
-        >
-          {isFs ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-            </svg>
-          )}
-        </button>
-      )}
     </div>
   );
 });

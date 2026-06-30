@@ -11,14 +11,6 @@
   margin-bottom: 0;
 }
 
-/* ─── Controls blocker overlay ───────────────────────── */
-.video-player__blocker {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  cursor: default;
-}
-
 /* ─── Chronometer ─────────────────────────────────────── */
 .video-player__chrono {
   position: absolute;
@@ -40,49 +32,13 @@
   z-index: 2;
 }
 
-/* ─── Subtitle overlay ────────────────────────────────── */
-.video-player__subtitle {
-  position: absolute;
-  bottom: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.78);
-  color: var(--white);
-  padding: 5px 16px;
-  border-radius: 4px;
+/* ─── Subtitle (WebVTT via <track>) ───────────────────── */
+::cue {
+  background-color: rgba(0, 0, 0, 0.78);
+  color: white;
   font-size: 18px;
-  max-width: 90%;
-  text-align: center;
-  pointer-events: none;
-  white-space: pre-wrap;
-  z-index: 2;
 }
 
-/* ─── Custom fullscreen button ───────────────────────── */
-.video-player__fs-btn {
-  position: absolute;
-  bottom: 56px;
-  right: 10px;
-  z-index: 3;
-  background: rgba(0, 0, 0, 0.55);
-  border: none;
-  color: var(--white);
-  font-size: 17px;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.18s;
-  padding: 0;
-  line-height: 1;
-}
-.video-player:hover .video-player__fs-btn {
-  opacity: 1;
-}
 /* ─── Fullscreen ──────────────────────────────────────── */
 .video-player:fullscreen,
 .video-player:-webkit-full-screen {
@@ -107,22 +63,4 @@
   font-size: 32px;
   padding: 6px 20px;
   letter-spacing: 3px;
-}
-.video-player:fullscreen .video-player__subtitle,
-.video-player:-webkit-full-screen .video-player__subtitle {
-  z-index: 10;
-  font-size: 38px;
-  bottom: 90px;
-  padding: 8px 24px;
-}
-.video-player:fullscreen .video-player__fs-btn,
-.video-player:-webkit-full-screen .video-player__fs-btn {
-  width: 48px;
-  height: 48px;
-  opacity: 0.85;
-}
-.video-player:fullscreen .video-player__fs-btn svg,
-.video-player:-webkit-full-screen .video-player__fs-btn svg {
-  width: 22px;
-  height: 22px;
 }
