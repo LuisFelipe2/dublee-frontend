@@ -5,13 +5,12 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const closeTimer = useRef(null);
 
-  const openFilter = () => { clearTimeout(closeTimer.current); setIsFilterOpen(true); };
-  const closeFilter = () => { closeTimer.current = setTimeout(() => setIsFilterOpen(false), 150); };
+  const openFilter = (isFilterOpen) => { clearTimeout(closeTimer.current); setIsFilterOpen(isFilterOpen); };
 
   return (
     <div className="catalog-filters">
-      <div className="catalog-filter-row">
-        <div className="catalog-search-wrapper">
+      <div className="wrapper">
+        <div className="wrapper catalog-search-wrapper">
           <svg className="catalog-search-icon" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <circle cx="9" cy="9" r="6"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
           </svg>
@@ -27,8 +26,7 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
         {allTags.length > 0 && (
           <button
             className={`filter-btn${activeTags.length > 0 ? ' filter-btn--active' : ''}`}
-            onMouseEnter={openFilter}
-            onMouseLeave={closeFilter}
+            onClick={() => openFilter(!isFilterOpen)}
             aria-expanded={isFilterOpen}
             aria-label="Filtrar por tag"
           >
@@ -41,32 +39,30 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
             )}
           </button>
         )}
-
-        {isFilterOpen && allTags.length > 0 && (
-          <div
-            className="filter-dropdown"
-            onMouseEnter={openFilter}
-            onMouseLeave={closeFilter}
-          >
-            <div className="filter-dropdown__row">
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  className={`filter-option${activeTags.includes(tag) ? ' filter-option--active' : ''}`}
-                  onClick={() => onToggleTag(tag)}
-                >
-                  {activeTags.includes(tag) && <span className="filter-option__check">✓ </span>}
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        
       </div>
 
-      <div className="active-filters">
+      {isFilterOpen && allTags.length > 0 && (
+        <div className="filter-dropdown">
+          <div className="filter-dropdown__row">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                className={`filter filter-option${activeTags.includes(tag) ? ' filter-option--active' : ''}`}
+                onClick={() => onToggleTag(tag)}
+              >
+                {activeTags.includes(tag) && <span className="filter-option__check">✓ </span>}
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    
+
+      <div className="filter-dropdown__row">
         {activeTags.map(tag => (
-          <span key={tag} className="active-filter">
+          <span key={tag} className="filter active-filter">
             {tag}
             <button
               className="active-filter__remove"

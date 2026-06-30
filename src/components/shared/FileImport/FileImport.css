@@ -39,6 +39,25 @@
   justify-content: center;
 }
 
+.file-input-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  border: 2px dashed var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--surface-1);
+  border-color: var(--border);
+}
+
+.file-input-label:hover,
+.file-input-label.drag-over {
+  border-color: var(--accent);
+  background: var(--surface-3);
+}
+
 @media (max-width: 768px) {
   .upload-section {
     padding-left: 20px;

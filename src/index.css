@@ -147,24 +147,6 @@ body {
   left: -9999px;
 }
 
-.file-input-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  border: 2px dashed var(--text-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #f7f7f7;
-}
-
-.file-input-label:hover,
-.file-input-label.drag-over {
-  border-color: var(--text-primary);
-  background: #efefef;
-}
-
 .button-group {
   display: flex;
   gap: 10px;
@@ -264,4 +246,12 @@ video {
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 10px;
+}
+
+.wrapper {
+  flex: 1;
+  gap: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
 }

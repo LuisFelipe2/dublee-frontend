@@ -4,10 +4,10 @@ import { getCatalog, importCatalogVideo, uploadVideo as uploadVideoAPI } from '.
 import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
 import Toast from '../../shared/Toast/Toast';
-import HomeHero from '../../shared/HomeHero/HomeHero';
 import CatalogCarousel from '../../shared/carousel/CatalogCarousel/CatalogCarousel';
 import FileImport from '../../shared/FileImport/FileImport';
 import './CatalogPage.css';
+import PageHeader from '../../shared/PageHeader/PageHeader';
 
 const CatalogPage = () => {
   const [items, setItems] = useState([]);
@@ -53,8 +53,13 @@ const CatalogPage = () => {
       <Header />
 
       <main className="page-main home-main">
-        <div className="home-container">
-          <HomeHero />
+        <div className="container">
+          <PageHeader
+            title="O app de DUBLAGEM mais RÁPIDO da internet"
+            subtitle="Treine dublagem de forma rápida e se profissionalize"
+            description="Escolha uma cena do catálogo ou importe seu próprio vídeo, Tudo pronto para gravar a sua dublagem!"
+          />
+
           <CatalogCarousel
             items={items}
             allTags={allTags}

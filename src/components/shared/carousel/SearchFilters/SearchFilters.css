@@ -1,24 +1,11 @@
 .catalog-filters {
-  padding: 0 var(--content-px) 32px;
+  padding: 32px var(--content-px) 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.catalog-filter-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 /* ── Search input ────────────────────────────────────────── */
-.catalog-search-wrapper {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
 
 .catalog-search-icon {
   position: absolute;
@@ -56,7 +43,6 @@
 
 /* ── Filter button ───────────────────────────────────────── */
 .filter-btn {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -88,17 +74,13 @@
   text-align: center;
 }
 
+
 /* ── Filter dropdown ─────────────────────────────────────── */
 .filter-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  z-index: var(--z-filter);
   background: var(--surface-3);
   border: 1px solid var(--border-mid);
   border-radius: 10px;
-  padding: 12px 12px 8px;
+  padding: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
 }
 
@@ -106,23 +88,24 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding-bottom: 4px;
 }
 
-.filter-option {
-  flex: 0 0 auto;
+.filter {
   display: flex;
   align-items: center;
   gap: 3px;
   padding: 5px 12px;
   border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-option {
   border: 1.5px solid var(--border-mid);
   background: transparent;
   color: var(--text-placeholder);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
   transition: all 0.15s;
 }
 
@@ -137,24 +120,11 @@
 .filter-option__check { font-size: 10px; }
 
 /* ── Active filter chips ─────────────────────────────────── */
-.active-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-height: 28px;
-}
 
 .active-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px 3px 11px;
   background: var(--accent-subtle);
   border: 1px solid var(--accent-border);
-  border-radius: 20px;
   color: #a0aaf0;
-  font-size: 12px;
-  font-weight: 500;
 }
 
 .active-filter__remove {

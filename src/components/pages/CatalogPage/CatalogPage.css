@@ -1,17 +1,7 @@
 /* ── Page layout ─────────────────────────────────────────── */
-.home-main {
-  align-items: flex-start;
-  padding: 32px 20px 60px;
-}
-
-.home-container {
-  width: 100%;
-  max-width: 1200px;
+.home-main .container {
   background: var(--bg-app);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   color: #e0e0e0;
-  overflow: hidden;
   padding-bottom: 56px;
 }
 
@@ -19,12 +9,6 @@
 .section-divider {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 40px var(--content-px) 0;
-  color: #3a3a3a;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .section-divider::before,
@@ -38,18 +22,9 @@
 .section-divider span {
   color: var(--text-secondary);
   white-space: nowrap;
-}
-
-/* ── File input dark theme override ─────────────────────── */
-.home-container .file-input-label {
-  background: var(--surface-1);
-  border-color: var(--border);
-}
-
-.home-container .file-input-label:hover,
-.home-container .file-input-label.drag-over {
-  border-color: var(--accent);
-  background: var(--surface-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
