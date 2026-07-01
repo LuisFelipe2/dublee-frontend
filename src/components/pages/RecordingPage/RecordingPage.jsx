@@ -44,8 +44,8 @@ const RecordingPage = () => {
     return () => {
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (monitorAudioRef.current) {
-        monitorAudioRef.current.pause();
-        monitorAudioRef.current.srcObject = null;
+        monitorAudioRef.current.close();
+        monitorAudioRef.current = null;
       }
       removeVideoListenersRef.current?.();
     };
@@ -63,8 +63,7 @@ const RecordingPage = () => {
       streamRef.current = null;
     }
     if (monitorAudioRef.current) {
-      monitorAudioRef.current.pause();
-      monitorAudioRef.current.srcObject = null;
+      monitorAudioRef.current.close();
       monitorAudioRef.current = null;
     }
     if (videoRef.current) {
@@ -109,8 +108,7 @@ const RecordingPage = () => {
       streamRef.current = null;
     }
     if (monitorAudioRef.current) {
-      monitorAudioRef.current.pause();
-      monitorAudioRef.current.srcObject = null;
+      monitorAudioRef.current.close();
       monitorAudioRef.current = null;
     }
     if (videoRef.current) {
@@ -150,14 +148,20 @@ const RecordingPage = () => {
     }
 
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        }
+      });
       streamRef.current = mediaStream;
 
       if (audioMonitor) {
-        const monEl = new Audio();
-        monEl.srcObject = mediaStream;
-        monEl.play().catch(() => {});
-        monitorAudioRef.current = monEl;
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(mediaStream);
+        source.connect(audioCtx.destination);
+        monitorAudioRef.current = audioCtx;
       }
 
       const recorder = new MediaRecorder(mediaStream);
