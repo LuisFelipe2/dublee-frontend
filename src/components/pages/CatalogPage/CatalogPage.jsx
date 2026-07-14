@@ -43,7 +43,11 @@ const CatalogPage = () => {
   };
 
   const handleUpload = async (file) => {
-    const data = await uploadVideoAPI(file);
+    const [data, success] = await uploadVideoAPI(file);
+    if (!success) {
+      showToast('error', 'Erro ao enviar vídeo. Tente novamente.');
+      return;
+    }
     showToast('success', 'Vídeo enviado! Redirecionando...');
     setTimeout(() => navigate(`/subtitle/${data.data.id}`), 2000);
   };

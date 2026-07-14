@@ -39,12 +39,10 @@ const FileImport = ({ onUpload, showToast }) => {
     if (!file) return;
     setIsUploading(true);
     showToast('loading', 'Enviando vídeo...');
-    try {
-      await onUpload(file);
-    } catch (err) {
-      showToast('error', err.message);
-      setIsUploading(false);
-    }
+    
+    await onUpload(file);
+
+    setIsUploading(false);
   };
 
   return (

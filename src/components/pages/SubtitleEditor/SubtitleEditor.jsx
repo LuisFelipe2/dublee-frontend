@@ -53,20 +53,21 @@ const SubtitleEditor = () => {
   }, [subtitles, videoId]);
 
   useEffect(() => {
-    let objectUrl;
-    setIsVideoLoading(true);
-    fetch(downloadVideo(videoId))
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.blob();
-      })
-      .then(blob => {
-        objectUrl = URL.createObjectURL(blob);
-        setBlobUrl(objectUrl);
-      })
-      .catch(err => showToast('error', `Erro ao carregar vídeo: ${err.message}`))
-      .finally(() => setIsVideoLoading(false));
-    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+    
+    async function fetchVideo() {
+      const [blob, success] = await downloadVideo(videoId);
+
+      if (!success) {
+        showToast('error', 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      setBlobUrl(objectUrl);
+    }
+
+    fetchVideo();
+    setIsVideoLoading(false);
   }, [videoId]);
 
   const handleGenerate = async () => {

@@ -6,29 +6,20 @@ export const uploadVideo = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/videos/upload`, {
+  const data = await fetch(`${API_BASE_URL}/videos/upload`, {
     method: 'POST',
     body: formData
-  });
+  }).then(res => res.json());
 
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Upload failed');
-  }
-  return data;
+  return [data, !data.error];
 };
 
-export const getVideo = async (videoId) => {
-  const response = await fetch(`${API_BASE_URL}/videos/${videoId}`);
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to get video');
-  }
-  return data;
-};
-
-export const downloadVideo = (videoId) => {
-  return `${API_BASE_URL}/videos/download/${videoId}`;
+export const downloadVideo = async (videoId) => {
+  const data = await fetch(`${API_BASE_URL}/videos/download/${videoId}`)
+      .then(r => {
+        return r.blob();
+      });
+  return [data, !data.error];
 };
 
 export const checkVoiceRemovalStatus = async (videoId) => {
@@ -36,35 +27,6 @@ export const checkVoiceRemovalStatus = async (videoId) => {
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || 'Failed to check status');
-  }
-  return data;
-};
-
-export const recordAudio = async (videoId, audioBlob) => {
-  const formData = new FormData();
-  formData.append('audio', audioBlob, 'recorded_audio.webm');
-
-  const response = await fetch(`${API_BASE_URL}/videos/${videoId}/record-audio`, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || data.message || 'Failed to record audio');
-  }
-
-  return response.blob();
-};
-
-export const deleteVideo = async (videoId) => {
-  const response = await fetch(`${API_BASE_URL}/videos/${videoId}`, {
-    method: 'DELETE'
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to delete video');
   }
   return data;
 };
