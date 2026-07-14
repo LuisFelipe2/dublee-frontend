@@ -73,21 +73,27 @@ const SubtitleEditor = () => {
   const handleGenerate = async () => {
     setIsGenerating(true);
     showToast('loading', 'Transcrevendo com IA… pode levar alguns instantes');
-    try {
-      const result = await transcribeWithWhisper(videoId);
-      let subs = result.subtitles ?? [];
-      if (autoTranslate && subs.length > 0) {
-        showToast('loading', 'Traduzindo legendas…');
-        const translated = await translateSubtitles(videoId, subs, targetLang);
-        subs = translated.subtitles ?? subs;
-      }
-      setSubtitles(subs);
-      showToast('success', `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`);
-    } catch (e) {
-      showToast('error', e.message);
-    } finally {
+    const [result, transcriptionSuccess] = await transcribeWithWhisper(videoId);
+    if (!transcriptionSuccess) {
+      showToast('error', 'Falha ao transcrever vídeo');
       setIsGenerating(false);
+      return;
     }
+
+    let subs = result.subtitles ?? [];
+    if (autoTranslate && subs.length > 0) {
+      showToast('loading', 'Traduzindo legendas…');
+      const [translated, success] = await translateSubtitles(videoId, subs, targetLang);
+      if (!success) {
+        showToast('error', 'Falha ao traduzir legendas');
+        return;
+      }
+      subs = translated.subtitles ?? subs;
+    }
+    setSubtitles(subs);
+    showToast('success', `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`);
+
+    setIsGenerating(false);
   };
 
   return (

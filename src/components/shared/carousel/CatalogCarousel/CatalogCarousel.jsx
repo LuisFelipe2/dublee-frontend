@@ -23,22 +23,25 @@ const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => 
 
   const handleSelectCard = async (item) => {
     if (selected?.id === item.id) {
-      setSelected(null);
-      setPreviewUrl(null);
+      updateSelected(null);
       return;
     }
-    setSelected(item);
-    setPreviewUrl(null);
-    setIsLoadingPreview(true);
-    try {
-      const url = await getCatalogPreview(item.id);
-      setPreviewUrl(url);
-    } catch (err) {
-      showToast('error', `Erro ao carregar preview: ${err.message}`);
-    } finally {
-      setIsLoadingPreview(false);
+    updateSelected(item);
+    
+    const [url, success] = await getCatalogPreview(item.id);
+    if (!success) {
+      showToast('error', `Erro ao carregar preview`);
+      updateSelected(null);
     }
+
+    updateSelected(item, url);
   };
+
+  const updateSelected = (item, url = null) => {
+    setSelected(item);
+    setPreviewUrl(url);
+    setIsLoadingPreview(item && !url);
+  }
 
   const handleImport = async () => {
     if (!selected) return;

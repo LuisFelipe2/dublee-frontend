@@ -41,19 +41,19 @@ const MixingPage = () => {
 
     const check = async () => {
       try {
-        const data = await checkStatusAPI(videoId);
-        const { is_complete, error } = data.data;
-        if (error) {
+        const [data, success] = await checkStatusAPI(videoId);
+        
+        if (!success) {
           showToast('error', `Erro no processamento: ${error}`);
           clearInterval(pollRef.current);
           return;
         }
-        if (is_complete) {
+        if (data.data) {
           clearInterval(pollRef.current);
           setIsWaitingDemucs(false);
         }
       } catch {
-        // ignora falhas de rede durante o polling
+        console.warn('Falha ao verificar status do processamento. Tentando novamente...');
       }
     };
 
@@ -87,7 +87,7 @@ const MixingPage = () => {
       return lastMixRef.current;
     }
 
-    const videoBlob = await mixAudio(videoId, audioBlob, voiceVolume / 100, effectsVolume / 100);
+    const [videoBlob, success] = await mixAudio(videoId, audioBlob, voiceVolume / 100, effectsVolume / 100);
     const url = URL.createObjectURL(videoBlob);
 
     if (lastMixRef.current?.url) URL.revokeObjectURL(lastMixRef.current.url);

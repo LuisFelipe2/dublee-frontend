@@ -20,21 +20,21 @@ const CatalogPage = () => {
 
   useEffect(() => {
     (async () => {
-      setIsLoading(true);
-      try {
-        const data = await getCatalog();
-        setItems(data);
-        setAllTags([...new Set(data.flatMap(i => i.tags || []))].sort());
-      } catch (err) {
-        showToast('error', err.message);
-      } finally {
-        setIsLoading(false);
-      }
+      const [data, success] = await getCatalog();
+      if (!success) showToast('error', 'Falha ao carregar catálogo');
+      setItems(data);
+      setAllTags([...new Set(data.flatMap(i => i.tags || []))].sort());
+      setIsLoading(false);
     })();
   }, []);
 
   const handleImport = async (id) => {
-    const data = await importCatalogVideo(id);
+    const [data, success] = await importCatalogVideo(id);
+    if (!success) {
+      showToast('error', 'Falha ao importar cena do catálogo');
+      return;
+    }
+
     if (data.subtitles?.length > 0) {
       localStorage.setItem(`dublee-subtitles-${data.id}`, JSON.stringify(data.subtitles));
     }
