@@ -22,8 +22,8 @@ const CatalogPage = () => {
     (async () => {
       const [data, success] = await getCatalog();
       if (!success) showToast('error', 'Falha ao carregar catálogo');
-      setItems(data);
-      setAllTags([...new Set(data.flatMap(i => i.tags || []))].sort());
+      setItems(data.items || []);
+      setAllTags([...new Set(data.items.flatMap(i => i.tags || []))].sort());
       setIsLoading(false);
     })();
   }, []);
