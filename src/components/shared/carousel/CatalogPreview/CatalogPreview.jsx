@@ -13,7 +13,7 @@ const CatalogPreview = ({ selected, previewUrl, isLoadingPreview, isImporting, o
       100
     );
     return () => clearTimeout(timer);
-  }, [selected?.id]);
+  }, [selected]);
 
   if (!selected) return null;
 

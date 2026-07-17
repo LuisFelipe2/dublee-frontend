@@ -22,11 +22,11 @@ const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => 
     setActiveTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
 
   const handleSelectCard = async (item) => {
-    if (selected?.id === item.id) {
+    if (selected === item.id) {
       updateSelected(null);
       return;
     }
-    updateSelected(item);
+    updateSelected(item.id);
     
     const [url, success] = await getCatalogPreview(item.id);
     if (!success) {
@@ -34,7 +34,7 @@ const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => 
       updateSelected(null);
     }
 
-    updateSelected(item, url);
+    updateSelected(item.id, url?.previewUrl);
   };
 
   const updateSelected = (item, url = null) => {
@@ -48,7 +48,7 @@ const CatalogCarousel = ({ items, allTags, isLoading, onImport, showToast }) => 
     setIsImporting(true);
     showToast('loading', 'Importando cena...');
     try {
-      await onImport(selected.id);
+      await onImport(selected);
     } catch (err) {
       showToast('error', err.message);
       setIsImporting(false);

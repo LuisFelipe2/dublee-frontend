@@ -49,7 +49,7 @@ const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
           <VideoCard
             key={item.id}
             item={item}
-            isSelected={selected?.id === item.id}
+            isSelected={selected === item.id}
             onClick={() => onSelectCard(item)}
             outerRef={outerRef}
             canScrollLeft={canScrollLeft}

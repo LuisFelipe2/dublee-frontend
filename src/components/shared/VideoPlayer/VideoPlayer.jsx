@@ -16,7 +16,6 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
   const textTrackRef = useRef(null);
   const chronoCueRef = useRef(null);
   const chronoTrackRef = useRef(null);
-  const [isFs, setIsFs] = useState(false);
 
   useImperativeHandle(ref, () => videoRef.current);
 
@@ -102,12 +101,8 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButt
     if (!video || !wrapper) return;
 
     const onWebkitFsChange = () => {
-      if (document.webkitFullscreenElement === video) {
-        document.webkitExitFullscreen?.();
-        wrapper.webkitRequestFullscreen?.();
-      } else {
-        setIsFs(!!document.webkitFullscreenElement);
-      }
+      document.webkitExitFullscreen?.();
+      wrapper.webkitRequestFullscreen?.();
     };
 
     document.addEventListener('webkitfullscreenchange', onWebkitFsChange);
