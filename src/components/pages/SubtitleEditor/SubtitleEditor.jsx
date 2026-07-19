@@ -39,7 +39,10 @@ const SubtitleEditor = () => {
 
       const [blob, success] = await downloadVideo(videoId);
 
-      if (!success) showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
+      if (!success) {
+        showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
+        return;
+      }
 
       setBlobUrl(URL.createObjectURL(blob));
 

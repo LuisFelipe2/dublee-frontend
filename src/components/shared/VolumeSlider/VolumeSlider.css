@@ -1,0 +1,50 @@
+.volume-slider__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.volume-slider__label {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.volume-slider__value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.volume-slider__input {
+  width: 100%;
+  accent-color: var(--text-primary);
+  cursor: pointer;
+  display: block;
+}
+
+.volume-slider__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.volume-slider__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-ghost);
+  margin-top: 2px;
+}
+
+/* ─── compact variant (used inline in TrackControls) ──── */
+.volume-slider--compact .volume-slider__header {
+  margin-bottom: 2px;
+}
+
+.volume-slider--compact .volume-slider__label {
+  font-size: 11px;
+}
+
+.volume-slider--compact .volume-slider__value {
+  font-size: 11px;
+}

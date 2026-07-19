@@ -1,3 +1,6 @@
+.container--wide {
+  max-width: 1280px;
+}
 
 /* ─── REC badge (over video) ─────────────────────────────── */
 .rec-badge {
@@ -40,15 +43,12 @@
   50%       { opacity: 0.1; }
 }
 
-/* ─── Icon + label inside buttons ───────────────────────── */
-.rec-btn-content {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+/* ─── Waiting-for-Demucs overlay ─────────────────────────── */
+.editor-player-wrapper {
+  position: relative;
 }
 
-/* ─── Processing overlay ────────────────────────────────── */
-.recording-overlay {
+.editor-overlay {
   position: absolute;
   inset: 0;
   display: flex;
@@ -60,61 +60,62 @@
   z-index: 10;
 }
 
-.recording-overlay__card {
+.editor-overlay__card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 32px;
+  gap: 14px;
+  padding: 28px 36px;
   background: rgba(255, 255, 255, 0.96);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
-  max-width: 300px;
+  max-width: 340px;
   text-align: center;
 }
 
-.recording-overlay__icon {
+.editor-overlay__icon {
   font-size: 26px;
   line-height: 1;
-  display: inline-block;
-  animation: spin 2s linear infinite;
 }
 
-.recording-overlay__text {
+.editor-overlay__icon--spin {
+  display: inline-block;
+  animation: spin 1.2s linear infinite;
+}
+
+.editor-overlay__text {
   font-size: 14px;
   color: var(--text-body);
   line-height: 1.65;
   margin: 0;
 }
 
-.recording-overlay__dots::after {
-  content: '';
-  animation: recording-dots 1.2s steps(1, end) infinite;
-}
-
-@keyframes recording-dots {
-  0%   { content: ''; }
-  25%  { content: '.'; }
-  50%  { content: '..'; }
-  75%  { content: '...'; }
-}
-
-/* ─── Start area (row + settings panel) ──────────────── */
-.recording-start-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.recording-start-row {
+/* ─── Transport bar ───────────────────────────────────────── */
+.editor-transport {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
 
-/* ─── Settings gear button ────────────────────────────── */
+.editor-transport__time {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 96px;
+}
+
+.editor-transport__spacer {
+  flex: 1;
+}
+
+/* ─── Settings gear button ────────────────────────────────── */
+.editor-settings-menu {
+  position: relative;
+  display: inline-block;
+}
+
 .recording-settings-btn {
   width: 38px;
   height: 38px;
@@ -136,13 +137,17 @@
   color: #667eea;
 }
 
-/* ─── Settings panel (inline block) ──────────────────── */
 .recording-settings-panel {
-  width: 230px;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 240px;
   padding: 14px 16px;
-  background: #f7f7f7;
-  border: 1px solid #e4e4e4;
-  border-radius: 10px;
+  background: var(--white);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -172,7 +177,7 @@
   font-style: italic;
 }
 
-/* ─── Fullscreen: scale up REC badge ─────────────────── */
+/* ─── Fullscreen: scale up REC badge ─────────────────────── */
 .video-player:fullscreen .rec-badge,
 .video-player:-webkit-full-screen .rec-badge {
   font-size: 20px;
@@ -189,15 +194,16 @@
   height: 14px;
 }
 
-/* ─── Recording controls (3 buttons) ─────────────────── */
-.recording-controls {
-  display: flex;
-  gap: 10px;
+/* ─── Actions row ─────────────────────────────────────────── */
+.editor-actions {
   margin-top: 20px;
 }
-.recording-controls .btn {
-  flex: 1;
-  padding: 12px 10px;
-  font-size: 14px;
-}
 
+@media (max-width: 768px) {
+  .editor-transport {
+    gap: 8px;
+  }
+  .editor-transport__spacer {
+    display: none;
+  }
+}

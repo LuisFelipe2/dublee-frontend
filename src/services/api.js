@@ -15,6 +15,10 @@ export const checkVoiceRemovalStatus = async (videoId) => {
   return await get(`videos/${videoId}/voice-removal-status`);
 };
 
+export const getNoVoiceAudio = async (videoId) => {
+  return await getBlob(`videos/${videoId}/no-voice-audio`);
+};
+
 export const transcribeWithWhisper = async (videoId) => {
   return await post(`videos/${videoId}/subtitles/whisper`);
 };
@@ -41,11 +45,17 @@ export const translateSubtitles = async (videoId, subtitles, targetLang) => {
   return await post(`videos/${videoId}/subtitles/translate`, requestBody, headers);
 };
 
-export const mixAudio = async (videoId, audioBlob, voiceVolume, effectsVolume) => {
+export const mixTracks = async (videoId, tracks) => {
   const formData = new FormData();
-  formData.append('audio', audioBlob, 'recorded_audio.webm');
-  formData.append('voice_volume', voiceVolume.toString());
-  formData.append('effects_volume', effectsVolume.toString());
+  formData.append('tracks_count', String(tracks.length));
+  tracks.forEach((t, i) => {
+    if (t.blob) formData.append(`tracks[${i}][audio]`, t.blob, `${t.kind}-${i}.webm`);
+    formData.append(`tracks[${i}][kind]`, t.kind);
+    formData.append(`tracks[${i}][volume]`, String(t.volume));
+    formData.append(`tracks[${i}][offset]`, String(t.offset));
+    formData.append(`tracks[${i}][trim_in]`, String(t.trimIn));
+    formData.append(`tracks[${i}][trim_out]`, String(t.trimOut));
+  });
 
   return await postBlob(`videos/${videoId}/mix`, formData);
 };

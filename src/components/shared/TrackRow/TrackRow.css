@@ -1,0 +1,12 @@
+.track-row {
+  position: relative;
+  border-bottom: 1px solid var(--border-row);
+}
+
+.track-row:nth-child(odd) {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.track-row--selected {
+  background: var(--accent-subtle);
+}

@@ -1,0 +1,70 @@
+.clip {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  border-radius: 6px;
+  background: var(--accent);
+  border: 1.5px solid var(--accent-border);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.clip--background {
+  background: #4b4b4b;
+  border-color: #5c5c5c;
+  cursor: default;
+}
+
+.clip--voice {
+  background: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.clip--imported {
+  background: #2f9e6b;
+  border-color: #3fbf83;
+}
+
+.clip--selected {
+  outline: 2px solid var(--white);
+  outline-offset: 1px;
+}
+
+.clip--muted {
+  opacity: 0.4;
+}
+
+.clip--disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.clip__label {
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.clip__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.clip__handle--left { left: 0; }
+.clip__handle--right { right: 0; }
+
+.clip__handle:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

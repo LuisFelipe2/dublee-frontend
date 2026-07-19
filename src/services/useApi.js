@@ -11,13 +11,13 @@ export const post = async (url, body, headers = {}) => {
 };
 
 export const postBlob = async (url, body, headers = {}) => {
-  const response = await fetch(`${API_BASE_URL}/${url}`, {
+  const res = await fetch(`${API_BASE_URL}/${url}`, {
     method: 'POST',
     headers: headers,
     body: body
-  }).then(res => res.blob());
-
-  return [response, !response.error];
+  });
+  if (!res.ok) return [null, false];
+  return [await res.blob(), true];
 };
 
 export const get = async (url) => {
@@ -27,8 +27,8 @@ export const get = async (url) => {
 };
 
 export const getBlob = async (url) => {
-  const response = await fetch(`${API_BASE_URL}/${url}`)
-      .then(r => r.blob());
-  return [response, !response.error];
+  const res = await fetch(`${API_BASE_URL}/${url}`);
+  if (!res.ok) return [null, false];
+  return [await res.blob(), true];
 };
 
