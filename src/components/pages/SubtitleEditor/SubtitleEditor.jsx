@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../../../services/api';
 import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
@@ -10,38 +10,19 @@ import PageHeader from '../../shared/PageHeader/PageHeader';
 import Toast from '../../shared/Toast/Toast';
 import SubtitleTable from '../../shared/SubtitleTable/SubtitleTable';
 import './SubtitleEditor.css';
-
-const LANGUAGES = [
-  { code: 'pt', label: 'Português' },
-  { code: 'en', label: 'Inglês' },
-  { code: 'es', label: 'Espanhol' },
-  { code: 'fr', label: 'Francês' },
-  { code: 'de', label: 'Alemão' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'ja', label: 'Japonês' },
-  { code: 'ko', label: 'Coreano' },
-  { code: 'zh-CN', label: 'Chinês (simplificado)' },
-  { code: 'ru', label: 'Russo' },
-];
+import { SubtitleManualDescriptionPanel } from './Panel/SubtitleManualDescriptionPanel';
+import { SubtitleAiDescriptionPanel } from './Panel/SubtitleAiDescriptionPanel';
+import { showToastError, handleToastLoading }  from '../../../utils/utils';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
 const SubtitleEditor = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const fromCatalog = searchParams.get('from') === 'catalog';
 
   const [blobUrl, setBlobUrl] = useState(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
-
-  const [subtitles, setSubtitles] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey(videoId));
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-
+  const [subtitles, setSubtitles] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [toast, setToast] = useState(null);
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -53,47 +34,54 @@ const SubtitleEditor = () => {
   }, [subtitles, videoId]);
 
   useEffect(() => {
-    
     async function fetchVideo() {
+      handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
+
       const [blob, success] = await downloadVideo(videoId);
 
-      if (!success) {
-        showToast('error', 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
-        return;
-      }
+      if (!success) showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
 
-      const objectUrl = URL.createObjectURL(blob);
-      setBlobUrl(objectUrl);
+      setBlobUrl(URL.createObjectURL(blob));
+
+      const saved = localStorage.getItem(storageKey(videoId));
+      setSubtitles(saved ? JSON.parse(saved) : []);
+      setIsVideoLoading(false);
+      setToast(null);
     }
 
     fetchVideo();
-    setIsVideoLoading(false);
   }, [videoId]);
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    showToast('loading', 'Transcrevendo com IA… pode levar alguns instantes');
-    const [result, transcriptionSuccess] = await transcribeWithWhisper(videoId);
-    if (!transcriptionSuccess) {
-      showToast('error', 'Falha ao transcrever vídeo');
-      setIsGenerating(false);
-      return;
-    }
+    handleToastLoading(showToast, setIsGenerating, 'Transcrevendo com IA… pode levar alguns instantes');
 
-    let subs = result.subtitles ?? [];
-    if (autoTranslate && subs.length > 0) {
-      showToast('loading', 'Traduzindo legendas…');
-      const [translated, success] = await translateSubtitles(videoId, subs, targetLang);
-      if (!success) {
-        showToast('error', 'Falha ao traduzir legendas');
-        return;
-      }
-      subs = translated.subtitles ?? subs;
-    }
-    setSubtitles(subs);
-    showToast('success', `${subs.length} legenda${subs.length !== 1 ? 's' : ''} gerada${subs.length !== 1 ? 's' : ''}`);
+    const [result, success] = await transcribeWithWhisper(videoId)
+    if (!success) return showToastError(showToast, setIsGenerating, 'Falha ao transcrever vídeo');
 
+    if (autoTranslate) await handleTranslateGenerate(result.subtitles);
+    else setSubtitles(result.subtitles);
+
+    showToast('success', 'Legendas geradas com sucesso!');
     setIsGenerating(false);
+  };
+
+  const handleTranslateGenerate = async (subs) => {
+    if (subs.length > 0) {
+      handleToastLoading(showToast, setIsGenerating, 'Traduzindo legendas…');
+      const [translated, success] = await translateSubtitles(videoId, subs, targetLang);
+
+      if (!success) return showToastError(showToast, setIsGenerating, 'Falha ao traduzir legendas');
+
+      setSubtitles(translated.subtitles);
+    }
+  };
+
+  const onAutoTranslateChange = (e) => {
+    setAutoTranslate(e.target.checked);
+  };
+
+  const onTargetLangChange = (e) => {
+    setTargetLang(e.target.value);
   };
 
   return (
@@ -111,20 +99,14 @@ const SubtitleEditor = () => {
           />
 
           <div className="content">
-
             {/* ── Seção 1: Vídeo ── */}
             <div className="section">
-              {isVideoLoading ? (
-                <div className="video-loading-placeholder">
-                  ⏳ Carregando vídeo…
-                </div>
-              ) : (
-                <VideoPlayer
-                  src={blobUrl}
-                  subtitles={subtitles}
-                  showFsButton
-                />
-              )}
+              <VideoPlayer
+                src={blobUrl}
+                subtitles={subtitles}
+                showFsButton
+                isVideoLoading={isVideoLoading}
+              />
             </div>
 
             {/* ── Seção 2: Métodos ── */}
@@ -132,60 +114,17 @@ const SubtitleEditor = () => {
               <SplitLayout
                 variant="bordered"
                 left={
-                  <>
-                    <h3 className="subtitle-method-panel__title">
-                      <span>✍️</span> Manual
-                    </h3>
-                    <p className="subtitle-method-panel__desc">
-                      Adicione legendas consultando o cronômetro do vídeo e preenchendo a tabela abaixo:
-                    </p>
-                    <ol className="subtitle-method-steps">
-                      <li>Reproduza o vídeo e anote os tempos em que o personagem começa e termina a fala pelo <strong>cronômetro</strong></li>
-                      <li>Clique em <strong>+</strong> na tabela para adicionar uma linha</li>
-                      <li>Na coluna <strong>Início</strong> digite o tempo em que o personagem começa a fala (ex: <code>0:05</code>)</li>
-                      <li>Na coluna <strong>Legenda</strong> escreva o texto que lhe guiará durante a gravação</li>
-                      <li>Na coluna <strong>Fim</strong> digite o tempo em que o personagem termina a fala (ex: <code>0:10</code>)</li>
-                    </ol>
-                  </>
+                  <SubtitleManualDescriptionPanel />
                 }
                 right={
-                  <>
-                    <h3 className="subtitle-method-panel__title">
-                      <span>🤖</span> IA (Whisper)
-                    </h3>
-                    <p className="subtitle-method-panel__desc">
-                      Gere legendas automaticamente a partir do áudio usando o modelo Whisper.
-                      O processo pode levar alguns instantes dependendo da duração do vídeo.
-                    </p>
-                    <Button
-                      variant="primary"
-                      onClick={handleGenerate}
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas'}
-                    </Button>
-                    <label className="subtitle-translate-check">
-                      <input
-                        type="checkbox"
-                        checked={autoTranslate}
-                        onChange={e => setAutoTranslate(e.target.checked)}
-                        disabled={isGenerating}
-                      />
-                      Traduzir automaticamente após gerar
-                    </label>
-                    {autoTranslate && (
-                      <select
-                        value={targetLang}
-                        onChange={e => setTargetLang(e.target.value)}
-                        disabled={isGenerating}
-                        className="subtitle-lang-select"
-                      >
-                        {LANGUAGES.map(l => (
-                          <option key={l.code} value={l.code}>{l.label}</option>
-                        ))}
-                      </select>
-                    )}
-                  </>
+                  <SubtitleAiDescriptionPanel
+                    handleGenerate={handleGenerate}
+                    isGenerating={isGenerating}
+                    autoTranslate={autoTranslate}
+                    handleAutoTranslate={onAutoTranslateChange}
+                    targetLang={targetLang}
+                    handleTargetLang={onTargetLangChange}
+                  />
                 }
               />
             </div>
