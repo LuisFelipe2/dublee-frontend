@@ -9,6 +9,7 @@ import Button from '../../shared/Button/Button';
 import PageHeader from '../../shared/PageHeader/PageHeader';
 import Toast from '../../shared/Toast/Toast';
 import './RecordingPage.css';
+import { handleToastLoading, showToastError } from '../../../utils/utils';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
@@ -19,6 +20,8 @@ const RecordingPage = () => {
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
 
   const videoRef = useRef(null);
   const isRecordingRef = useRef(false);
@@ -39,6 +42,21 @@ const RecordingPage = () => {
       return [];
     }
   });
+
+  useEffect(() => {
+    async function fetchVideo() {
+      handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
+
+      const [blob, success] = await downloadVideo(videoId);
+
+      if (!success) showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
+
+      setBlobUrl(URL.createObjectURL(blob));
+      setToast(null)
+    }
+
+    fetchVideo();
+  }, [videoId]);
 
   useEffect(() => {
     return () => {
@@ -241,10 +259,9 @@ const RecordingPage = () => {
               <div className="player-wrapper">
                 <VideoPlayer
                   ref={videoRef}
-                  src={downloadVideo(videoId)}
+                  src={blobUrl}
                   muted
                   subtitles={subtitles}
-                  showFsButton
                   disableControls
                   badge={isRecording && (
                     <div className={`rec-badge${isPaused ? ' rec-badge--paused' : ''}`}>

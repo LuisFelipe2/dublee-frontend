@@ -8,7 +8,7 @@ const formatChrono = (s) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
 };
 
-const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showFsButton = false, showChrono = true, disableControls = false, badge = null, isVideoLoading }, ref) => {
+const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono = true, disableControls = false, badge = null, isVideoLoading }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const fsPendingRef = useRef(false);

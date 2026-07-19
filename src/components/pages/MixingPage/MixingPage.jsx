@@ -42,13 +42,13 @@ const MixingPage = () => {
     const check = async () => {
       try {
         const [data, success] = await checkStatusAPI(videoId);
-        
+
         if (!success) {
           showToast('error', `Erro no processamento: ${error}`);
           clearInterval(pollRef.current);
           return;
         }
-        if (data.data) {
+        if (data.is_complete) {
           clearInterval(pollRef.current);
           setIsWaitingDemucs(false);
         }
@@ -147,7 +147,6 @@ const MixingPage = () => {
                 <VideoPlayer
                   ref={videoRef}
                   src={previewUrl}
-                  showFsButton
                   showChrono={false}
                 />
                 {showOverlay && (

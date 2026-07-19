@@ -17,7 +17,7 @@ export const postBlob = async (url, body, headers = {}) => {
     body: body
   }).then(res => res.blob());
 
-  return [response.data, !response.error];
+  return [response, !response.error];
 };
 
 export const get = async (url) => {
