@@ -49,7 +49,7 @@ const CatalogPage = () => {
       return;
     }
     showToast('success', 'Vídeo enviado! Redirecionando...');
-    setTimeout(() => navigate(`/subtitle/${data.data.id}`), 2000);
+    setTimeout(() => navigate(`/subtitle/${data.id}`), 2000);
   };
 
   return (

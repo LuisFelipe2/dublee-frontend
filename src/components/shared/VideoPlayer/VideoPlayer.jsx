@@ -29,13 +29,13 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
     const track = textTrackRef.current;
     while (track.cues?.length) track.removeCue(track.cues[0]);
     subtitles.forEach(sub => track.addCue(new VTTCue(sub.startTime, sub.endTime, sub.text)));
-  }, [subtitles]);
+  }, [subtitles, isVideoLoading]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
     video.src = src;
-  }, [src]);
+  }, [src, isVideoLoading]);
 
   // Chronometer track
   useEffect(() => {
@@ -55,7 +55,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
       chronoCueRef.current = null;
       chronoTrackRef.current = null;
     };
-  }, [showChrono]);
+  }, [showChrono, isVideoLoading]);
 
   // Chronometer RAF
   useEffect(() => {
@@ -93,7 +93,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, []);
+  }, [isVideoLoading]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -109,7 +109,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
     return () => {
       document.removeEventListener('webkitfullscreenchange', onWebkitFsChange);
     };
-  }, []);
+  }, [isVideoLoading]);
 
   // Click → play/pause | Double-click → toggle fullscreen
   useEffect(() => {
@@ -142,7 +142,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
       video.removeEventListener('dblclick', onDblClick);
       clearTimeout(timer);
     };
-  }, [disableControls]);
+  }, [disableControls, isVideoLoading]);
 
   return (
     <>
