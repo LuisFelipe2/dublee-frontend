@@ -13,6 +13,10 @@ const FileImport = ({ onUpload, showToast }) => {
 
   const applyFile = (f) => {
     if (!f) return;
+    if (!f.type.startsWith('video/')) {
+      showToast('error', 'Arquivo inválido. Selecione um vídeo.');
+      return;
+    }
     if (f.size > MAX_SIZE_BYTES) {
       showToast('error', 'Vídeo muito grande. Limite máximo 10 MB.');
       return;

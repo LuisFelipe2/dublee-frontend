@@ -34,17 +34,22 @@ const SubtitleEditor = () => {
   }, [subtitles, videoId]);
 
   useEffect(() => {
+    let cancelled = false;
+    let createdBlobUrl = null;
+
     async function fetchVideo() {
       handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
 
       const [blob, success] = await downloadVideo(videoId);
+      if (cancelled) return;
 
       if (!success) {
         showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
         return;
       }
 
-      setBlobUrl(URL.createObjectURL(blob));
+      createdBlobUrl = URL.createObjectURL(blob);
+      setBlobUrl(createdBlobUrl);
 
       const saved = localStorage.getItem(storageKey(videoId));
       setSubtitles(saved ? JSON.parse(saved) : []);
@@ -53,6 +58,10 @@ const SubtitleEditor = () => {
     }
 
     fetchVideo();
+    return () => {
+      cancelled = true;
+      if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
+    };
   }, [videoId]);
 
   const handleGenerate = async () => {

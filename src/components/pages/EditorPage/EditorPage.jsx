@@ -176,6 +176,7 @@ const EditorPage = () => {
   // ── Carrega o vídeo original (visual) ──────────────────────────
   useEffect(() => {
     let cancelled = false;
+    let createdBlobUrl = null;
     async function fetchVideo() {
       handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
       const [blob, success] = await downloadVideo(videoId);
@@ -184,12 +185,16 @@ const EditorPage = () => {
         showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
         return;
       }
-      setBlobUrl(URL.createObjectURL(blob));
+      createdBlobUrl = URL.createObjectURL(blob);
+      setBlobUrl(createdBlobUrl);
       setIsVideoLoading(false);
       setToast(null);
     }
     fetchVideo();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
 

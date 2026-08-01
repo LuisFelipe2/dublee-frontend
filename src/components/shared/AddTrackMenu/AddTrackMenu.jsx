@@ -22,6 +22,10 @@ const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled }) =>
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
+    if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+      showError?.('Arquivo inválido. Selecione um áudio ou vídeo.');
+      return;
+    }
     if (file.size > MAX_SIZE_BYTES) {
       showError?.('Arquivo muito grande. Limite máximo 50 MB.');
       return;
