@@ -1,0 +1,235 @@
+.editor-mobile {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* ─── Vídeo full-bleed ────────────────────────────────────
+   object-fit: contain (não cover) — mostra o quadro inteiro sempre.
+   Para o caso comum (vídeo gravado na horizontal dentro do container
+   vertical do celular), isso já resulta em largura total naturalmente
+   (a largura é a dimensão que limita o encaixe), com barras pretas só
+   em cima/embaixo. "cover" cortaria as laterais do vídeo pra preencher
+   a tela, o que quebra a visualização — ruim pra um app de dublagem
+   onde o quadro completo precisa ficar visível. ────────────────── */
+.editor-mobile__video-wrapper {
+  position: absolute;
+  inset: 0;
+}
+
+.editor-mobile__video-wrapper .video-player,
+.editor-mobile__video-wrapper .video-player video {
+  width: 100%;
+  height: 100%;
+}
+
+.editor-mobile__video-wrapper .video-player video {
+  object-fit: contain;
+  border-radius: 0;
+  display: block;
+}
+
+/* ─── Pilha inferior: menu (colapsável) empilhado sobre o
+       transport (sempre visível) via flex — nunca se sobrepõem,
+       independente da altura do menu aberto/fechado. ────────── */
+.editor-mobile__bottom-stack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Transport: só play/pausar + avançar/retroceder ─────── */
+.editor-mobile__transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55));
+}
+
+.editor-mobile__transport-play {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--white);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.editor-mobile__transport-play:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-mobile__scrub {
+  flex: 1;
+  height: 4px;
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+.editor-mobile__scrub:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-mobile__transport-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Menu puxável (volume / gravar / configurações) ──────── */
+.editor-mobile__menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-mobile__menu-handle {
+  align-self: center;
+  width: 64px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.editor-mobile__menu-grip {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.editor-mobile__menu-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0 20px;
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+}
+
+.editor-mobile__menu-panel--open {
+  max-height: 120px;
+  opacity: 1;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.editor-mobile__menu-secondary {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Durante a gravação, o menu quase some — só o botão de finalizar
+   continua um pouco mais nítido que o resto. */
+.editor-mobile__menu-panel--recording .editor-mobile__menu-secondary {
+  opacity: 0.12;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.editor-mobile__menu-panel--recording .editor-mobile__icon-btn--record {
+  opacity: 0.75;
+  filter: blur(0.5px);
+}
+
+.editor-mobile__icon-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s, opacity 0.3s, filter 0.3s;
+}
+
+.editor-mobile__icon-btn:active {
+  transform: scale(0.94);
+}
+
+.editor-mobile__icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-mobile__icon-btn--record {
+  width: 62px;
+  height: 62px;
+  font-size: 26px;
+  background: #e53935;
+  border-color: #e53935;
+}
+
+.editor-mobile__icon-btn--recording {
+  background: #b71c1c;
+  border-color: #b71c1c;
+  animation: editorMobileRecPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes editorMobileRecPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
+}
+
+/* ─── Volume modal ───────────────────────────────────────── */
+.editor-mobile__volume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ─── Settings modal ─────────────────────────────────────── */
+.editor-mobile__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editor-mobile__settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ─── Tracks ("editar faixas") modal ─────────────────────── */
+.editor-mobile__tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
