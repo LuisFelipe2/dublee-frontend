@@ -9,7 +9,7 @@ const VolumeSlider = ({ label, value, onChange, disabled, compact = false }) => 
     <input
       type="range"
       min={0}
-      max={200}
+      max={300}
       step={5}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
@@ -21,6 +21,7 @@ const VolumeSlider = ({ label, value, onChange, disabled, compact = false }) => 
         <span>0%</span>
         <span>100%</span>
         <span>200%</span>
+        <span>300%</span>
       </div>
     )}
   </div>

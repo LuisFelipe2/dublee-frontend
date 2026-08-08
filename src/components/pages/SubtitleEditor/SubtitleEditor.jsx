@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { downloadVideo, translateSubtitles, transcribeWithWhisper } from '../../../services/api';
+import { translateSubtitles, transcribeWithWhisper } from '../../../services/api';
+import { downloadVideoCached } from '../../../services/videoCache';
 import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
 import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
@@ -40,7 +41,7 @@ const SubtitleEditor = () => {
     async function fetchVideo() {
       handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
 
-      const [blob, success] = await downloadVideo(videoId);
+      const [blob, success] = await downloadVideoCached(videoId);
       if (cancelled) return;
 
       if (!success) {

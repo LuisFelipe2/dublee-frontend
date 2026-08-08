@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { downloadVideo, getNoVoiceAudio, checkVoiceRemovalStatus, mixTracks } from '../../../services/api';
+import { getNoVoiceAudio, checkVoiceRemovalStatus, mixTracks } from '../../../services/api';
+import { downloadVideoCached } from '../../../services/videoCache';
 import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
 import PageHeader from '../../shared/PageHeader/PageHeader';
@@ -15,6 +16,13 @@ import './EditorPage.css';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
 
+const MAX_VOICE_TRACKS = 5;
+const MAX_IMPORT_DURATION_SEC = 10 * 60;
+const POLL_INTERVAL_MS = 2000;
+const POLL_BACKOFF_AFTER_ATTEMPTS = 30;
+const POLL_BACKOFF_INTERVAL_MS = 4000;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+
 const formatTime = (s) => {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
@@ -25,6 +33,18 @@ const isTrackAudible = (track, tracks) => {
   if (track.muted) return false;
   const anySolo = tracks.some(t => t.solo);
   return !anySolo || track.solo;
+};
+
+const SILENCE_PEAK_THRESHOLD = 0.01;
+
+const isSilentAudioBuffer = (audioBuffer, threshold = SILENCE_PEAK_THRESHOLD) => {
+  for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+    const data = audioBuffer.getChannelData(ch);
+    for (let i = 0; i < data.length; i++) {
+      if (Math.abs(data[i]) > threshold) return false;
+    }
+  }
+  return true;
 };
 
 const EditorPage = () => {
@@ -69,7 +89,7 @@ const EditorPage = () => {
   const isRecordingRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
-  const monitorAudioRef = useRef(null);
+  const monitorSourceRef = useRef(null);
   const removeVideoListenersRef = useRef(null);
 
   const ensureAudioContext = () => {
@@ -84,6 +104,13 @@ const EditorPage = () => {
       try { source.stop(); } catch { /* already stopped */ }
     });
     activeSourceNodesRef.current = [];
+  };
+
+  const reopenAudioContext = () => {
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
   };
 
   const stopPlayheadLoop = () => {
@@ -179,7 +206,7 @@ const EditorPage = () => {
     let createdBlobUrl = null;
     async function fetchVideo() {
       handleToastLoading(showToast, setIsVideoLoading, 'Baixando vídeo…');
-      const [blob, success] = await downloadVideo(videoId);
+      const [blob, success] = await downloadVideoCached(videoId);
       if (cancelled) return;
       if (!success) {
         showToastError(showToast, setIsVideoLoading, 'Erro ao baixar vídeo. Tente novamente ou comunique o suporte.');
@@ -216,27 +243,45 @@ const EditorPage = () => {
       }
     };
 
+    let cancelled = false;
+    let attempts = 0;
+    const startedAt = Date.now();
+
+    const scheduleNext = () => {
+      if (cancelled) return;
+      const interval = attempts >= POLL_BACKOFF_AFTER_ATTEMPTS ? POLL_BACKOFF_INTERVAL_MS : POLL_INTERVAL_MS;
+      pollRef.current = setTimeout(check, interval);
+    };
+
     const check = async () => {
+      if (cancelled) return;
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        showToast('error', 'Tempo limite excedido ao processar o vídeo. Tente novamente mais tarde.');
+        return;
+      }
+      attempts += 1;
       try {
         const [data, success] = await checkVoiceRemovalStatus(videoId);
         if (!success) {
           showToast('error', 'Erro ao verificar processamento do vídeo.');
-          clearInterval(pollRef.current);
           return;
         }
         if (data.is_complete) {
-          clearInterval(pollRef.current);
           setIsWaitingDemucs(false);
           loadBackgroundTrack();
+          return;
         }
       } catch {
         console.warn('Falha ao verificar status do processamento. Tentando novamente...');
       }
+      scheduleNext();
     };
 
     check();
-    pollRef.current = setInterval(check, 2000);
-    return () => clearInterval(pollRef.current);
+    return () => {
+      cancelled = true;
+      clearTimeout(pollRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
 
@@ -268,7 +313,7 @@ const EditorPage = () => {
       stopPlayheadLoop();
       stopAllSources();
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
-      if (monitorAudioRef.current) monitorAudioRef.current.close();
+      if (monitorSourceRef.current) monitorSourceRef.current.disconnect();
       if (audioContextRef.current) audioContextRef.current.close();
       removeVideoListenersRef.current?.();
     };
@@ -277,6 +322,10 @@ const EditorPage = () => {
   // ── Faixas ──────────────────────────────────────────────────────
   const handleAddVoiceTrack = () => {
     const voiceCount = state.tracks.filter(t => t.kind === TRACK_KIND.VOICE).length;
+    if (voiceCount >= MAX_VOICE_TRACKS) {
+      showToast('error', `Limite de ${MAX_VOICE_TRACKS} faixas de voz atingido.`);
+      return;
+    }
     const track = createTrack({ kind: TRACK_KIND.VOICE, label: `Voz ${voiceCount + 1}` });
     dispatch({ type: 'ADD_TRACK', track });
   };
@@ -292,11 +341,25 @@ const EditorPage = () => {
       showToast('error', 'Nenhum áudio gravado.');
       return;
     }
+    if (!targetTrackId) {
+      const voiceCount = stateRef.current.tracks.filter(t => t.kind === TRACK_KIND.VOICE).length;
+      if (voiceCount >= MAX_VOICE_TRACKS) {
+        showToast('error', `Limite de ${MAX_VOICE_TRACKS} faixas de voz atingido. Gravação descartada.`);
+        return;
+      }
+    }
     try {
       const blob = new Blob(chunks, { type: 'audio/webm' });
       const arrayBuffer = await blob.arrayBuffer();
       const ctx = ensureAudioContext();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      if (isSilentAudioBuffer(audioBuffer)) {
+        showToast('error',
+          'A gravação saiu sem áudio audível. Isso costuma acontecer com fones Bluetooth quando ' +
+          '"Retorno do áudio" está ativado — desative essa opção (ou use um fone com fio) e grave novamente.'
+        );
+        return;
+      }
       if (targetTrackId) {
         dispatch({ type: 'SET_TRACK_AUDIO', id: targetTrackId, blob, audioBuffer, offsetSec });
       } else {
@@ -327,10 +390,11 @@ const EditorPage = () => {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
-    if (monitorAudioRef.current) {
-      monitorAudioRef.current.close();
-      monitorAudioRef.current = null;
+    if (monitorSourceRef.current) {
+      monitorSourceRef.current.disconnect();
+      monitorSourceRef.current = null;
     }
+    reopenAudioContext();
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.onended = null;
@@ -370,10 +434,11 @@ const EditorPage = () => {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
-    if (monitorAudioRef.current) {
-      monitorAudioRef.current.close();
-      monitorAudioRef.current = null;
+    if (monitorSourceRef.current) {
+      monitorSourceRef.current.disconnect();
+      monitorSourceRef.current = null;
     }
+    reopenAudioContext();
     videoRef.current?.pause();
     setIsRecording(false);
     setIsPaused(false);
@@ -395,15 +460,16 @@ const EditorPage = () => {
 
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
       streamRef.current = mediaStream;
 
       if (audioMonitor) {
-        const monitorCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = monitorCtx.createMediaStreamSource(mediaStream);
-        source.connect(monitorCtx.destination);
-        monitorAudioRef.current = monitorCtx;
+        const ctx = ensureAudioContext();
+        if (ctx.state === 'suspended') await ctx.resume();
+        const source = ctx.createMediaStreamSource(mediaStream);
+        source.connect(ctx.destination);
+        monitorSourceRef.current = source;
       }
 
       const recorder = new MediaRecorder(mediaStream);
@@ -474,6 +540,10 @@ const EditorPage = () => {
       const arrayBuffer = await file.arrayBuffer();
       const ctx = ensureAudioContext();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      if (audioBuffer.duration > MAX_IMPORT_DURATION_SEC) {
+        showToast('error', `Áudio muito longo. Limite máximo de ${MAX_IMPORT_DURATION_SEC / 60} minutos.`);
+        return;
+      }
       const track = createTrack({
         kind: TRACK_KIND.IMPORTED,
         label: file.name,
@@ -652,7 +722,7 @@ const EditorPage = () => {
                           onChange={e => setAudioMonitor(e.target.checked)}
                         />
                         Retorno do áudio
-                        <span className="recording-option__hint"> (use fones de ouvido)</span>
+                        <span className="recording-option__hint"> (em fones Bluetooth a qualidade pode cair um pouco durante a gravação)</span>
                       </label>
                     </div>
                   )}

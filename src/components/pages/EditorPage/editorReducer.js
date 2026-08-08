@@ -92,7 +92,7 @@ export function editorReducer(state, action) {
     }
 
     case 'SET_VOLUME':
-      return updateTrack(state, action.id, t => ({ ...t, volume: clamp(action.volume, 0, 200) }));
+      return updateTrack(state, action.id, t => ({ ...t, volume: clamp(action.volume, 0, 300) }));
 
     case 'TOGGLE_MUTE':
       return updateTrack(state, action.id, t => ({ ...t, muted: !t.muted }));
