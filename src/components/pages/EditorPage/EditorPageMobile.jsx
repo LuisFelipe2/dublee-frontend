@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
 import Button from '../../shared/Button/Button';
 import Toast from '../../shared/Toast/Toast';
@@ -43,7 +43,7 @@ const EditorPageMobile = () => {
     handleDownload,
     interactionsDisabled,
     transportDisabled,
-  } = useEditorEngine();
+  } = useEditorEngine({ isMobile: true });
 
   const [isVolumeModalOpen, setIsVolumeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -51,6 +51,26 @@ const EditorPageMobile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
 
   const menuDragRef = useRef(null);
+  const rootRef = useRef(null);
+  const bottomStackRef = useRef(null);
+
+  const activeSubtitle = useMemo(
+    () => subtitles.find(s => state.playheadSec >= s.startTime && state.playheadSec < s.endTime),
+    [subtitles, state.playheadSec]
+  );
+
+  // Mantém a legenda sempre acima da pilha de controles (menu + transport),
+  // que muda de altura quando o menu puxável abre/fecha.
+  useEffect(() => {
+    const root = rootRef.current;
+    const stack = bottomStackRef.current;
+    if (!root || !stack) return;
+    const observer = new ResizeObserver(([entry]) => {
+      root.style.setProperty('--bottom-stack-h', `${entry.contentRect.height}px`);
+    });
+    observer.observe(stack);
+    return () => observer.disconnect();
+  }, []);
 
   const openTracksModal = () => {
     setIsSettingsModalOpen(false);
@@ -63,10 +83,10 @@ const EditorPageMobile = () => {
   };
 
   // Puxar (arrastar) o handle abre/fecha o menu, igual apps de streaming;
-  // um tap simples no handle também alterna. Travado durante a gravação
-  // para o botão de finalizar não ficar inacessível.
+  // um tap simples no handle também alterna. Continua disponível durante
+  // a gravação — mesmo se o menu fechar, o handle continua ali para
+  // reabri-lo e acessar o botão de finalizar.
   const handleMenuHandlePointerDown = (e) => {
-    if (isRecording) return;
     menuDragRef.current = { startY: e.clientY, moved: false };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
@@ -91,13 +111,14 @@ const EditorPageMobile = () => {
   };
 
   return (
-    <div className="editor-mobile">
+    <div className="editor-mobile" ref={rootRef}>
       <div className="editor-mobile__video-wrapper">
         <VideoPlayer
           ref={videoRef}
           src={blobUrl}
           muted
           subtitles={subtitles}
+          showNativeCaptions={false}
           disableControls
           isVideoLoading={isVideoLoading}
           badge={isRecording && (
@@ -107,6 +128,9 @@ const EditorPageMobile = () => {
             </div>
           )}
         />
+        {activeSubtitle && (
+          <div className="editor-mobile__subtitle">{activeSubtitle.text}</div>
+        )}
         {!isVideoLoading && isWaitingDemucs && (
           <div className="editor-overlay">
             <div className="editor-overlay__card">
@@ -122,7 +146,7 @@ const EditorPageMobile = () => {
 
       {/* Pilha inferior: menu puxável (topo) + handle + transport do vídeo
           (base, sempre visível) — empilhados via flex, nunca se sobrepõem. */}
-      <div className="editor-mobile__bottom-stack">
+      <div className="editor-mobile__bottom-stack" ref={bottomStackRef}>
 
       {/* Menu (volume / gravar / configurações) — puxável para cima/baixo */}
       <div className="editor-mobile__menu">

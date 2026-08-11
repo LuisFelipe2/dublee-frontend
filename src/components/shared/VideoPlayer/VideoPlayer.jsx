@@ -8,7 +8,7 @@ const formatChrono = (s) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
 };
 
-const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono = true, disableControls = false, badge = null, isVideoLoading }, ref) => {
+const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono = true, showNativeCaptions = true, disableControls = false, badge = null, isVideoLoading }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const fsPendingRef = useRef(false);
@@ -21,7 +21,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !showNativeCaptions) return;
     if (!textTrackRef.current) {
       textTrackRef.current = video.addTextTrack('subtitles', 'Legendas', 'pt');
       textTrackRef.current.mode = 'showing';
@@ -29,7 +29,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, subtitles = [], showChrono
     const track = textTrackRef.current;
     while (track.cues?.length) track.removeCue(track.cues[0]);
     subtitles.forEach(sub => track.addCue(new VTTCue(sub.startTime, sub.endTime, sub.text)));
-  }, [subtitles, isVideoLoading]);
+  }, [subtitles, isVideoLoading, showNativeCaptions]);
 
   useEffect(() => {
     const video = videoRef.current;

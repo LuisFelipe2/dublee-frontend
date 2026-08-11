@@ -45,7 +45,7 @@ const isSilentAudioBuffer = (audioBuffer, threshold = SILENCE_PEAK_THRESHOLD) =>
  * views drive playback through their own custom buttons/scrub bar (calling
  * handleTogglePlay/handleSeek), never through native <video> controls.
  */
-export function useEditorEngine() {
+export function useEditorEngine({ isMobile = false } = {}) {
   const { videoId } = useParams();
   const navigate = useNavigate();
 
@@ -55,6 +55,11 @@ export function useEditorEngine() {
 
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
+  // No mobile, o transport já mostra o estado "gravando" com o botão pulsando
+  // e o REC badge no vídeo — o toast só ocuparia espaço por cima da tela cheia.
+  const showRecordingToast = () => {
+    if (!isMobile) showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
+  };
 
   const [blobUrl, setBlobUrl] = useState(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -393,6 +398,7 @@ export function useEditorEngine() {
       monitorSourceRef.current = null;
     }
     reopenAudioContext();
+    stopPlayheadLoop();
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.onended = null;
@@ -406,6 +412,7 @@ export function useEditorEngine() {
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.pause();
       videoRef.current?.pause();
+      stopPlayheadLoop();
       setIsPaused(true);
       setToast(null);
     }
@@ -415,8 +422,9 @@ export function useEditorEngine() {
     if (mediaRecorderRef.current?.state === 'paused') {
       mediaRecorderRef.current.resume();
       videoRef.current?.play();
+      startPlayheadLoop();
       setIsPaused(false);
-      showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
+      showRecordingToast();
     }
   };
 
@@ -437,6 +445,7 @@ export function useEditorEngine() {
       monitorSourceRef.current = null;
     }
     reopenAudioContext();
+    stopPlayheadLoop();
     videoRef.current?.pause();
     setIsRecording(false);
     setIsPaused(false);
@@ -495,7 +504,7 @@ export function useEditorEngine() {
       recorder.start();
       isRecordingRef.current = true;
       setIsRecording(true);
-      showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
+      showRecordingToast();
 
       if (videoRef.current) {
         videoRef.current.currentTime = startOffset;
@@ -516,7 +525,7 @@ export function useEditorEngine() {
           if (mediaRecorderRef.current?.state === 'paused') {
             mediaRecorderRef.current.resume();
             setIsPaused(false);
-            showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
+            showRecordingToast();
           }
         };
         videoRef.current.addEventListener('pause', handleVideoPause);
@@ -527,6 +536,7 @@ export function useEditorEngine() {
         };
 
         await videoRef.current.play();
+        startPlayheadLoop();
       }
 
       if (fullscreenOnStart && videoRef.current?.parentElement) {
