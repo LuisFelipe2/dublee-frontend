@@ -260,7 +260,7 @@ const EditorPageMobile = () => {
               onChange={e => setAudioMonitor(e.target.checked)}
             />
             Retorno do áudio
-            <span className="recording-option__hint"> (em fones Bluetooth a qualidade pode cair um pouco durante a gravação)</span>
+            <span className="recording-option__hint"> (Usar fone de ouvido)</span>
           </label>
 
           <div className="editor-mobile__settings-actions">

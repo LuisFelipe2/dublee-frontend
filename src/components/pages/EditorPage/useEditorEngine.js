@@ -478,7 +478,14 @@ export function useEditorEngine({ isMobile = false } = {}) {
 
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        audio: {
+          // Com o retorno ativo, o áudio do mic é tocado de volta na saída;
+          // manter o AEC ligado faz o navegador tentar cancelar a voz a
+          // partir do próprio retorno, cortando o áudio (ao vivo e gravado).
+          echoCancellation: !audioMonitor,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       streamRef.current = mediaStream;
 
