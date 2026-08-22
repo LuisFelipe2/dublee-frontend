@@ -1,0 +1,21 @@
+.info-page-container {
+  text-align: left;
+}
+
+.info-page__content {
+  max-width: 720px;
+  margin: 32px auto 0;
+  padding: 0 40px 32px;
+}
+
+.info-page__placeholder {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .info-page__content {
+    padding-inline: 20px;
+  }
+}

@@ -141,6 +141,9 @@ const VideoCard = ({ item, isSelected, onClick, outerRef, canScrollLeft, canScro
     } else if (e.key === 'ArrowUp') {
       const search = document.querySelector('.catalog-search');
       if (search) { e.preventDefault(); search.focus(); }
+    } else if (e.key === 'ArrowDown') {
+      const footerFirst = document.querySelector('.app-footer__copy--link, .app-footer__link');
+      if (footerFirst) { e.preventDefault(); footerFirst.focus(); }
     }
   }, [onClick, tvNav]);
 

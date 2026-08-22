@@ -1,0 +1,74 @@
+.subtitle-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.subtitle-caption__quote {
+  /* Mobile-first: base é o tamanho de tela P (celular), aumentando nos
+     breakpoints M/G/X abaixo — mesmos limiares de src/constants/breakpoints.js. */
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-disabled);
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.subtitle-caption__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-bottom: 2px solid var(--border-default);
+  outline: none;
+  background: transparent;
+  padding-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.subtitle-caption__input::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 500;
+}
+
+.subtitle-caption__input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.subtitle-caption__input:disabled {
+  cursor: not-allowed;
+}
+
+@media (min-width: 601px) { /* M — tablet / notebook pequeno */
+  .subtitle-caption__quote {
+    font-size: 26px;
+  }
+  .subtitle-caption__input {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 1025px) { /* G — monitor / notebook, valores de sempre */
+  .subtitle-caption__quote {
+    font-size: 32px;
+  }
+  .subtitle-caption__input {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .subtitle-caption {
+    gap: 12px;
+  }
+  .subtitle-caption__quote {
+    font-size: 46px;
+  }
+  .subtitle-caption__input {
+    font-size: 34px;
+  }
+}

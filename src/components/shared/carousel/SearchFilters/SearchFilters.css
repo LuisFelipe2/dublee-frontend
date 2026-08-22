@@ -142,6 +142,16 @@
 
 .active-filter__remove:hover { opacity: 1; }
 
+/* ── Foco por teclado (Tab) — o filtro de tags some inteiro em tier X
+   (ver showTagFilter em SearchFilters.jsx), então isso só é alcançado nas
+   telas P/M/G, não faz parte da navegação por D-pad/TV. ── */
+.filter-btn:focus-visible,
+.filter-option:focus-visible,
+.active-filter__remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .catalog-filters {
@@ -150,10 +160,9 @@
   }
 }
 
-/* tier X (TV): texto legível a distância */
+/* tier X (TV): texto legível a distância. Filtro de tags some inteiro
+   nessa tela (ver showTagFilter em SearchFilters.jsx) — só a busca fica. */
 @media (min-width: 1920px) {
   .catalog-search { font-size: 20px; padding: 14px 18px 14px 46px; }
   .catalog-search-icon { left: 16px; }
-  .filter-btn { font-size: 18px; padding: 12px 18px; }
-  .filter { font-size: 16px; padding: 7px 16px; }
 }

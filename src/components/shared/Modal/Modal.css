@@ -56,6 +56,11 @@
   color: var(--text-primary);
 }
 
+.modal__close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .modal__body {
   padding: 18px;
 }

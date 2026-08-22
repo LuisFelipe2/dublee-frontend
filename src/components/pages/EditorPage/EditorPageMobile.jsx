@@ -16,6 +16,8 @@ const MENU_DRAG_THRESHOLD_PX = 32;
 
 const EditorPageMobile = () => {
   const {
+    videoId,
+    navigate,
     state,
     dispatch,
     toast,
@@ -128,11 +130,21 @@ const EditorPageMobile = () => {
           showNativeCaptions={false}
           disableControls
           isVideoLoading={isVideoLoading}
-          badge={isRecording && (
+          badge={isRecording ? (
             <div className={`rec-badge${isPaused ? ' rec-badge--paused' : ''}`}>
               <span className="rec-badge__dot" />
               {isPaused ? 'PAUSADO' : 'REC'}
             </div>
+          ) : (
+            <button
+              type="button"
+              className="editor-mobile__back-btn"
+              onClick={() => navigate(`/subtitle/${videoId}`)}
+              aria-label="Voltar"
+              title="Voltar"
+            >
+              ‹
+            </button>
           )}
         />
         {activeSubtitle && (

@@ -1,0 +1,128 @@
+.subtitle-settings-modal.modal {
+  max-width: 420px;
+}
+
+.subtitle-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subtitle-settings__section + .subtitle-settings__section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-row);
+}
+
+.subtitle-settings__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.subtitle-settings__size-options {
+  display: flex;
+  gap: 8px;
+}
+
+.subtitle-settings__size-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-default);
+  background: var(--surface-white);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.subtitle-settings__size-btn:hover {
+  background: var(--surface-hover);
+}
+
+.subtitle-settings__size-btn--active {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--white);
+}
+
+/* Sem isso, passar o mouse por cima do botão ativo faz o :hover (mais
+   específico, por ter uma pseudo-classe a mais) vencer só o `background`
+   (que clareia pro cinza do hover normal) mas não o `color` (que continua
+   branco, herdado da regra --active acima) — texto branco em fundo claro
+   ficava ilegível. Mantendo o fundo escuro também no hover, resolve. */
+.subtitle-settings__size-btn--active:hover {
+  background: var(--text-primary);
+}
+
+.subtitle-settings__size-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Toolbar de geração por IA (SubtitleAiDescriptionPanel) ───
+   Empilhado em vez de em linha — o modal é mais estreito do que a
+   barra que existia direto na página. */
+.subtitle-ai-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.subtitle-translate-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+.subtitle-translate-check input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--text-primary);
+  flex-shrink: 0;
+}
+.subtitle-lang-select {
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-default);
+  font-size: 13px;
+  background: var(--surface-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.subtitle-lang-select:focus {
+  border-color: var(--text-primary);
+}
+
+/* tier X (TV): a legenda/cronômetro em si já ficam maiores nessa tela (ver
+   SubtitleEditor.jsx/.css) — o seletor de tamanho aqui precisa acompanhar,
+   senão fica minúsculo perto do resto da UI em tela cheia. */
+@media (min-width: 1920px) {
+  .subtitle-settings-modal.modal {
+    max-width: 640px;
+  }
+
+  .subtitle-settings__label {
+    font-size: 19px;
+  }
+
+  .subtitle-settings__size-options {
+    gap: 14px;
+  }
+
+  .subtitle-settings__size-btn {
+    padding: 16px 20px;
+    font-size: 20px;
+    border-radius: 10px;
+  }
+}

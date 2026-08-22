@@ -182,7 +182,7 @@ const CatalogPage = () => {
         />
       </Modal>
 
-      <Footer />
+      <Footer tvNav={isTV} />
 
       {toast && createPortal(
         <Toast

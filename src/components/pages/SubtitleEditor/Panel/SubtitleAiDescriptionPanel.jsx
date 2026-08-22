@@ -16,20 +16,13 @@ const LANGUAGES = [
 export function SubtitleAiDescriptionPanel({handleGenerate, isGenerating, autoTranslate, handleAutoTranslate, targetLang, handleTargetLang}) {
 
     return (
-        <div className="subtitle-ai-description-panel">
-          <h3 className="subtitle-method-panel__title">
-            <span>🤖</span> IA (Whisper)
-          </h3>
-          <p className="subtitle-method-panel__desc">
-            Gere legendas automaticamente a partir do áudio usando o modelo Whisper.
-            O processo pode levar alguns instantes dependendo da duração do vídeo.
-          </p>
+        <div className="subtitle-ai-toolbar">
           <Button
             variant="primary"
             onClick={handleGenerate}
             disabled={isGenerating}
           >
-            {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas'}
+            {isGenerating ? '⏳ Gerando…' : '✨ Gerar legendas com IA'}
           </Button>
           <label className="subtitle-translate-check">
             <input
@@ -38,7 +31,7 @@ export function SubtitleAiDescriptionPanel({handleGenerate, isGenerating, autoTr
               onChange={handleAutoTranslate}
               disabled={isGenerating}
             />
-            Traduzir automaticamente após gerar
+            Traduzir automaticamente
           </label>
           {autoTranslate && (
             <select

@@ -225,6 +225,34 @@
   50% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
 }
 
+/* ─── Botão de voltar (mesmo canto do rec-badge — nunca aparecem juntos:
+   este só quando !isRecording, o rec-badge só quando isRecording) ────── */
+.editor-mobile__back-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  color: var(--white);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.editor-mobile__back-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
 /* ─── Volume modal ───────────────────────────────────────── */
 .editor-mobile__volume-list {
   display: flex;

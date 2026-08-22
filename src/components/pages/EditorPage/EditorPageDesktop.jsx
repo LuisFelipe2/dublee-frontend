@@ -6,6 +6,7 @@ import Button from '../../shared/Button/Button';
 import Toast from '../../shared/Toast/Toast';
 import Timeline from '../../shared/Timeline/Timeline';
 import AddTrackMenu from '../../shared/AddTrackMenu/AddTrackMenu';
+import useFullscreenElement from '../../../hooks/useFullscreenElement';
 import { useEditorEngine, formatTime } from './useEditorEngine';
 import './EditorPage.css';
 
@@ -49,6 +50,8 @@ const EditorPageDesktop = () => {
     transportDisabled,
   } = useEditorEngine();
 
+  const isFullscreen = !!useFullscreenElement();
+
   return (
     <>
       <Header />
@@ -67,11 +70,25 @@ const EditorPageDesktop = () => {
                   subtitles={subtitles}
                   disableControls
                   isVideoLoading={isVideoLoading}
-                  badge={isRecording && (
+                  badge={isRecording ? (
                     <div className={`rec-badge${isPaused ? ' rec-badge--paused' : ''}`}>
                       <span className="rec-badge__dot" />
                       {isPaused ? 'PAUSADO' : 'REC'}
                     </div>
+                  ) : isFullscreen && (
+                    // Fora de tela cheia o "Voltar" já existe embaixo (button-group
+                    // editor-actions); em tela cheia essa área some (fica fora do
+                    // .video-player, que é o elemento que realmente entra em
+                    // fullscreen), então precisa de uma cópia própria aqui dentro.
+                    <button
+                      type="button"
+                      className="editor-desktop__back-btn"
+                      onClick={() => navigate(`/subtitle/${videoId}`)}
+                      aria-label="Voltar"
+                      title="Voltar"
+                    >
+                      ‹
+                    </button>
                   )}
                 />
                 {!isVideoLoading && isWaitingDemucs && (

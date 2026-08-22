@@ -2,6 +2,16 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import VideoPlayer from '../../../shared/VideoPlayer/VideoPlayer';
 import './CatalogPreview.css';
 
+// Segundos avançados/retrocedidos por pressionar de seta na barra de
+// progresso — mesmo valor do `step` nativo do <input type="range"> (mantido
+// como fallback visual), mas implementado explicitamente em JS porque
+// depender do avanço nativo do range em ArrowLeft/Right é o único ponto
+// desse arquivo que não segue o padrão do resto (todo o resto do sistema de
+// D-pad é 100% JS explícito, nunca depende de comportamento nativo do
+// browser pra teclas de seta) — e é exatamente o tipo de coisa que pode não
+// disparar dependendo de como o remoto/TV entrega os eventos de teclado.
+const SEEK_STEP_SEC = 5;
+
 const formatTime = (s) => {
   if (!isFinite(s) || s < 0) return '0:00';
   const m = Math.floor(s / 60);
@@ -53,6 +63,25 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
     continueRef.current?.focus();
   }, [tvNav, previewUrl]);
 
+  // TV: o botão de fechar (×) é renderizado pelo Modal genérico (fora da
+  // árvore deste componente), então ele nunca fazia parte do mapa de setas —
+  // só dava pra fechar via Escape/Backspace, nunca navegando até o botão de
+  // verdade. Anexado via DOM direto (em vez de prop-drilling pro Modal
+  // genérico, que também é usado por ReportProblemModal/SubtitleSettingsModal
+  // sem noção de tvNav) pra não acoplar um componente compartilhado a este
+  // caso específico.
+  useEffect(() => {
+    if (!tvNav) return;
+    const closeBtn = document.querySelector('.modal__close');
+    if (!closeBtn) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); continueRef.current?.focus(); }
+      else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); onClose?.(); }
+    };
+    closeBtn.addEventListener('keydown', onKeyDown);
+    return () => closeBtn.removeEventListener('keydown', onKeyDown);
+  }, [tvNav, onClose]);
+
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -81,9 +110,12 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
 
   const handleContinueKeyDown = (e) => {
     if (!tvNav) return;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       pauseRef.current?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      document.querySelector('.modal__close')?.focus();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       progressRef.current?.focus();
@@ -122,9 +154,21 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
 
   const handleProgressKeyDown = (e) => {
     if (!tvNav) return;
-    if (e.key === 'ArrowUp') { e.preventDefault(); backToContinue(); }
-    else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); backToContinue(); }
-    // ArrowLeft/ArrowRight: deixa o <input type="range"> nativo avançar/retroceder (step).
+    const video = videoRef.current;
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (video) video.currentTime = Math.min(video.currentTime + SEEK_STEP_SEC, duration || video.currentTime);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (video) video.currentTime = Math.max(video.currentTime - SEEK_STEP_SEC, 0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      backToContinue();
+    } else if (e.key === 'Escape' || e.key === 'Backspace') {
+      e.preventDefault();
+      e.stopPropagation();
+      backToContinue();
+    }
   };
 
   return (
@@ -175,7 +219,7 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
                 className="catalog-preview__progress"
                 min={0}
                 max={duration || 0}
-                step={5}
+                step={SEEK_STEP_SEC}
                 value={Math.min(currentTime, duration || 0)}
                 onChange={handleSeekChange}
                 onKeyDown={handleProgressKeyDown}

@@ -1,17 +1,28 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import './SearchFilters.css';
 
+// `tvNav` (===tier X/TV) também é usado pra ESCONDER o filtro de tags nessa
+// tela — pedido explícito do usuário ("os filtros estão feios, quero
+// removê-los em telas X"). A busca continua normal. Como consequência, toda
+// a navegação por seta que existia pro botão Filtrar/dropdown/chips (só
+// ativa quando tvNav===true) ficou sem propósito, já que agora é exatamente
+// quando tvNav é true que esses elementos não existem mais no DOM — removida
+// junto (senão seria código morto apontando pra elementos que nunca renderizam).
 const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTag, tvNav }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const closeTimer = useRef(null);
 
-  const openFilter = (isFilterOpen) => { clearTimeout(closeTimer.current); setIsFilterOpen(isFilterOpen); };
+  const openFilter = (isFilterOpen) => setIsFilterOpen(isFilterOpen);
 
   const handleSearchKeyDown = (e) => {
     if (!tvNav || e.key !== 'ArrowDown') return;
-    const first = document.querySelector('.video-card');
-    if (first) { e.preventDefault(); first.focus(); }
+    // Sem resultado de busca não existe .video-card — cai direto no footer
+    // pra nunca deixar a seta num beco sem saída.
+    const target = document.querySelector('.video-card')
+      || document.querySelector('.app-footer__copy--link, .app-footer__link');
+    if (target) { e.preventDefault(); target.focus(); }
   };
+
+  const showTagFilter = !tvNav && allTags.length > 0;
 
   return (
     <div className="catalog-filters">
@@ -30,7 +41,7 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
           />
         </div>
 
-        {allTags.length > 0 && (
+        {showTagFilter && (
           <button
             className={`filter-btn${activeTags.length > 0 ? ' filter-btn--active' : ''}`}
             onClick={() => openFilter(!isFilterOpen)}
@@ -46,10 +57,10 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
             )}
           </button>
         )}
-        
+
       </div>
 
-      {isFilterOpen && allTags.length > 0 && (
+      {showTagFilter && isFilterOpen && (
         <div className="filter-dropdown">
           <div className="filter-dropdown__row">
             {allTags.map(tag => (
@@ -65,20 +76,21 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
           </div>
         </div>
       )}
-    
 
-      <div className="filter-dropdown__row">
-        {activeTags.map(tag => (
-          <span key={tag} className="filter active-filter">
-            {tag}
-            <button
-              className="active-filter__remove"
-              onClick={() => onToggleTag(tag)}
-              aria-label={`Remover filtro ${tag}`}
-            >×</button>
-          </span>
-        ))}
-      </div>
+      {showTagFilter && (
+        <div className="filter-dropdown__row">
+          {activeTags.map(tag => (
+            <span key={tag} className="filter active-filter">
+              {tag}
+              <button
+                className="active-filter__remove"
+                onClick={() => onToggleTag(tag)}
+                aria-label={`Remover filtro ${tag}`}
+              >×</button>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

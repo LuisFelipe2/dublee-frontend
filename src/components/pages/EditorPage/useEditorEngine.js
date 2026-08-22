@@ -471,6 +471,21 @@ export function useEditorEngine({ isMobile = false } = {}) {
       return;
     }
 
+    // Precisa disparar ANTES de qualquer `await` (inclusive o do getUserMedia
+    // logo abaixo, que abre um prompt de permissão) — a Fullscreen API exige
+    // ativação "fresca" do usuário, e esperar por uma promise nesse meio
+    // tempo (ainda mais uma que mostra um diálogo nativo) pode consumir essa
+    // ativação, fazendo o pedido de tela cheia falhar silenciosamente mesmo
+    // vindo de um clique real (era por isso que o botão de voltar em tela
+    // cheia nunca aparecia: a tela cheia nunca chegava a ser concedida).
+    let enteredFullscreen = false;
+    if (fullscreenOnStart && videoRef.current?.parentElement) {
+      try {
+        await videoRef.current.parentElement.requestFullscreen();
+        enteredFullscreen = true;
+      } catch { /* segue sem tela cheia — não bloqueia a gravação */ }
+    }
+
     pausePlayback();
 
     const startOffset = typeof atSec === 'number' ? atSec : stateRef.current.playheadSec;
@@ -545,11 +560,8 @@ export function useEditorEngine({ isMobile = false } = {}) {
         await videoRef.current.play();
         startPlayheadLoop();
       }
-
-      if (fullscreenOnStart && videoRef.current?.parentElement) {
-        videoRef.current.parentElement.requestFullscreen?.().catch(() => {});
-      }
     } catch (error) {
+      if (enteredFullscreen) document.exitFullscreen?.().catch(() => {});
       let msg = 'Erro ao acessar microfone: ';
       if (error.name === 'NotAllowedError') msg += 'Permissão negada. Permita acesso ao microfone.';
       else if (error.name === 'NotFoundError') msg += 'Microfone não encontrado.';

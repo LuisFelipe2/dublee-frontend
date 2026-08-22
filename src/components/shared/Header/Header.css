@@ -33,3 +33,9 @@
     font-size: 12px;
   }
 }
+
+/* tier X (TV): texto legível a distância */
+@media (min-width: 1920px) {
+  .app-header { padding: 24px 56px; gap: 20px; }
+  .app-header__text h1 { font-size: 32px; }
+}

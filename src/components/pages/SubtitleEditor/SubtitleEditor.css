@@ -12,64 +12,364 @@
   font-weight: 500;
 }
 
-/* ─── Methods panel content ───────────────────────────── */
-.subtitle-method-panel__title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-.subtitle-method-panel__desc {
-  font-size: 13px;
-  color: #777;
-  line-height: 1.65;
-  margin: 0;
-}
-.subtitle-method-steps {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.9;
-  padding-left: 18px;
-  margin: 0;
-}
-.subtitle-method-steps code {
-  background: var(--surface-subtle);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 12px;
+/* ─── Stage: envolve o VideoPlayer (controles nativos desligados) + a barra
+   de controles própria — é ELE o alvo do requestFullscreen (não o
+   .video-player), pra que a barra, a legenda/cronômetro overlay, o input em
+   tela cheia e o botão Continuar fiquem todos visíveis em fullscreen (mesmo
+   padrão de CatalogPreview.jsx/CatalogPreview.css). ──────────────────────── */
+.subtitle-editor__stage {
+  position: relative;
 }
 
-/* ─── AI panel controls ───────────────────────────────── */
-.subtitle-translate-check {
+.subtitle-editor__stage:fullscreen,
+.subtitle-editor__stage:-webkit-full-screen {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+.subtitle-editor__stage:fullscreen .video-player,
+.subtitle-editor__stage:-webkit-full-screen .video-player {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.subtitle-editor__stage:fullscreen .video-player video,
+.subtitle-editor__stage:-webkit-full-screen .video-player video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* ─── Barra de controles própria (substitui os controles nativos do <video>,
+   mesmo visual de CatalogPreview.css, sem o botão de mudo — o áudio original
+   importa pra quem está legendando). ─────────────────────────────────────── */
+.subtitle-editor__controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 70%, transparent 100%);
+}
+
+.subtitle-editor__ctrl-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  font-size: 14px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.subtitle-editor__ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.subtitle-editor__time {
+  flex-shrink: 0;
+  color: var(--white);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.subtitle-editor__progress {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ─── Botão de configurações (engrenagem, sobre o vídeo) ── */
+.subtitle-editor__settings-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.subtitle-editor__settings-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* ─── Botão de voltar (canto oposto da engrenagem, só existe em tier X —
+   ver isTV em SubtitleEditor.jsx — já que a timeline/Seção 3, de onde o
+   "Voltar" normal vem, não existe mais nessa tela). Mesmo visual do botão
+   equivalente em EditorPage.css (.editor-desktop__back-btn). ── */
+.subtitle-editor__back-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  color: var(--white);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.subtitle-editor__back-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* ─── Foco por teclado/D-pad (navegação TV, ver useBreakpoint/isTV) ── */
+.subtitle-editor__back-btn:focus-visible,
+.subtitle-editor__settings-btn:focus-visible,
+.subtitle-editor__continue-btn:focus-visible,
+.subtitle-editor__ctrl-btn:focus-visible,
+.subtitle-editor__progress:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Legenda/cronômetro em overlay próprio (não mais ::cue nativo) ──────
+   Tamanho vem inline via JS (state captionSize) — ver comentário em
+   SubtitleEditor.jsx sobre por que abandonamos legenda nativa. Centralizado
+   no topo (mesma posição que o cronômetro nativo via VTTCue tinha antes). */
+.subtitle-editor__chrono {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  pointer-events: none;
   user-select: none;
 }
-.subtitle-translate-check input[type='checkbox'] {
-  width: 15px;
-  height: 15px;
-  cursor: pointer;
-  accent-color: var(--text-primary);
-  flex-shrink: 0;
+
+.subtitle-editor__overlay-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  z-index: 10;
+  max-width: 90%;
+  background: rgba(0, 0, 0, 0.78);
+  color: var(--white);
+  font-weight: 600;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
 }
-.subtitle-lang-select {
-  padding: 7px 10px;
+
+/* ─── Legendagem em tela cheia (só aparece com .subtitle-editor__stage em
+   fullscreen, já que tudo fora dele fica invisível — inclusive o input/
+   timeline normais abaixo do vídeo, o que já resolve sozinho "não exibir a
+   pipeline" ali). bottom:64px fica acima da barra de controles (~46px). ── */
+.subtitle-editor__fullscreen-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(640px, 80vw);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+  padding: 10px 20px;
+}
+
+.subtitle-editor__fullscreen-caption .subtitle-caption__quote {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.subtitle-editor__fullscreen-caption .subtitle-caption__input {
+  color: var(--white);
+  border-bottom-color: rgba(255, 255, 255, 0.4);
+}
+
+.subtitle-editor__fullscreen-caption .subtitle-caption__input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.subtitle-editor__fullscreen-caption .subtitle-caption__input:focus {
+  border-bottom-color: var(--accent);
+}
+
+/* Mesmo estilo/posição do botão equivalente em CatalogPreview.css
+   (.catalog-preview__continue) — canto inferior direito, logo acima da
+   barra de controles (~46px de altura). */
+.subtitle-editor__continue-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 64px;
+  z-index: 10;
+  padding: 10px 20px;
+  background: rgba(20, 20, 20, 0.85);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
-  border: 1.5px solid var(--border-default);
   font-size: 13px;
-  background: var(--surface-white);
-  color: var(--text-primary);
+  font-weight: 600;
   cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s;
+  transition: background 0.2s, opacity 0.2s;
 }
-.subtitle-lang-select:focus {
-  border-color: var(--text-primary);
+
+.subtitle-editor__continue-btn:hover {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+@media (max-width: 768px) {
+  .subtitle-editor__chrono {
+    top: 8px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .subtitle-editor__overlay-caption {
+    bottom: 48px;
+  }
+
+  .subtitle-editor__fullscreen-caption {
+    bottom: 56px;
+    padding: 8px 14px;
+  }
+
+  .subtitle-editor__controls {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .subtitle-editor__time {
+    font-size: 10px;
+  }
+}
+
+/* ─── Tela X (TV): raiz própria em tela cheia DE VERDADE ─────────────────
+   Não basta esconder a timeline/input normal dentro do layout de página
+   comum (Header + container + Footer) — a página continua sujeita a scroll
+   (altura total pode passar do viewport, dependendo do aspect ratio do
+   vídeo), e um controle remoto/D-pad não tem como rolar a página, então
+   informação pode ficar simplesmente inalcançável. Por isso .subtitle-
+   editor-tv é uma raiz position:fixed cobrindo 100% do viewport, sem
+   Header/Footer — MESMO padrão já usado e validado em
+   EditorPageMobile.css (.editor-mobile). Só existe no DOM quando isTV (ver
+   SubtitleEditor.jsx), então não precisa de @media — a própria existência
+   do elemento já é exclusiva de tier X. ────────────────────────────────── */
+.subtitle-editor-tv {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: #000;
+  overflow: hidden;
+}
+
+.subtitle-editor-tv .subtitle-editor__stage {
+  position: absolute;
+  inset: 0;
+}
+
+.subtitle-editor-tv .subtitle-editor__stage .video-player,
+.subtitle-editor-tv .subtitle-editor__stage .video-player video {
+  width: 100%;
+  height: 100%;
+}
+
+.subtitle-editor-tv .subtitle-editor__stage .video-player video {
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* Texto/controles legíveis e alcançáveis a distância (mesma proporção usada
+   no resto do app pro tier X). */
+.subtitle-editor-tv .subtitle-editor__settings-btn,
+.subtitle-editor-tv .subtitle-editor__back-btn {
+  width: 46px;
+  height: 46px;
+  font-size: 22px;
+  top: 16px;
+}
+
+.subtitle-editor-tv .subtitle-editor__settings-btn {
+  right: 16px;
+}
+
+.subtitle-editor-tv .subtitle-editor__back-btn {
+  left: 16px;
+}
+
+.subtitle-editor-tv .subtitle-editor__chrono {
+  top: 16px;
+  padding: 10px 22px;
+  font-size: 40px;
+}
+
+.subtitle-editor-tv .subtitle-editor__continue-btn {
+  right: 28px;
+  bottom: 84px;
+  font-size: 20px;
+  padding: 16px 32px;
+}
+
+.subtitle-editor-tv .subtitle-editor__fullscreen-caption {
+  bottom: 84px;
+}
+
+.subtitle-editor-tv .subtitle-editor__controls {
+  padding: 14px 20px;
+  gap: 16px;
+}
+
+.subtitle-editor-tv .subtitle-editor__ctrl-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+}
+
+.subtitle-editor-tv .subtitle-editor__time {
+  font-size: 16px;
 }
