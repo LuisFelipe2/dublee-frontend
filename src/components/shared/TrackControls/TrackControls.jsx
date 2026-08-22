@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import VolumeSlider from '../VolumeSlider/VolumeSlider';
 import './TrackControls.css';
 
 const ICONS = { background: '🎵', voice: '🎙', imported: '📁' };
+const DOUBLE_TAP_THRESHOLD_MS = 350;
 
 const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, onToggleMute, onToggleSolo, onRemove, onRename }) => {
   const [editing, setEditing] = useState(false);
@@ -12,6 +13,21 @@ const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, on
     e.stopPropagation();
     setEditValue(track.label);
     setEditing(true);
+  };
+
+  // Duplo-toque em telas touch não gera um dblclick de forma confiável
+  // (mesmo motivo/fix já usado em SubtitleCaptionInput.jsx) — precisa de
+  // detecção própria via toque, senão renomear faixa não funciona no mobile.
+  const lastTapRef = useRef(0);
+  const handleTouchEnd = (e) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_THRESHOLD_MS) {
+      e.preventDefault();
+      beginEdit(e);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
   };
 
   const commitEdit = () => {
@@ -50,8 +66,9 @@ const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, on
       ) : (
         <span
           className="track-controls__label"
-          title={`${track.label} (duplo clique para renomear)`}
+          title={`${track.label} (duplo clique/toque para renomear)`}
           onDoubleClick={beginEdit}
+          onTouchEnd={handleTouchEnd}
         >
           {track.label}
         </span>

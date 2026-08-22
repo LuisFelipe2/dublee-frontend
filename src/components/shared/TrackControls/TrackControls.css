@@ -94,3 +94,32 @@
   background: #d97706;
   border-color: #d97706;
 }
+
+.track-controls__toggle:focus-visible,
+.track-controls__remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* tier X (TV): legível a distância — a altura da linha (.track-controls)
+   fica de fora de propósito, senão a timeline vira uma lista gigante; só o
+   texto/alvos de toque crescem. */
+@media (min-width: 1920px) {
+  .track-controls__icon,
+  .track-controls__label,
+  .track-controls__label-input {
+    font-size: 20px;
+  }
+
+  .track-controls__remove {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+
+  .track-controls__toggle {
+    width: 34px;
+    height: 30px;
+    font-size: 16px;
+  }
+}

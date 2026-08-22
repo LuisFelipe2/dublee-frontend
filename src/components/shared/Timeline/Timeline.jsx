@@ -23,6 +23,8 @@ const Timeline = ({
   pxPerSec,
   selectedTrackId,
   disabled,
+  isPlaying,
+  onTogglePlay,
   onSeek,
   onZoomIn,
   onZoomOut,
@@ -35,8 +37,29 @@ const Timeline = ({
   onToggleSolo,
   onRemoveTrack,
   onRenameTrack,
+  tvNav,
 }) => {
   const contentRef = useRef(null);
+
+  // Navegação por controle remoto (TV): play/zoom navegam entre si por
+  // ArrowRight/Left (mesma linha), ArrowUp volta pro botão "+ Adicionar
+  // faixa". Os controles por faixa (M/S/remover/arrastar/redimensionar
+  // clipe) ficam de fora de propósito — arrastar clipe pelo D-pad é ruim
+  // (mesmo racional já aplicado à timeline de legendas em SubtitleEditor.jsx),
+  // então esses continuam só mouse/toque/Tab por enquanto.
+  const handleZoomRowKeyDown = (e) => {
+    if (!tvNav) return;
+    const btns = Array.from(document.querySelectorAll('.timeline__play-btn, .timeline__zoom-btn'));
+    const idx = btns.indexOf(e.currentTarget);
+    if (e.key === 'ArrowRight') {
+      if (idx < btns.length - 1) { e.preventDefault(); btns[idx + 1].focus(); }
+    } else if (e.key === 'ArrowLeft') {
+      if (idx > 0) { e.preventDefault(); btns[idx - 1].focus(); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      document.querySelector('.add-track-menu .btn')?.focus();
+    }
+  };
 
   const safeDuration = Math.max(durationSec, 1);
   const contentWidth = safeDuration * pxPerSec + 80;
@@ -56,11 +79,29 @@ const Timeline = ({
       <div className="timeline__controls-col">
         <div className="timeline__controls-spacer" style={{ height: RULER_HEIGHT }}>
           <div className="timeline__zoom">
+            {/* Toca/pausa sem fechar o modal de faixas — o transport normal
+                da página fica atrás do backdrop do modal (inalcançável),
+                então esse é o único jeito de ouvir o resultado enquanto
+                ainda está ajustando as faixas. */}
+            {onTogglePlay && (
+              <button
+                type="button"
+                className="timeline__play-btn"
+                onClick={onTogglePlay}
+                onKeyDown={handleZoomRowKeyDown}
+                disabled={disabled}
+                aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+                title={isPlaying ? 'Pausar' : 'Reproduzir'}
+              >
+                {isPlaying ? '⏸' : '▶'}
+              </button>
+            )}
             <span className="timeline__zoom-icon" aria-hidden>🔍</span>
             <button
               type="button"
               className="timeline__zoom-btn"
               onClick={onZoomOut}
+              onKeyDown={handleZoomRowKeyDown}
               disabled={disabled}
               aria-label="Diminuir zoom"
             >
@@ -70,6 +111,7 @@ const Timeline = ({
               type="button"
               className="timeline__zoom-btn"
               onClick={onZoomIn}
+              onKeyDown={handleZoomRowKeyDown}
               disabled={disabled}
               aria-label="Aumentar zoom"
             >

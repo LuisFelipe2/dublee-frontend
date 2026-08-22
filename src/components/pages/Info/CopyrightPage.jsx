@@ -13,11 +13,15 @@ const CopyrightPage = () => (
         <PageHeader title="Direitos autorais" />
 
         <section className="info-page__content">
-          <p className="info-page__placeholder">Conteúdo em breve.</p>
+          <p className="info-page__placeholder">
+            O Dublee respeita os direitos autorais e a propriedade intelectual de terceiros. Todo o conteúdo disponível na plataforma, 
+            incluindo vídeos, áudios, imagens e textos, é protegido por leis de direitos autorais e não pode ser reproduzido, distribuído 
+            ou utilizado sem a devida autorização dos detentores dos direitos.
+          </p>
         </section>
 
         <div className="page-nav">
-          <Link to="/" className="btn btn--ghost">← Voltar para o início</Link>
+          <Link to="/" className="btn btn--ghost">Voltar para o início</Link>
         </div>
       </div>
     </main>

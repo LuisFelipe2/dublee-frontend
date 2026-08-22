@@ -34,7 +34,9 @@
 
 /* ─── Legenda (renderizada via JS/div, não <track> nativo, para
        poder ficar sempre acima da pilha de controles, que muda de
-       altura quando o menu puxável abre/fecha). ────────────────── */
+       altura quando o menu puxável abre/fecha). Tamanho vem inline via JS
+       (overlayFontSize, mesma preferência global de useCaptionSize usada
+       na tela de legendagem). ────────────────────────────────────────── */
 .editor-mobile__subtitle {
   position: absolute;
   left: 12px;
@@ -45,10 +47,29 @@
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.78);
   color: #fff;
-  font-size: 18px;
   text-align: center;
   pointer-events: none;
   transition: bottom 0.25s ease;
+}
+
+/* ─── Cronômetro (mesmo padrão visual de SubtitleEditor.css
+       .subtitle-editor__chrono — overlay próprio, não <track> nativo,
+       mesmo tamanho da legenda via useCaptionSize). ────────────────── */
+.editor-mobile__chrono {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* ─── Pilha inferior: menu (colapsável) empilhado sobre o
@@ -279,4 +300,105 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* ─── Foco por teclado/D-pad (navegação TV, ver useBreakpoint/isTV) ── */
+.editor-mobile__back-btn:focus-visible,
+.editor-mobile__menu-handle:focus-visible,
+.editor-mobile__icon-btn:focus-visible,
+.editor-mobile__transport-play:focus-visible,
+.editor-mobile__scrub:focus-visible,
+.editor-mobile__settings-nav-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* tier X (TV): botões/menus da tela de gravação legíveis e alcançáveis a
+   distância (mesma proporção usada no resto do app pro tier X). */
+@media (min-width: 1920px) {
+  .editor-mobile__back-btn {
+    width: 64px;
+    height: 64px;
+    font-size: 40px;
+    top: 24px;
+    left: 24px;
+  }
+
+  .editor-mobile__chrono {
+    font-size: 38px;
+    padding: 10px 22px;
+    top: 24px;
+  }
+
+  .editor-mobile__menu-handle {
+    width: 116px;
+    height: 38px;
+  }
+
+  .editor-mobile__menu-grip {
+    width: 72px;
+    height: 7px;
+  }
+
+  .editor-mobile__menu-panel {
+    gap: 40px;
+  }
+
+  .editor-mobile__menu-panel--open {
+    max-height: 240px;
+    padding: 30px 40px calc(30px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .editor-mobile__menu-secondary {
+    gap: 40px;
+  }
+
+  .editor-mobile__icon-btn {
+    width: 94px;
+    height: 94px;
+    font-size: 40px;
+  }
+
+  .editor-mobile__icon-btn--record {
+    width: 108px;
+    height: 108px;
+    font-size: 46px;
+  }
+
+  .editor-mobile__transport {
+    gap: 20px;
+    padding: 20px 28px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .editor-mobile__transport-play {
+    width: 68px;
+    height: 68px;
+    font-size: 30px;
+  }
+
+  .editor-mobile__scrub {
+    height: 8px;
+  }
+
+  .editor-mobile__transport-time {
+    font-size: 22px;
+  }
+
+  .editor-mobile__volume-list {
+    gap: 32px;
+  }
+
+  .editor-mobile__settings {
+    gap: 28px;
+  }
+
+  .editor-mobile__settings-actions {
+    gap: 20px;
+  }
+
+  .editor-mobile__settings-actions .btn {
+    font-size: 22px;
+    padding: 18px 28px;
+  }
 }

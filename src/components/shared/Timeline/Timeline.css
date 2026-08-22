@@ -32,6 +32,32 @@
   margin-right: 2px;
 }
 
+.timeline__play-btn {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent);
+  color: var(--white);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  padding: 0;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline__play-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.timeline__play-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .timeline__zoom-btn {
   width: 20px;
   height: 20px;
@@ -52,6 +78,26 @@
 .timeline__zoom-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.timeline__play-btn:focus-visible,
+.timeline__zoom-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* tier X (TV): legível e alcançável a distância. */
+@media (min-width: 1920px) {
+  .timeline__play-btn,
+  .timeline__zoom-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .timeline__zoom-icon {
+    font-size: 22px;
+  }
 }
 
 .timeline__scroll {

@@ -4,7 +4,7 @@ import './AddTrackMenu.css';
 
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
-const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled }) => {
+const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled, tvNav }) => {
   const [open, setOpen] = useState(false);
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
@@ -33,9 +33,49 @@ const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled }) =>
     onImportFile(file);
   };
 
+  // Navegação por controle remoto (TV): botão-gatilho abre/desce pro
+  // dropdown (ou pro próximo controle abaixo, se fechado); itens do
+  // dropdown navegam entre si e fecham com Escape/Backspace/ArrowUp.
+  const handleTriggerKeyDown = (e) => {
+    if (!tvNav) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (open) {
+        document.querySelector('.add-track-menu__item')?.focus();
+      } else {
+        document.querySelector('.timeline__play-btn, .timeline__zoom-btn')?.focus();
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      document.querySelector('.modal__close')?.focus();
+    }
+  };
+
+  const closeDropdown = () => {
+    setOpen(false);
+    containerRef.current?.querySelector('.btn')?.focus();
+  };
+
+  const handleItemKeyDown = (e) => {
+    if (!tvNav) return;
+    const items = Array.from(document.querySelectorAll('.add-track-menu__item'));
+    const idx = items.indexOf(e.currentTarget);
+    if (e.key === 'ArrowDown') {
+      if (idx < items.length - 1) { e.preventDefault(); items[idx + 1].focus(); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) items[idx - 1].focus();
+      else closeDropdown();
+    } else if (e.key === 'Escape' || e.key === 'Backspace') {
+      e.preventDefault();
+      e.stopPropagation();
+      closeDropdown();
+    }
+  };
+
   return (
     <div className="add-track-menu" ref={containerRef}>
-      <Button variant="outline" onClick={() => setOpen(o => !o)} disabled={disabled}>
+      <Button variant="outline" onClick={() => setOpen(o => !o)} onKeyDown={handleTriggerKeyDown} disabled={disabled}>
         + Adicionar faixa
       </Button>
 
@@ -53,6 +93,7 @@ const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled }) =>
             type="button"
             className="add-track-menu__item"
             onClick={() => { setOpen(false); onAddVoiceTrack(); }}
+            onKeyDown={handleItemKeyDown}
           >
             🎙 Nova faixa de voz (vazia)
           </button>
@@ -60,6 +101,7 @@ const AddTrackMenu = ({ onAddVoiceTrack, onImportFile, showError, disabled }) =>
             type="button"
             className="add-track-menu__item"
             onClick={() => { setOpen(false); fileInputRef.current?.click(); }}
+            onKeyDown={handleItemKeyDown}
           >
             📁 Importar áudio
           </button>

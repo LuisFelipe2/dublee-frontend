@@ -97,8 +97,21 @@ export function editorReducer(state, action) {
     case 'TOGGLE_MUTE':
       return updateTrack(state, action.id, t => ({ ...t, muted: !t.muted }));
 
+    // Solo é exclusivo (só uma faixa por vez, como um radio button) — clicar
+    // no S de uma faixa já solada desliga (volta a ouvir tudo); clicar no S
+    // de outra faixa troca o solo pra ela. Antes cada faixa tinha seu
+    // próprio `solo` independente, então dava pra deixar várias marcadas ao
+    // mesmo tempo sem querer — o usuário perdia o controle de quais faixas
+    // realmente estavam tocando (mudar seleção de solo silenciava faixas
+    // que ele não tinha intenção de mexer, parecendo "mutar" com o S).
     case 'TOGGLE_SOLO':
-      return updateTrack(state, action.id, t => ({ ...t, solo: !t.solo }));
+      return {
+        ...state,
+        tracks: state.tracks.map(t => ({
+          ...t,
+          solo: t.id === action.id ? !t.solo : false,
+        })),
+      };
 
     case 'MOVE_CLIP':
       return updateTrack(state, action.id, t => {

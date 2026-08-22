@@ -30,7 +30,7 @@ const FaqPage = () => {
           </section>
 
           <div className="page-nav">
-            <Link to="/" className="btn btn--ghost">← Voltar para o início</Link>
+            <Link to="/" className="btn btn--ghost">Voltar para o início</Link>
           </div>
         </div>
       </main>

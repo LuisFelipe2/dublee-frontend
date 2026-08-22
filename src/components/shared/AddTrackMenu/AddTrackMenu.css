@@ -40,3 +40,23 @@
 .add-track-menu__item:hover {
   background: var(--surface-hover);
 }
+
+.add-track-menu__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: var(--surface-hover);
+}
+
+/* tier X (TV): legível e alcançável a distância. */
+@media (min-width: 1920px) {
+  .add-track-menu__dropdown {
+    width: 400px;
+    padding: 16px;
+    gap: 8px;
+  }
+
+  .add-track-menu__item {
+    padding: 20px 22px;
+    font-size: 22px;
+  }
+}

@@ -39,13 +39,14 @@ const isSilentAudioBuffer = (audioBuffer, threshold = SILENCE_PEAK_THRESHOLD) =>
 };
 
 /**
- * Business-logic engine shared by EditorPageDesktop and EditorPageMobile:
- * video/background loading, Web-Audio-based multi-track playback, multi-take
- * recording, audio import and final mixing/download. No JSX here — both
- * views drive playback through their own custom buttons/scrub bar (calling
- * handleTogglePlay/handleSeek), never through native <video> controls.
+ * Business-logic engine usado por EditorPageMobile (única view do fluxo de
+ * gravação, ver EditorPage.jsx): video/background loading, Web-Audio-based
+ * multi-track playback, multi-take recording, audio import e mixagem/
+ * download final. Sem JSX aqui — a view aciona a reprodução pelos próprios
+ * botões/scrub bar (via handleTogglePlay/handleSeek), nunca pelos controles
+ * nativos do <video>.
  */
-export function useEditorEngine({ isMobile = false } = {}) {
+export function useEditorEngine() {
   const { videoId } = useParams();
   const navigate = useNavigate();
 
@@ -55,11 +56,6 @@ export function useEditorEngine({ isMobile = false } = {}) {
 
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
-  // No mobile, o transport já mostra o estado "gravando" com o botão pulsando
-  // e o REC badge no vídeo — o toast só ocuparia espaço por cima da tela cheia.
-  const showRecordingToast = () => {
-    if (!isMobile) showToast('loading', 'Gravando... Fale em sincronia com o vídeo.');
-  };
 
   const [blobUrl, setBlobUrl] = useState(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -424,7 +420,6 @@ export function useEditorEngine({ isMobile = false } = {}) {
       videoRef.current?.play();
       startPlayheadLoop();
       setIsPaused(false);
-      showRecordingToast();
     }
   };
 
@@ -526,7 +521,6 @@ export function useEditorEngine({ isMobile = false } = {}) {
       recorder.start();
       isRecordingRef.current = true;
       setIsRecording(true);
-      showRecordingToast();
 
       if (videoRef.current) {
         videoRef.current.currentTime = startOffset;
@@ -547,7 +541,6 @@ export function useEditorEngine({ isMobile = false } = {}) {
           if (mediaRecorderRef.current?.state === 'paused') {
             mediaRecorderRef.current.resume();
             setIsPaused(false);
-            showRecordingToast();
           }
         };
         videoRef.current.addEventListener('pause', handleVideoPause);

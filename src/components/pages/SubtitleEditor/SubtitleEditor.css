@@ -130,7 +130,7 @@
 /* ─── Botão de voltar (canto oposto da engrenagem, só existe em tier X —
    ver isTV em SubtitleEditor.jsx — já que a timeline/Seção 3, de onde o
    "Voltar" normal vem, não existe mais nessa tela). Mesmo visual do botão
-   equivalente em EditorPage.css (.editor-desktop__back-btn). ── */
+   equivalente em EditorPageMobile.css (.editor-mobile__back-btn). ── */
 .subtitle-editor__back-btn {
   position: absolute;
   top: 12px;
@@ -181,7 +181,6 @@
   color: rgba(255, 255, 255, 0.85);
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  font-size: 13px;
   letter-spacing: 1px;
   padding: 3px 10px;
   border-radius: 4px;
@@ -267,7 +266,6 @@
   .subtitle-editor__chrono {
     top: 8px;
     padding: 2px 8px;
-    font-size: 11px;
   }
   .subtitle-editor__overlay-caption {
     bottom: 48px;
@@ -345,7 +343,6 @@
 .subtitle-editor-tv .subtitle-editor__chrono {
   top: 16px;
   padding: 10px 22px;
-  font-size: 40px;
 }
 
 .subtitle-editor-tv .subtitle-editor__continue-btn {

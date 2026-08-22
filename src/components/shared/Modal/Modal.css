@@ -31,6 +31,16 @@
   border-bottom: 1px solid var(--border-default);
 }
 
+.modal--draggable .modal__header {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.modal--draggable .modal__header:active {
+  cursor: grabbing;
+}
+
 .modal__title {
   font-size: 16px;
   font-weight: 600;
@@ -71,6 +81,33 @@
   }
   .modal {
     border-radius: 16px;
+  }
+}
+
+/* tier X (TV): modal legível a distância — genérico, vale pra qualquer
+   modal do app (não só os da tela de gravação). */
+@media (min-width: 1920px) {
+  .modal {
+    max-width: 680px;
+  }
+
+  .modal__header {
+    padding: 28px 32px;
+    gap: 20px;
+  }
+
+  .modal__title {
+    font-size: 27px;
+  }
+
+  .modal__close {
+    width: 52px;
+    height: 52px;
+    font-size: 34px;
+  }
+
+  .modal__body {
+    padding: 32px;
   }
 }
 

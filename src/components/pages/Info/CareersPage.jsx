@@ -14,13 +14,14 @@ const CareersPage = () => (
 
         <section className="info-page__content">
           <p className="info-page__placeholder">
-            Quer trabalhar conosco? Sinta se livre para entrar em contato, o código do Dublee é open-source e estamos sempre abertos a novas ideias, sugestões e colaborações. Se você tem interesse em contribuir para o desenvolvimento da plataforma, seja como desenvolvedor, designer, ou em qualquer outra área, entre em contato conosco através das nossas redes sociais ou pelo email de contato disponível no site.
-            Quiser entrar em contato, basta enviar um email para 
+            Quer trabalhar no Dublee? o código fonte é open-source, se você tem interesse em contribuir para o desenvolvimento da plataforma, 
+            seja como desenvolvedor, designer, ou em qualquer outra área, basta abrir um PR no github e entrar em contato através do 
+            instagran: @dublee_oficial ou pelo email: dublee.plataforma@gmail.com
           </p>
         </section>
 
         <div className="page-nav">
-          <Link to="/" className="btn btn--ghost">← Voltar para o início</Link>
+          <Link to="/" className="btn btn--ghost">Voltar para o início</Link>
         </div>
       </div>
     </main>

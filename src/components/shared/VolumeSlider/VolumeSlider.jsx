@@ -1,6 +1,6 @@
 import './VolumeSlider.css';
 
-const VolumeSlider = ({ label, value, onChange, disabled, compact = false }) => (
+const VolumeSlider = ({ label, value, onChange, disabled, compact = false, onKeyDown }) => (
   <div className={`volume-slider${compact ? ' volume-slider--compact' : ''}`}>
     <div className="volume-slider__header">
       <span className="volume-slider__label">{label}</span>
@@ -13,6 +13,7 @@ const VolumeSlider = ({ label, value, onChange, disabled, compact = false }) => 
       step={5}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
+      onKeyDown={onKeyDown}
       disabled={disabled}
       className="volume-slider__input"
     />

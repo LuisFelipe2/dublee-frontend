@@ -1,7 +1,3 @@
-.container--wide {
-  max-width: 1280px;
-}
-
 /* ─── REC badge (over video) ─────────────────────────────── */
 .rec-badge {
   position: absolute;
@@ -24,35 +20,6 @@
   user-select: none;
 }
 
-/* ─── Botão de voltar em tela cheia (desktop) — mesmo canto do rec-badge,
-   nunca aparecem juntos (só um ou outro, conforme isRecording). Fora de
-   tela cheia o "Voltar" normal (button-group editor-actions) já resolve. ── */
-.editor-desktop__back-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(4px);
-  color: var(--white);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.editor-desktop__back-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
-
 .rec-badge__dot {
   width: 9px;
   height: 9px;
@@ -73,10 +40,6 @@
 }
 
 /* ─── Waiting-for-Demucs overlay ─────────────────────────── */
-.editor-player-wrapper {
-  position: relative;
-}
-
 .editor-overlay {
   position: absolute;
   inset: 0;
@@ -117,69 +80,6 @@
   color: var(--text-body);
   line-height: 1.65;
   margin: 0;
-}
-
-/* ─── Transport bar ───────────────────────────────────────── */
-.editor-transport {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
-.editor-transport__time {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  color: var(--text-secondary);
-  min-width: 96px;
-}
-
-.editor-transport__spacer {
-  flex: 1;
-}
-
-/* ─── Settings gear button ────────────────────────────────── */
-.editor-settings-menu {
-  position: relative;
-  display: inline-block;
-}
-
-.recording-settings-btn {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--text-ghost);
-  transition: border-color 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-
-.recording-settings-btn:hover,
-.recording-settings-btn--open {
-  border-color: #667eea;
-  color: #667eea;
-}
-
-.recording-settings-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 30;
-  width: 240px;
-  padding: 14px 16px;
-  background: var(--white);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .recording-option {
@@ -223,16 +123,19 @@
   height: 14px;
 }
 
-/* ─── Actions row ─────────────────────────────────────────── */
-.editor-actions {
-  margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-  .editor-transport {
-    gap: 8px;
+/* tier X (TV): checkbox de configuração legível a distância. */
+@media (min-width: 1920px) {
+  .recording-option {
+    font-size: 22px;
+    gap: 16px;
   }
-  .editor-transport__spacer {
-    display: none;
+
+  .recording-option input[type='checkbox'] {
+    width: 26px;
+    height: 26px;
+  }
+
+  .recording-option__hint {
+    font-size: 18px;
   }
 }

@@ -28,6 +28,11 @@
   opacity: 0.6;
 }
 
+.volume-slider__input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
 .volume-slider__scale {
   display: flex;
   justify-content: space-between;
@@ -47,4 +52,21 @@
 
 .volume-slider--compact .volume-slider__value {
   font-size: 11px;
+}
+
+/* tier X (TV): legível a distância — não afeta a variante compact (usada
+   dentro de TrackControls, que tem seu próprio bloco tier X). */
+@media (min-width: 1920px) {
+  .volume-slider:not(.volume-slider--compact) .volume-slider__label,
+  .volume-slider:not(.volume-slider--compact) .volume-slider__value {
+    font-size: 25px;
+  }
+
+  .volume-slider:not(.volume-slider--compact) .volume-slider__input {
+    height: 10px;
+  }
+
+  .volume-slider:not(.volume-slider--compact) .volume-slider__scale {
+    font-size: 18px;
+  }
 }

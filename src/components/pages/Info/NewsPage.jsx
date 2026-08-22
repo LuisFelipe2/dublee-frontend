@@ -14,16 +14,19 @@ const NewsPage = () => (
 
         <section className="info-page__content">
           <p className="info-page__placeholder">
-            Fique atento pois manteremos o dublee sempre atualizado com novidades, melhorias e correções.
-
-            Temos atualizações nos vídeos do catálogo toda a semana e eventualmente criando novas funcionalidades. Aceitamos sugestões e pedidos
-
-            Mantenha contato para sempre saber das novidades por email ou pelo aplicativo de celular. Siga-nos nas redes sociais para ficar por dentro de tudo que acontece no Dublee. 
+            Fique atento pois o dublee está sempre se atualizando com novidades, melhorias e correções.
+          </p>
+          <p className="info-page__placeholder">
+            Toda a semana novos vídeos são adicionados ao catálogo! 
+            Novas funcionalidades são publicadas nas redes sociais!
+          </p>
+          <p className="info-page__placeholder">
+            Aceitamos sugestões e pedidos, mande mensagem para o @dublee_oficial
           </p>
         </section>
 
         <div className="page-nav">
-          <Link to="/" className="btn btn--ghost">← Voltar para o início</Link>
+          <Link to="/" className="btn btn--ghost">Voltar para o início</Link>
         </div>
       </div>
     </main>

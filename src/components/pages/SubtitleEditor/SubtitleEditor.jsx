@@ -13,11 +13,13 @@ import SubtitleTimeline from './Timeline/SubtitleTimeline';
 import SubtitleSettingsModal from './SettingsModal/SubtitleSettingsModal';
 import useFullscreenElement from '../../../hooks/useFullscreenElement';
 import useBreakpoint from '../../../hooks/useBreakpoint';
+import useCaptionSize from '../../../hooks/useCaptionSize';
+import { CAPTION_FONT_SIZE, CAPTION_FONT_SIZE_IMMERSIVE, CAPTION_SIZE_MULTIPLIER } from '../../../constants/captionSize';
+import { formatChrono } from '../../../utils/chrono';
 import './SubtitleEditor.css';
 import { showToastError, handleToastLoading }  from '../../../utils/utils';
 
 const storageKey = (id) => `dublee-subtitles-${id}`;
-const CAPTION_SIZE_STORAGE_KEY = 'dublee-caption-size';
 
 // Menor duração possível de um bloco comitado — evita blocos de duração zero
 // quando o fechamento acontece exatamente no instante em que ele foi aberto.
@@ -57,32 +59,11 @@ const mergeIfMatches = (subs, pending) => {
 const nextBoundary = (subs, fromSec, fallbackSec) =>
   subs.filter(s => s.startTime >= fromSec).reduce((min, s) => Math.min(min, s.startTime), fallbackSec);
 
-// Legenda/cronômetro renderizados como overlay próprio (não mais via
-// <track>/VTTCue nativo — ver EditorPageMobile.jsx, que já tinha abandonado
-// legenda nativa pelo mesmo motivo: alguns navegadores/SOs mobile sobrescrevem
-// o ::cue com a preferência de legenda do sistema, ignorando o CSS da página).
-// Tamanho vem 100% do nosso próprio state, garantindo que o controle funcione
-// em qualquer aparelho.
-const CAPTION_FONT_SIZE = { sm: 13, md: 18, lg: 26 };
-const CAPTION_FONT_SIZE_FULLSCREEN = { sm: 22, md: 32, lg: 40 };
-
-// Multiplicador por tier de tela (mesmos limiares de useBreakpoint/breakpoints.js):
-// P (celular) reduz pra caber na tela pequena; X (TV, ≥1920px) aumenta bastante
-// pra ficar legível a distância — M/G ficam no tamanho "de referência" (1x).
-const SIZE_MULTIPLIER = { P: 0.72, M: 1, G: 1, X: 1.7 };
-
 // Segundos avançados/retrocedidos por seta na barra de progresso em tela X —
 // mesmo racional/valor do fix equivalente em CatalogPreview.jsx: JS explícito
 // em vez de depender do avanço nativo do <input type="range">, que pode não
 // disparar de forma confiável dependendo de como o remoto entrega os eventos.
 const SEEK_STEP_SEC = 5;
-
-const formatChrono = (s) => {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  const ms = Math.floor((s % 1) * 1000);
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
-};
 
 // Tempo m:ss pra barra de controles própria (mesmo formato de CatalogPreview.jsx).
 const formatTime = (s) => {
@@ -114,10 +95,8 @@ const SubtitleEditor = () => {
   const [targetLang, setTargetLang] = useState('pt');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // Preferência de tamanho de legenda/cronômetro é global (não por vídeo) e
-  // persiste entre visitas — sem isso, a escolha se perdia ao sair da tela.
-  const [captionSize, setCaptionSize] = useState(
-    () => localStorage.getItem(CAPTION_SIZE_STORAGE_KEY) || 'md'
-  );
+  // compartilhada com a tela de gravação (ver useCaptionSize).
+  const [captionSize, setCaptionSize] = useCaptionSize();
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
 
   // Refs "espelho" pra ler o estado mais recente de dentro dos listeners
@@ -182,10 +161,6 @@ const SubtitleEditor = () => {
     if (!hasLoadedSubtitlesRef.current) return;
     localStorage.setItem(storageKey(videoId), JSON.stringify(subtitles));
   }, [subtitles, videoId]);
-
-  useEffect(() => {
-    localStorage.setItem(CAPTION_SIZE_STORAGE_KEY, captionSize);
-  }, [captionSize]);
 
   // ── Playhead / duração / play-pause via <video> nativo ──────────────────
   const stopPlayheadLoop = () => {
@@ -594,9 +569,6 @@ const SubtitleEditor = () => {
   const fullscreenEl = useFullscreenElement();
   const isFullscreen = !!fullscreenEl;
   const screenTier = useBreakpoint();
-  const overlayFontSize = Math.round(
-    (isFullscreen ? CAPTION_FONT_SIZE_FULLSCREEN : CAPTION_FONT_SIZE)[captionSize] * SIZE_MULTIPLIER[screenTier]
-  );
 
   // Tela X (TV): mexer nos blocos da timeline via controle é ruim, então
   // essa tela vira SÓ o modo de edição em tela cheia (input+cronômetro+
@@ -604,6 +576,15 @@ const SubtitleEditor = () => {
   // abaixo do vídeo, independente do estado real da Fullscreen API.
   const isTV = screenTier === 'X';
   const showOverlayCaptionUI = isFullscreen || isTV;
+
+  // Legenda e cronômetro usam sempre o MESMO tamanho (pedido explícito do
+  // usuário) — a tabela "imersiva" (maior) vale tanto pra tela cheia real
+  // quanto pro modo forçado de tier X, daí checar showOverlayCaptionUI (não
+  // isFullscreen sozinho, que fica sempre false em tier X já que não
+  // chamamos a Fullscreen API de verdade lá).
+  const overlayFontSize = Math.round(
+    (showOverlayCaptionUI ? CAPTION_FONT_SIZE_IMMERSIVE : CAPTION_FONT_SIZE)[captionSize] * CAPTION_SIZE_MULTIPLIER[screenTier]
+  );
 
   // TV: foco inicial no input de legenda assim que o vídeo estiver pronto.
   const hasAutoFocusedRef = useRef(false);
@@ -655,7 +636,7 @@ const SubtitleEditor = () => {
             >
               ⚙️
             </button>
-            <div className="subtitle-editor__chrono">
+            <div className="subtitle-editor__chrono" style={{ fontSize: overlayFontSize }}>
               {formatChrono(playheadSec)}
             </div>
             {showOverlayCaptionUI ? (
