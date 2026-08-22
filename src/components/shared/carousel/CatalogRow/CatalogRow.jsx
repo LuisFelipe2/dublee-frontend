@@ -3,11 +3,12 @@ import VideoCard from '../../VideoCard/VideoCard';
 import CatalogSkeleton from '../CatalogSkeleton/CatalogSkeleton';
 import './CatalogRow.css';
 
-const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
+const CatalogRow = ({ items, isLoading, selected, onSelectCard, tvNav }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const rowRef = useRef(null);
   const outerRef = useRef(null);
+  const hasAutoFocused = useRef(false);
 
   const updateScrollBtns = useCallback(() => {
     const el = rowRef.current;
@@ -24,8 +25,20 @@ const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
     return () => el.removeEventListener('scroll', updateScrollBtns);
   }, [items.length, updateScrollBtns]);
 
+  // TV: foco inicial do controle remoto vai pro primeiro card, uma única vez.
+  useEffect(() => {
+    if (!tvNav || hasAutoFocused.current || isLoading || items.length === 0) return;
+    hasAutoFocused.current = true;
+    rowRef.current?.querySelector('.video-card')?.focus();
+  }, [tvNav, isLoading, items.length]);
+
   const scrollRow = useCallback((dir) => {
-    rowRef.current?.scrollBy({ left: dir * 3 * 162, behavior: 'smooth' });
+    const el = rowRef.current;
+    if (!el) return;
+    const card = el.querySelector('.video-card');
+    const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+    const step = (card?.getBoundingClientRect().width || el.clientWidth * 0.4) + gap;
+    el.scrollBy({ left: dir * 3 * step, behavior: 'smooth' });
   }, []);
 
   if (isLoading) return <CatalogSkeleton />;
@@ -54,6 +67,7 @@ const CatalogRow = ({ items, isLoading, selected, onSelectCard }) => {
             outerRef={outerRef}
             canScrollLeft={canScrollLeft}
             canScrollRight={canScrollRight}
+            tvNav={tvNav}
           />
         ))}
       </div>

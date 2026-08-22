@@ -56,12 +56,6 @@ const EditorPageDesktop = () => {
       <main className="page-main">
         <div className="container container--wide">
 
-          <PageHeader
-            title="Editor de dublagem"
-            subtitle="Grave, importe e mixe suas faixas de áudio"
-            description="Arraste os clipes na timeline, ajuste volume/mute/solo por faixa e gere o vídeo final."
-          />
-
           <div className="content">
             <div className="section">
 

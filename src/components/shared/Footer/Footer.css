@@ -6,11 +6,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .app-footer__copy {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.app-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.app-footer__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+}
+
+.app-footer__link:hover {
+  color: var(--white);
 }
 
 .app-footer__badge {

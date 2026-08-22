@@ -1,0 +1,166 @@
+.catalog-preview__player {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalog-preview__stage {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+/* o vídeo dita o próprio tamanho (retrato ou paisagem) dentro do limite de
+   viewport — nem o wrapper nem o .video-player forçam width:100%, senão um
+   vídeo vertical ficaria cortado tentando ocupar a largura toda do modal.
+   dvh como fallback do vh evita o corte em navegadores mobile com barra de
+   endereço dinâmica (vh neles é calculado com a barra escondida). */
+.catalog-preview__stage .video-player {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+}
+
+.catalog-preview__stage .video-player video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 75vh;
+  max-height: 75dvh;
+}
+
+.catalog-preview__loading {
+  text-align: center;
+  padding: 36px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ── Tela cheia: o .catalog-preview__stage (não o .video-player) é o alvo,
+   pra que o botão Continuar e a barra de controles fiquem dentro dele. ── */
+.catalog-preview__stage:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  background: #000;
+}
+
+.catalog-preview__stage:fullscreen .video-player {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalog-preview__stage:fullscreen .video-player video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* ── Botão "Continuar" — pill sobreposta ao vídeo, estilo "pular abertura".
+   Fica acima da barra de controles (nunca sobre mute/tela-cheia). ── */
+.catalog-preview__continue {
+  position: absolute;
+  right: 16px;
+  bottom: 64px;
+  padding: 10px 20px;
+  background: rgba(20, 20, 20, 0.85);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  z-index: 1;
+}
+
+.catalog-preview__continue:hover:not(:disabled) {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+.catalog-preview__continue:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Barra de controles própria (substitui os controles nativos do <video>) ── */
+.catalog-preview__controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 70%, transparent 100%);
+}
+
+.catalog-preview__ctrl-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.catalog-preview__ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.catalog-preview__time {
+  flex-shrink: 0;
+  color: var(--white);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.catalog-preview__progress {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.catalog-preview__continue:focus-visible,
+.catalog-preview__ctrl-btn:focus-visible,
+.catalog-preview__progress:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .catalog-preview__stage .video-player video {
+    max-height: 70vh;
+    max-height: 70dvh;
+  }
+}
+
+/* tier X (TV): texto/controles legíveis e alcançáveis a distância */
+@media (min-width: 1920px) {
+  .catalog-preview__loading { font-size: 18px; padding: 48px; }
+  .catalog-preview__continue { font-size: 20px; padding: 16px 32px; right: 28px; bottom: 84px; }
+  .catalog-preview__controls { padding: 14px 20px; gap: 16px; }
+  .catalog-preview__ctrl-btn { width: 44px; height: 44px; font-size: 20px; }
+  .catalog-preview__time { font-size: 16px; }
+}

@@ -1,8 +1,4 @@
-import { useState } from 'react';
-import VideoPlayer from '../VideoPlayer/VideoPlayer';
-import Button from '../Button/Button';
 import './FileImport.css';
-import CatalogPreview from '../carousel/CatalogPreview/CatalogPreview';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_DURATION_SEC = 5 * 60;
@@ -21,11 +17,7 @@ const readVideoDuration = (file) => new Promise((resolve, reject) => {
   video.src = URL.createObjectURL(file);
 });
 
-const FileImport = ({ onUpload, showToast }) => {
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-
+const FileImport = ({ variant = 'panel', onFileSelected, showToast }) => {
   const applyFile = async (f) => {
     if (!f) return;
     if (!f.type.startsWith('video/')) {
@@ -46,9 +38,7 @@ const FileImport = ({ onUpload, showToast }) => {
       showToast('error', 'Não foi possível validar o vídeo. Tente outro arquivo.');
       return;
     }
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(f);
-    setPreviewUrl(URL.createObjectURL(f));
+    onFileSelected(f);
   };
 
   const handleFileChange = (e) => {
@@ -64,27 +54,53 @@ const FileImport = ({ onUpload, showToast }) => {
     applyFile(e.dataTransfer.files[0]);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
-    setIsUploading(true);
-    showToast('loading', 'Enviando vídeo...');
-    
-    await onUpload(file);
-
-    setIsUploading(false);
+  const handleTileKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      document.getElementById('file-input')?.click();
+    } else if (e.key === 'ArrowRight') {
+      const first = document.querySelector('.video-card');
+      if (first) { e.preventDefault(); first.focus(); }
+    } else if (e.key === 'ArrowUp') {
+      const search = document.querySelector('.catalog-search');
+      if (search) { e.preventDefault(); search.focus(); }
+    }
   };
+
+  const input = (
+    <input
+      type="file"
+      id="file-input"
+      accept="video/*"
+      onChange={handleFileChange}
+    />
+  );
+
+  if (variant === 'tile') {
+    return (
+      <div className="file-input-wrapper import-tile-wrapper">
+        {input}
+        <label
+          htmlFor="file-input"
+          className="import-tile"
+          tabIndex={0}
+          role="button"
+          aria-label="Importar vídeo"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onKeyDown={handleTileKeyDown}
+        >
+          <span className="import-tile__plus" aria-hidden="true">+</span>
+        </label>
+      </div>
+    );
+  }
 
   return (
     <section className="catalog-section">
-      <h2 className="section-title">📁 Arquivo local</h2>
-
       <div className="file-input-wrapper">
-        <input
-          type="file"
-          id="file-input"
-          accept="video/*"
-          onChange={handleFileChange}
-        />
+        {input}
         <label
           htmlFor="file-input"
           className="file-input-label"
@@ -100,10 +116,6 @@ const FileImport = ({ onUpload, showToast }) => {
           </div>
         </label>
       </div>
-
-      {previewUrl && (
-        <CatalogPreview selected={file} onImport={handleUpload} isImporting={isUploading} previewUrl={previewUrl} />
-      )}
     </section>
   );
 };

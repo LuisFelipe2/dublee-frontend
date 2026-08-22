@@ -1,11 +1,17 @@
 import { useState, useRef } from 'react';
 import './SearchFilters.css';
 
-const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTag }) => {
+const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTag, tvNav }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const closeTimer = useRef(null);
 
   const openFilter = (isFilterOpen) => { clearTimeout(closeTimer.current); setIsFilterOpen(isFilterOpen); };
+
+  const handleSearchKeyDown = (e) => {
+    if (!tvNav || e.key !== 'ArrowDown') return;
+    const first = document.querySelector('.video-card');
+    if (first) { e.preventDefault(); first.focus(); }
+  };
 
   return (
     <div className="catalog-filters">
@@ -20,6 +26,7 @@ const SearchFilters = ({ search, onSearchChange, allTags, activeTags, onToggleTa
             placeholder="Buscar cenas..."
             value={search}
             onChange={e => onSearchChange(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
         </div>
 

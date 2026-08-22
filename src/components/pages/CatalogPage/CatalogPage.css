@@ -35,6 +35,43 @@
   gap: 10px;
 }
 
+/* ── Modal do preview (tema escuro, igual ao resto do catálogo) ─────
+   width:fit-content pra a caixa abraçar o tamanho real do vídeo (retrato
+   ou paisagem, ver CatalogPreview.css) em vez de esticar pro max-width
+   mesmo quando o conteúdo é mais estreito. max-width em vw escala sozinho
+   com o tamanho da tela, sem precisar de breakpoint por tier. */
+.catalog-preview-modal.modal {
+  width: fit-content;
+  max-width: min(94vw, 960px);
+  background: var(--surface-2);
+  border-radius: 16px;
+}
+
+.catalog-preview-modal .modal__header {
+  background: var(--surface-2);
+  border-bottom-color: var(--border-subtle);
+}
+
+.catalog-preview-modal .modal__close {
+  color: var(--text-hint);
+}
+
+.catalog-preview-modal .modal__close:hover {
+  background: var(--surface-4);
+  color: var(--white);
+}
+
+.catalog-preview-modal .modal__body {
+  padding: 0;
+}
+
+/* sempre centralizado no centro da tela (viewport), inclusive no celular —
+   o Modal genérico usa align-items:flex-end (bottom sheet) até 640px, mas
+   pra vídeo isso deixa o conteúdo grudado embaixo/cortado. */
+.modal-backdrop:has(.catalog-preview-modal) {
+  align-items: center;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .section-divider {
@@ -45,5 +82,17 @@
   .catalog-section {
     padding-left: 20px;
     padding-right: 20px;
+  }
+}
+
+/* tier X (TV): ignora o max-width do container, mantendo só a margem
+   do .page-main pra deixar o fundo cinza aparecer nos 4 cantos */
+@media (min-width: 1920px) {
+  .home-main .container {
+    max-width: none;
+  }
+
+  .section-divider span {
+    font-size: 16px;
   }
 }

@@ -1,3 +1,5 @@
+@import './styles/breakpoints.css';
+
 /* ── Design tokens ───────────────────────────────────────── */
 :root {
   --accent:        #667eea;
@@ -5,7 +7,6 @@
   --accent-border: rgba(102, 126, 234, 0.35);
 
   --content-px:    48px;
-  --scroll-btn-w:  75px;
 
   --bg-app:      #141414;
   --surface-1:   #1a1a1a;
@@ -22,6 +23,8 @@
   --z-filter: 50;
   --z-scroll: 20;
   --z-portal: 9999;
+  --z-modal:  10000;
+  --z-toast:  10001;
 
   /* ── Escala de texto ──────────────────────────────────── */
   --text-primary:     #333;

@@ -103,14 +103,6 @@ const SubtitleEditor = () => {
 
       <main className="page-main">
         <div className="container">
-
-          <PageHeader
-            title="Vamos colocar legendas!"
-            subtitle="Passo 1 de 2"
-            description="Primeiro adicione legendas para auxíliar na hora de dublar. Você pode fazer isso
-              consultando o cronômetro do vídeo e preenchendo na tabela abaixo a legenda e o tempo de início e fim de cada fala."
-          />
-
           <div className="content">
             {/* ── Seção 1: Vídeo ── */}
             <div className="section">

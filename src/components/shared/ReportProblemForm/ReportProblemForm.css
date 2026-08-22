@@ -1,0 +1,22 @@
+.report-problem-form__textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 100px;
+}
+
+.report-problem-form__textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.report-problem-form__actions {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+}

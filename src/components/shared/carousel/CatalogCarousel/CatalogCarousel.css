@@ -1,0 +1,10 @@
+.catalog-row-group {
+  display: flex;
+  gap: var(--card-gap);
+  align-items: stretch;
+}
+
+.catalog-row-group .catalog-row-outer {
+  flex: 1;
+  min-width: 0;
+}

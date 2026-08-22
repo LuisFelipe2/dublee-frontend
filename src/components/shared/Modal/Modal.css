@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-portal);
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: flex-end;
@@ -25,7 +25,6 @@
   top: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 16px 18px;
   background: var(--white);
@@ -41,6 +40,7 @@
 .modal__close {
   width: 32px;
   height: 32px;
+  margin-left: auto;
   flex-shrink: 0;
   border: none;
   background: transparent;

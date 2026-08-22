@@ -1,0 +1,15 @@
+.faq-container {
+  text-align: left;
+}
+
+.faq-report {
+  max-width: 720px;
+  margin: 32px auto 0;
+  padding: 0 40px 32px;
+}
+
+@media (max-width: 720px) {
+  .faq-report {
+    padding-inline: 20px;
+  }
+}

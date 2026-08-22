@@ -6,6 +6,7 @@ import Timeline from '../../shared/Timeline/Timeline';
 import AddTrackMenu from '../../shared/AddTrackMenu/AddTrackMenu';
 import VolumeSlider from '../../shared/VolumeSlider/VolumeSlider';
 import Modal from '../../shared/Modal/Modal';
+import ReportProblemModal from '../../shared/ReportProblemModal/ReportProblemModal';
 import { useEditorEngine, formatTime } from './useEditorEngine';
 import './EditorPage.css';
 import './EditorPageMobile.css';
@@ -48,6 +49,7 @@ const EditorPageMobile = () => {
   const [isVolumeModalOpen, setIsVolumeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTracksModalOpen, setIsTracksModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(true);
 
   const menuDragRef = useRef(null);
@@ -80,6 +82,11 @@ const EditorPageMobile = () => {
   const handleDownloadFromSettings = () => {
     setIsSettingsModalOpen(false);
     handleDownload();
+  };
+
+  const openReportModal = () => {
+    setIsSettingsModalOpen(false);
+    setIsReportModalOpen(true);
   };
 
   // Puxar (arrastar) o handle abre/fecha o menu, igual apps de streaming;
@@ -267,6 +274,9 @@ const EditorPageMobile = () => {
             <Button variant="outline" onClick={openTracksModal}>
               ✎ Editar faixas
             </Button>
+            <Button variant="outline" onClick={openReportModal}>
+              🚩 Reportar problema
+            </Button>
             <Button
               variant="advance"
               onClick={handleDownloadFromSettings}
@@ -277,6 +287,8 @@ const EditorPageMobile = () => {
           </div>
         </div>
       </Modal>
+
+      <ReportProblemModal open={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} />
 
       <Modal open={isTracksModalOpen} onClose={() => setIsTracksModalOpen(false)} title="Editar faixas">
         <div className="editor-mobile__tracks">

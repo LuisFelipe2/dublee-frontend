@@ -1,0 +1,18 @@
+/* keep in sync with src/constants/breakpoints.js */
+:root { /* base = P (mobile-first) */
+  --card-w: 108px;
+  --card-gap: 8px;
+  --scroll-btn-w: 0px; /* botões de scroll escondidos em P, ver CatalogRow.css */
+}
+
+@media (min-width: 601px) {  /* M — tablet / notebook pequeno */
+  :root { --card-w: 132px; --card-gap: 10px; --scroll-btn-w: 60px; }
+}
+
+@media (min-width: 1025px) { /* G — monitor / notebook, valores atuais de produção */
+  :root { --card-w: 150px; --card-gap: 12px; --scroll-btn-w: 75px; }
+}
+
+@media (min-width: 1920px) { /* X — TV */
+  :root { --card-w: 210px; --card-gap: 18px; --scroll-btn-w: 100px; }
+}

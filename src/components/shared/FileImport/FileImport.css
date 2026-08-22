@@ -41,3 +41,38 @@
   border-color: var(--accent);
   background: var(--surface-3);
 }
+
+/* ── Tile de importação (linha do carrossel na TV) ────────── */
+.import-tile-wrapper {
+  flex: 0 0 var(--card-w);
+  width: var(--card-w);
+}
+
+.import-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.import-tile:hover,
+.import-tile.drag-over,
+.import-tile:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-3);
+  color: var(--accent);
+  outline: none;
+}
+
+.import-tile__plus {
+  font-size: 48px;
+  font-weight: 300;
+  line-height: 1;
+}

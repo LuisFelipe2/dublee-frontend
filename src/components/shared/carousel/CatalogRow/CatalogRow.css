@@ -9,9 +9,8 @@
 
 .catalog-row {
   display: flex;
-  gap: 12px;
+  gap: var(--card-gap);
   overflow-x: auto;
-  padding: 0 0 24px;
   scrollbar-width: none;
 }
 
@@ -28,7 +27,7 @@
 .catalog-scroll-btn {
   position: absolute;
   top: 0px;
-  bottom: 24px;
+  bottom: 0px;
   width: var(--scroll-btn-w);
   z-index: var(--z-scroll);
   border: none;
@@ -65,4 +64,9 @@
   }
 
   .catalog-row { padding-bottom: 20px; }
+}
+
+/* tier P: sem botões de scroll, navegação por swipe nativo */
+@media (max-width: 600px) {
+  .catalog-scroll-btn { display: none; }
 }
