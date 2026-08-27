@@ -7,6 +7,8 @@ import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
 import VideoPlayer from '../../shared/VideoPlayer/VideoPlayer';
 import Button from '../../shared/Button/Button';
+import FullscreenBackButton from '../../shared/FullscreenBackButton/FullscreenBackButton';
+import ContinueButton from '../../shared/ContinueButton/ContinueButton';
 import Toast from '../../shared/Toast/Toast';
 import SubtitleCaptionInput from './CaptionInput/SubtitleCaptionInput';
 import SubtitleTimeline from './Timeline/SubtitleTimeline';
@@ -206,7 +208,6 @@ const SubtitleEditor = () => {
     const onPlay = () => { setIsPlaying(true); startPlayheadLoop(); };
     const onPause = () => { setIsPlaying(false); stopPlayheadLoop(); setPlayheadSec(video.currentTime); };
     const onSeeked = () => setPlayheadSec(video.currentTime);
-    const onClick = () => commitPendingCaption();
     const onEnded = () => {
       setIsPlaying(false);
       stopPlayheadLoop();
@@ -222,7 +223,6 @@ const SubtitleEditor = () => {
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
     video.addEventListener('seeked', onSeeked);
-    video.addEventListener('click', onClick);
     video.addEventListener('ended', onEnded);
     if (video.duration) onLoadedMetadata();
 
@@ -231,7 +231,6 @@ const SubtitleEditor = () => {
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
       video.removeEventListener('seeked', onSeeked);
-      video.removeEventListener('click', onClick);
       video.removeEventListener('ended', onEnded);
       stopPlayheadLoop();
     };
@@ -327,7 +326,7 @@ const SubtitleEditor = () => {
     if (!isTV) return;
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      document.querySelector('.subtitle-editor__back-btn')?.focus();
+      document.querySelector('.fullscreen-back-btn')?.focus();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       document.querySelector('.subtitle-editor__fullscreen-caption .subtitle-caption__input')?.focus();
@@ -386,6 +385,14 @@ const SubtitleEditor = () => {
     const video = videoRef.current;
     if (!video) return;
     video.paused ? video.play().catch(() => {}) : video.pause();
+  };
+
+  // Clicar no vídeo também comita o bloco de legenda pendente, antes de
+  // alternar play/pause (senão o texto digitado se perderia sem passar
+  // pelo blur/Enter que normalmente dispara o commit).
+  const handleVideoToggleClick = () => {
+    commitPendingCaption();
+    togglePlay();
   };
 
   const toggleFullscreen = () => {
@@ -577,6 +584,38 @@ const SubtitleEditor = () => {
   const isTV = screenTier === 'X';
   const showOverlayCaptionUI = isFullscreen || isTV;
 
+  // Caixa da legenda em tela cheia arrastável (mesmo padrão de Modal.jsx):
+  // arrastar não pode roubar o clique de posicionar o cursor/selecionar texto
+  // dentro do input, então só inicia se o pointerdown não for no próprio
+  // input (ver handleCaptionBoxPointerDown). Reseta ao sair do modo overlay
+  // pra não começar deslocado da próxima vez que entrar em tela cheia.
+  const [captionDragOffset, setCaptionDragOffset] = useState({ x: 0, y: 0 });
+  const captionDragStateRef = useRef(null);
+
+  useEffect(() => {
+    if (!showOverlayCaptionUI) setCaptionDragOffset({ x: 0, y: 0 });
+  }, [showOverlayCaptionUI]);
+
+  const handleCaptionBoxPointerDown = (e) => {
+    if (e.target.closest('.subtitle-caption__input')) return;
+    captionDragStateRef.current = { startX: e.clientX, startY: e.clientY, baseX: captionDragOffset.x, baseY: captionDragOffset.y };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleCaptionBoxPointerMove = (e) => {
+    const drag = captionDragStateRef.current;
+    if (!drag) return;
+    setCaptionDragOffset({
+      x: drag.baseX + (e.clientX - drag.startX),
+      y: drag.baseY + (e.clientY - drag.startY),
+    });
+  };
+
+  const handleCaptionBoxPointerUp = (e) => {
+    captionDragStateRef.current = null;
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* já liberado */ }
+  };
+
   // Legenda e cronômetro usam sempre o MESMO tamanho (pedido explícito do
   // usuário) — a tabela "imersiva" (maior) vale tanto pra tela cheia real
   // quanto pro modo forçado de tier X, daí checar showOverlayCaptionUI (não
@@ -586,13 +625,21 @@ const SubtitleEditor = () => {
     (showOverlayCaptionUI ? CAPTION_FONT_SIZE_IMMERSIVE : CAPTION_FONT_SIZE)[captionSize] * CAPTION_SIZE_MULTIPLIER[screenTier]
   );
 
-  // TV: foco inicial no input de legenda assim que o vídeo estiver pronto.
-  const hasAutoFocusedRef = useRef(false);
+  // Foco automático no input de legenda (pedido explícito do usuário: dar
+  // pra digitar a legenda sem precisar do mouse) — dispara assim que o vídeo
+  // termina de carregar e sempre que entra/sai do modo overlay (tela cheia
+  // real ou tier X), já que aí o input visível troca de elemento (o normal,
+  // dentro de "Legendagem ao vivo", ou o de dentro de .subtitle-editor__stage).
+  // Quando showOverlayCaptionUI é true o input de tela cheia vem ANTES do
+  // normal na árvore (Seção 1 antes da Seção 2), então um seletor sem escopo
+  // já pega o certo mesmo nos dois existindo ao mesmo tempo (fullscreen real
+  // fora do tier X não desmonta a Seção 2, só fica visualmente coberta).
   useEffect(() => {
-    if (!isTV || isVideoLoading || hasAutoFocusedRef.current) return;
-    hasAutoFocusedRef.current = true;
-    document.querySelector('.subtitle-editor__fullscreen-caption .subtitle-caption__input')?.focus();
-  }, [isTV, isVideoLoading]);
+    if (isVideoLoading) return;
+    const input = document.querySelector('.subtitle-caption__input');
+    input?.focus();
+    input?.select();
+  }, [isVideoLoading, showOverlayCaptionUI]);
 
   // Tela X (TV): não basta esconder a timeline/input normal dentro do layout
   // de página normal (Header + container + Footer) — isso ainda deixa a
@@ -611,20 +658,12 @@ const SubtitleEditor = () => {
         showNativeCaptions={false}
         showChrono={false}
         disableControls
+        onToggleClick={handleVideoToggleClick}
         isVideoLoading={isVideoLoading}
         badge={!isVideoLoading && (
           <>
             {isTV && (
-              <button
-                type="button"
-                className="subtitle-editor__back-btn"
-                onClick={() => navigate('/')}
-                onKeyDown={handleBackBtnKeyDown}
-                aria-label="Voltar"
-                title="Voltar"
-              >
-                ‹
-              </button>
+              <FullscreenBackButton onClick={() => navigate('/')} onKeyDown={handleBackBtnKeyDown} />
             )}
 
             <button
@@ -646,22 +685,26 @@ const SubtitleEditor = () => {
                     do vídeo — em tier X isso já não existe mais no DOM, ver
                     showOverlayCaptionUI/isTV mais acima) — então o input de
                     legenda precisa de uma cópia própria aqui dentro. */}
-                <div className="subtitle-editor__fullscreen-caption">
+                <div
+                  className="subtitle-editor__fullscreen-caption"
+                  style={{ transform: `translate(calc(-50% + ${captionDragOffset.x}px), ${captionDragOffset.y}px)` }}
+                  onPointerDown={handleCaptionBoxPointerDown}
+                  onPointerMove={handleCaptionBoxPointerMove}
+                  onPointerUp={handleCaptionBoxPointerUp}
+                >
                   <SubtitleCaptionInput
                     value={captionValue}
                     onChange={handleCaptionChange}
                     onBlur={handleCaptionBlur}
                     onKeyDown={handleCaptionKeyDown}
+                    autoGrow
                   />
                 </div>
-                <button
-                  type="button"
+                <ContinueButton
                   className="subtitle-editor__continue-btn"
                   onClick={() => navigate(`/record/${videoId}`)}
                   onKeyDown={handleContinueBtnKeyDown}
-                >
-                  Continuar
-                </button>
+                />
               </>
             ) : overlayCaptionText && (
               <div className="subtitle-editor__overlay-caption" style={{ fontSize: overlayFontSize }}>

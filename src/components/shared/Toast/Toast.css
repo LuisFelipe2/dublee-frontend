@@ -1,24 +1,25 @@
 .toast {
   --toast-color: #667eea;
+  --toast-color-dim: #8b8fae;
   --toast-glow: rgba(102, 126, 234, 0.30);
 
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  right: 16px;
   z-index: var(--z-toast);
 
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 
-  min-width: 280px;
-  max-width: 400px;
-  padding: 14px 44px 14px 16px;
+  min-width: 240px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 40px 12px 14px;
 
   background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-radius: 10px;
+  border-radius: 9px;
   border-left: 4px solid var(--toast-color);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.12),
@@ -26,12 +27,65 @@
 
   animation:
     toastIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards,
-    toastGlow 0.9s ease 0.3s 1 forwards;
+    toastNeon 1.8s ease-in-out 0.35s infinite;
 }
 
-.toast--success { --toast-color: #43a047; --toast-glow: rgba(67, 160, 71, 0.30); }
-.toast--error   { --toast-color: #e53935; --toast-glow: rgba(229, 57, 53, 0.30); }
-.toast--loading { --toast-color: #667eea; --toast-glow: rgba(102, 126, 234, 0.30); }
+.toast--success { --toast-color: #43a047; --toast-color-dim: #7a9c7c; --toast-glow: rgba(67, 160, 71, 0.30); }
+.toast--error   { --toast-color: #e53935; --toast-color-dim: #a97674; --toast-glow: rgba(229, 57, 53, 0.30); }
+.toast--loading { --toast-color: #667eea; --toast-color-dim: #8b8fae; --toast-glow: rgba(102, 126, 234, 0.30); }
+
+/* ─── Responsivo (mesmos tiers de src/constants/breakpoints.js) ──────── */
+@media (min-width: 601px) {  /* M — tablet / notebook pequeno */
+  .toast {
+    bottom: 24px;
+    right: 24px;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    padding: 14px 44px 14px 16px;
+    border-radius: 10px;
+  }
+
+  .toast__icon { font-size: 17px; }
+  .toast__spinner { width: 16px; height: 16px; }
+  .toast__message { font-size: 14px; }
+  .toast__close { font-size: 20px; top: 8px; right: 10px; }
+}
+
+@media (min-width: 1025px) { /* G — monitor / notebook */
+  .toast {
+    bottom: 28px;
+    right: 28px;
+    gap: 14px;
+    min-width: 320px;
+    max-width: 460px;
+    padding: 16px 48px 16px 18px;
+    border-radius: 11px;
+  }
+
+  .toast__icon { font-size: 19px; }
+  .toast__spinner { width: 18px; height: 18px; border-width: 3px; }
+  .toast__message { font-size: 15px; }
+  .toast__close { font-size: 22px; top: 9px; right: 12px; }
+}
+
+@media (min-width: 1920px) { /* X — TV */
+  .toast {
+    bottom: 40px;
+    right: 40px;
+    gap: 18px;
+    min-width: 420px;
+    max-width: 620px;
+    padding: 22px 64px 22px 26px;
+    border-radius: 14px;
+    border-left-width: 6px;
+  }
+
+  .toast__icon { font-size: 28px; }
+  .toast__spinner { width: 26px; height: 26px; border-width: 4px; }
+  .toast__message { font-size: 20px; }
+  .toast__close { font-size: 30px; top: 12px; right: 16px; }
+}
 
 .toast.toast--leaving {
   animation: toastOut 0.28s ease forwards;
@@ -94,10 +148,24 @@
   to { transform: translateX(calc(100% + 32px)); opacity: 0; }
 }
 
-@keyframes toastGlow {
-  0%   { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 12px var(--toast-glow); }
-  50%  { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 36px var(--toast-glow); }
-  100% { box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 12px var(--toast-glow); }
+/* Respiração contínua tipo letreiro de neon: a borda alterna entre a cor
+   dessaturada (--toast-color-dim) e a versão viva (--toast-color), junto
+   com o brilho (box-shadow) crescendo/encolhendo e um leve scale — mesmo
+   ritmo de um neon "acendendo" e "apagando". */
+@keyframes toastNeon {
+  0%, 100% {
+    transform: scale(1);
+    border-left-color: var(--toast-color-dim);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 8px var(--toast-glow);
+  }
+  50% {
+    transform: scale(1.03);
+    border-left-color: var(--toast-color);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 0 26px var(--toast-glow),
+      0 0 44px var(--toast-glow);
+  }
 }
 
 @keyframes toastSpin {

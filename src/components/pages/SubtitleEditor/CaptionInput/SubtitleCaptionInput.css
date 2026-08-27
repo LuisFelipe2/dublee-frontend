@@ -5,6 +5,13 @@
   padding: 4px 2px;
 }
 
+/* Textarea multi-linha (legenda em tela cheia, ver SubtitleCaptionInput.jsx
+   prop autoGrow): aspas alinhadas ao topo da primeira linha, não à baseline
+   (que ficaria estranho quando o box cresce em altura). */
+.subtitle-caption--auto-grow {
+  align-items: flex-start;
+}
+
 .subtitle-caption__quote {
   /* Mobile-first: base é o tamanho de tela P (celular), aumentando nos
      breakpoints M/G/X abaixo — mesmos limiares de src/constants/breakpoints.js. */
@@ -41,6 +48,22 @@
 
 .subtitle-caption__input:disabled {
   cursor: not-allowed;
+}
+
+/* textarea (autoGrow): mesmo visual do input de uma linha, só ajustando o
+   que é específico de textarea — altura é controlada via JS (scrollHeight),
+   CSS só define o teto (max-height) a partir do qual passa a rolar em vez
+   de continuar crescendo. */
+textarea.subtitle-caption__input {
+  display: block;
+  width: 100%;
+  resize: none;
+  overflow-y: auto;
+  max-height: 30vh;
+  font-family: inherit;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (min-width: 601px) { /* M — tablet / notebook pequeno */

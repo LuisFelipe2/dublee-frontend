@@ -127,40 +127,13 @@
   background: rgba(0, 0, 0, 0.8);
 }
 
-/* ─── Botão de voltar (canto oposto da engrenagem, só existe em tier X —
-   ver isTV em SubtitleEditor.jsx — já que a timeline/Seção 3, de onde o
-   "Voltar" normal vem, não existe mais nessa tela). Mesmo visual do botão
-   equivalente em EditorPageMobile.css (.editor-mobile__back-btn). ── */
-.subtitle-editor__back-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(4px);
-  color: var(--white);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.subtitle-editor__back-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
+/* ─── Botão de voltar: extraído para componente compartilhado
+   (src/components/shared/FullscreenBackButton), só existe em tier X — ver
+   isTV em SubtitleEditor.jsx — já que a timeline/Seção 3, de onde o
+   "Voltar" normal vem, não existe mais nessa tela. ── */
 
 /* ─── Foco por teclado/D-pad (navegação TV, ver useBreakpoint/isTV) ── */
-.subtitle-editor__back-btn:focus-visible,
 .subtitle-editor__settings-btn:focus-visible,
-.subtitle-editor__continue-btn:focus-visible,
 .subtitle-editor__ctrl-btn:focus-visible,
 .subtitle-editor__progress:focus-visible {
   outline: 2px solid var(--accent);
@@ -220,15 +193,27 @@
   backdrop-filter: blur(4px);
   border-radius: 10px;
   padding: 10px 20px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.subtitle-editor__fullscreen-caption:active {
+  cursor: grabbing;
 }
 
 .subtitle-editor__fullscreen-caption .subtitle-caption__quote {
   color: rgba(255, 255, 255, 0.55);
 }
 
+/* O input em si não deve herdar o cursor/touch-action de arraste do
+   container — precisa continuar digitável/selecionável normalmente (ver
+   handleCaptionBoxPointerDown em SubtitleEditor.jsx, que ignora pointerdown
+   dentro dele). */
 .subtitle-editor__fullscreen-caption .subtitle-caption__input {
   color: var(--white);
   border-bottom-color: rgba(255, 255, 255, 0.4);
+  cursor: text;
+  touch-action: auto;
 }
 
 .subtitle-editor__fullscreen-caption .subtitle-caption__input::placeholder {
@@ -239,28 +224,7 @@
   border-bottom-color: var(--accent);
 }
 
-/* Mesmo estilo/posição do botão equivalente em CatalogPreview.css
-   (.catalog-preview__continue) — canto inferior direito, logo acima da
-   barra de controles (~46px de altura). */
-.subtitle-editor__continue-btn {
-  position: absolute;
-  right: 16px;
-  bottom: 64px;
-  z-index: 10;
-  padding: 10px 20px;
-  background: rgba(20, 20, 20, 0.85);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-}
-
-.subtitle-editor__continue-btn:hover {
-  background: rgba(20, 20, 20, 0.95);
-}
+/* Botão "Continuar" — ver componente compartilhado ContinueButton. */
 
 @media (max-width: 768px) {
   .subtitle-editor__chrono {
@@ -324,32 +288,17 @@
 
 /* Texto/controles legíveis e alcançáveis a distância (mesma proporção usada
    no resto do app pro tier X). */
-.subtitle-editor-tv .subtitle-editor__settings-btn,
-.subtitle-editor-tv .subtitle-editor__back-btn {
-  width: 46px;
-  height: 46px;
-  font-size: 22px;
-  top: 16px;
-}
-
 .subtitle-editor-tv .subtitle-editor__settings-btn {
-  right: 16px;
-}
-
-.subtitle-editor-tv .subtitle-editor__back-btn {
-  left: 16px;
+  width: 64px;
+  height: 64px;
+  font-size: 30px;
+  top: 20px;
+  right: 20px;
 }
 
 .subtitle-editor-tv .subtitle-editor__chrono {
   top: 16px;
   padding: 10px 22px;
-}
-
-.subtitle-editor-tv .subtitle-editor__continue-btn {
-  right: 28px;
-  bottom: 84px;
-  font-size: 20px;
-  padding: 16px 32px;
 }
 
 .subtitle-editor-tv .subtitle-editor__fullscreen-caption {

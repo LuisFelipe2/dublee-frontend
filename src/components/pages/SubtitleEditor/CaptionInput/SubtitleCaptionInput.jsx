@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import './SubtitleCaptionInput.css';
 
 const DOUBLE_TAP_THRESHOLD_MS = 350;
@@ -16,7 +16,7 @@ const handleMouseDown = (e) => {
   }
 };
 
-const SubtitleCaptionInput = ({ value, onChange, onBlur, onKeyDown, disabled }) => {
+const SubtitleCaptionInput = ({ value, onChange, onBlur, onKeyDown, disabled, autoGrow = false }) => {
   // Duplo-toque em telas touch não gera um mousedown com detail>1 de forma
   // confiável (os eventos de mouse sintetizados a partir de toque variam
   // muito entre browsers mobile, e telas touch costumam tratar duplo-toque
@@ -34,24 +34,40 @@ const SubtitleCaptionInput = ({ value, onChange, onBlur, onKeyDown, disabled }) 
     }
   };
 
+  // `autoGrow` (usado só na legenda em tela cheia, ver SubtitleEditor.jsx)
+  // troca o <input> de uma linha só por um <textarea> que cresce em altura
+  // conforme o texto quebra linha — o wrap em si já é comportamento nativo
+  // do textarea, só precisamos sincronizar a altura com o conteúdo.
+  const textareaRef = useRef(null);
+  useEffect(() => {
+    if (!autoGrow || !textareaRef.current) return;
+    textareaRef.current.style.height = 'auto';
+    textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  }, [autoGrow, value]);
+
+  const sharedProps = {
+    className: 'subtitle-caption__input',
+    value,
+    onChange: e => onChange(e.target.value),
+    onBlur,
+    onKeyDown,
+    onMouseDown: handleMouseDown,
+    onDoubleClick: e => e.target.select(),
+    onTouchEnd: handleTouchEnd,
+    placeholder: 'Legendas...',
+    disabled,
+    autoComplete: 'off',
+    spellCheck: false,
+  };
+
   return (
-    <div className="subtitle-caption">
+    <div className={`subtitle-caption${autoGrow ? ' subtitle-caption--auto-grow' : ''}`}>
       <span className="subtitle-caption__quote" aria-hidden>&ldquo;</span>
-      <input
-        type="text"
-        className="subtitle-caption__input"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        onMouseDown={handleMouseDown}
-        onDoubleClick={e => e.target.select()}
-        onTouchEnd={handleTouchEnd}
-        placeholder="Legendas..."
-        disabled={disabled}
-        autoComplete="off"
-        spellCheck={false}
-      />
+      {autoGrow ? (
+        <textarea ref={textareaRef} rows={1} {...sharedProps} />
+      ) : (
+        <input type="text" {...sharedProps} />
+      )}
       <span className="subtitle-caption__quote" aria-hidden>&rdquo;</span>
     </div>
   );

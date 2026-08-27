@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getNoVoiceAudio, checkVoiceRemovalStatus, mixTracks } from '../../../services/api';
 import { downloadVideoCached } from '../../../services/videoCache';
@@ -359,8 +360,12 @@ export function useEditorEngine() {
         );
         return;
       }
+      // flushSync (em vez de só dispatch) porque a revisão automática logo
+      // abaixo (startPlayback(0)) precisa da faixa recém-gravada já refletida
+      // em stateRef.current — dispatch normal é assíncrono/batched, e sem
+      // isso o startPlayback tocaria as faixas antigas sem a gravação nova.
       if (targetTrackId) {
-        dispatch({ type: 'SET_TRACK_AUDIO', id: targetTrackId, blob, audioBuffer, offsetSec });
+        flushSync(() => dispatch({ type: 'SET_TRACK_AUDIO', id: targetTrackId, blob, audioBuffer, offsetSec }));
       } else {
         const voiceCount = stateRef.current.tracks.filter(t => t.kind === TRACK_KIND.VOICE).length;
         const track = createTrack({
@@ -370,9 +375,13 @@ export function useEditorEngine() {
           audioBuffer,
           offsetSec,
         });
-        dispatch({ type: 'ADD_TRACK', track });
+        flushSync(() => dispatch({ type: 'ADD_TRACK', track }));
       }
       setToast(null);
+      // Pedido do usuário: depois de finalizar a gravação (botão, soltar o
+      // toque, ou fim do vídeo — todos passam por aqui), volta pro início e
+      // reproduz automaticamente, já incluindo a faixa recém-gravada.
+      startPlayback(0);
     } catch (error) {
       showToast('error', 'Erro ao processar gravação: ' + error.message);
     }

@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import VideoPlayer from '../../../shared/VideoPlayer/VideoPlayer';
+import ContinueButton from '../../../shared/ContinueButton/ContinueButton';
 import './CatalogPreview.css';
 
 // Segundos avançados/retrocedidos por pressionar de seta na barra de
@@ -186,16 +187,13 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
               showChrono={false}
             />
 
-            <button
+            <ContinueButton
               ref={continueRef}
-              type="button"
-              className="catalog-preview__continue"
               onClick={onImport}
               onKeyDown={handleContinueKeyDown}
               disabled={isImporting}
-            >
-              {isImporting ? 'Selecionando...' : 'Continuar'}
-            </button>
+              loading={isImporting}
+            />
 
             <div className="catalog-preview__controls">
               <button

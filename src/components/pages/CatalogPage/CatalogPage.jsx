@@ -171,7 +171,7 @@ const CatalogPage = () => {
         </div>
       </main>
 
-      <Modal open={!!selected} onClose={handleModalClose} className="catalog-preview-modal">
+      <Modal open={!!selected} onClose={handleModalClose} className="catalog-preview-modal" draggable>
         <CatalogPreview
           previewUrl={previewUrl}
           isLoadingPreview={isLoadingPreview}

@@ -67,32 +67,7 @@
   border-radius: 0;
 }
 
-/* ── Botão "Continuar" — pill sobreposta ao vídeo, estilo "pular abertura".
-   Fica acima da barra de controles (nunca sobre mute/tela-cheia). ── */
-.catalog-preview__continue {
-  position: absolute;
-  right: 16px;
-  bottom: 64px;
-  padding: 10px 20px;
-  background: rgba(20, 20, 20, 0.85);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-  z-index: 1;
-}
-
-.catalog-preview__continue:hover:not(:disabled) {
-  background: rgba(20, 20, 20, 0.95);
-}
-
-.catalog-preview__continue:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Botão "Continuar" — ver componente compartilhado ContinueButton. */
 
 /* ── Barra de controles própria (substitui os controles nativos do <video>) ── */
 .catalog-preview__controls {
@@ -142,7 +117,6 @@
   cursor: pointer;
 }
 
-.catalog-preview__continue:focus-visible,
 .catalog-preview__ctrl-btn:focus-visible,
 .catalog-preview__progress:focus-visible {
   outline: 2px solid var(--accent);
@@ -159,7 +133,6 @@
 /* tier X (TV): texto/controles legíveis e alcançáveis a distância */
 @media (min-width: 1920px) {
   .catalog-preview__loading { font-size: 18px; padding: 48px; }
-  .catalog-preview__continue { font-size: 20px; padding: 16px 32px; right: 28px; bottom: 84px; }
   .catalog-preview__controls { padding: 14px 20px; gap: 16px; }
   .catalog-preview__ctrl-btn { width: 44px; height: 44px; font-size: 20px; }
   .catalog-preview__time { font-size: 16px; }

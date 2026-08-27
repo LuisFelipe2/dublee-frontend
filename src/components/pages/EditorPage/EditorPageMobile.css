@@ -233,6 +233,9 @@
   font-size: 26px;
   background: #e53935;
   border-color: #e53935;
+  /* segurar-pra-gravar no touch (ver handleMicPointerDown) não pode disparar
+     scroll/pull-to-refresh no meio do gesto */
+  touch-action: none;
 }
 
 .editor-mobile__icon-btn--recording {
@@ -247,32 +250,8 @@
 }
 
 /* ─── Botão de voltar (mesmo canto do rec-badge — nunca aparecem juntos:
-   este só quando !isRecording, o rec-badge só quando isRecording) ────── */
-.editor-mobile__back-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(4px);
-  color: var(--white);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.editor-mobile__back-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
+   este só quando !isRecording, o rec-badge só quando isRecording): extraído
+   para componente compartilhado (src/components/shared/FullscreenBackButton). ── */
 
 /* ─── Volume modal ───────────────────────────────────────── */
 .editor-mobile__volume-list {
@@ -303,7 +282,6 @@
 }
 
 /* ─── Foco por teclado/D-pad (navegação TV, ver useBreakpoint/isTV) ── */
-.editor-mobile__back-btn:focus-visible,
 .editor-mobile__menu-handle:focus-visible,
 .editor-mobile__icon-btn:focus-visible,
 .editor-mobile__transport-play:focus-visible,
@@ -316,14 +294,6 @@
 /* tier X (TV): botões/menus da tela de gravação legíveis e alcançáveis a
    distância (mesma proporção usada no resto do app pro tier X). */
 @media (min-width: 1920px) {
-  .editor-mobile__back-btn {
-    width: 64px;
-    height: 64px;
-    font-size: 40px;
-    top: 24px;
-    left: 24px;
-  }
-
   .editor-mobile__chrono {
     font-size: 38px;
     padding: 10px 22px;

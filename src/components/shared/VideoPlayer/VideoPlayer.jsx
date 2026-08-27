@@ -8,7 +8,7 @@ const formatChrono = (s) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(3, '0')}`;
 };
 
-const VideoPlayer = forwardRef(({ src, muted = false, autoPlay = false, subtitles = [], showChrono = true, showNativeCaptions = true, disableControls = false, badge = null, isVideoLoading }, ref) => {
+const VideoPlayer = forwardRef(({ src, muted = false, autoPlay = false, subtitles = [], showChrono = true, showNativeCaptions = true, disableControls = false, badge = null, isVideoLoading, onToggleClick }, ref) => {
   const videoRef = useRef(null);
   const wrapperRef = useRef(null);
   const fsPendingRef = useRef(false);
@@ -112,22 +112,36 @@ const VideoPlayer = forwardRef(({ src, muted = false, autoPlay = false, subtitle
     };
   }, [isVideoLoading]);
 
-  // Click → play/pause | Double-click → toggle fullscreen
+  // Click → play/pause (sempre ativo, mesmo com disableControls — telas com
+  // controles próprios, ex. EditorPageMobile, passam onToggleClick pra rotear
+  // o toggle pela sua própria engine em vez de chamar video.play()/pause()
+  // direto, já que lá o play/pause precisa ficar em sync com tracks de áudio
+  // via Web Audio API) | Double-click → toggle fullscreen (só quando os
+  // controles nativos/wrapper padrão estão em uso — telas com stage próprio
+  // já têm seu próprio botão de fullscreen mirando o elemento certo).
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || disableControls) return;
+    if (!video) return;
+
+    const toggle = () => {
+      if (onToggleClick) onToggleClick();
+      else video.paused ? video.play().catch(() => {}) : video.pause();
+    };
 
     let timer = null;
 
     const onClick = (e) => {
       e.preventDefault();
+      if (disableControls) {
+        toggle();
+        return;
+      }
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        video.paused ? video.play().catch(() => {}) : video.pause();
-      }, 220);
+      timer = setTimeout(toggle, 220);
     };
 
     const onDblClick = () => {
+      if (disableControls) return;
       clearTimeout(timer);
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
@@ -143,7 +157,7 @@ const VideoPlayer = forwardRef(({ src, muted = false, autoPlay = false, subtitle
       video.removeEventListener('dblclick', onDblClick);
       clearTimeout(timer);
     };
-  }, [disableControls, isVideoLoading]);
+  }, [disableControls, isVideoLoading, onToggleClick]);
 
   return (
     <>

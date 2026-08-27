@@ -77,7 +77,7 @@ const SubtitleSettingsModal = ({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Configurações" className="subtitle-settings-modal">
+    <Modal open={open} onClose={onClose} title="Configurações" className="subtitle-settings-modal" draggable>
       <div className="subtitle-settings__section">
         <h4 className="subtitle-settings__label">Tamanho da legenda/cronômetro</h4>
         <div className="subtitle-settings__size-options">

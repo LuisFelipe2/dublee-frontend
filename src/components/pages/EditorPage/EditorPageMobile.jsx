@@ -7,6 +7,7 @@ import AddTrackMenu from '../../shared/AddTrackMenu/AddTrackMenu';
 import VolumeSlider from '../../shared/VolumeSlider/VolumeSlider';
 import Modal from '../../shared/Modal/Modal';
 import ReportProblemModal from '../../shared/ReportProblemModal/ReportProblemModal';
+import FullscreenBackButton from '../../shared/FullscreenBackButton/FullscreenBackButton';
 import { useEditorEngine, formatTime } from './useEditorEngine';
 import useCaptionSize from '../../../hooks/useCaptionSize';
 import useBreakpoint from '../../../hooks/useBreakpoint';
@@ -242,7 +243,7 @@ const EditorPageMobile = () => {
     if (!isTV) return;
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      document.querySelector('.editor-mobile__back-btn')?.focus();
+      document.querySelector('.fullscreen-back-btn')?.focus();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       (document.querySelector('.editor-mobile__icon-btn') || document.querySelector('.editor-mobile__transport-play'))?.focus();
@@ -265,6 +266,64 @@ const EditorPageMobile = () => {
       document.querySelector('.editor-mobile__transport-play')?.focus();
     }
   };
+
+  // Pedido do usuário: no celular (toque), segurar o botão do microfone
+  // inicia a gravação e soltar finaliza — mas o toque simples (clique) tem
+  // que continuar funcionando também (toggle: toca pra começar, toca de
+  // novo pra finalizar), do jeito que já era. Distinguimos os dois só pelo
+  // TEMPO que o dedo fica no botão: solta antes de HOLD_THRESHOLD_MS → foi
+  // um toque rápido, deixamos o click nativo do navegador disparar e cuidar
+  // do toggle (handleMicClick) normalmente; continua pressionado até o
+  // limiar → vira "segurar", a gravação começa ali (isHoldRecordingRef) e
+  // termina ao soltar. Mouse/teclado/TV não passam por nada disso, sempre
+  // usaram (e continuam usando) só o onClick abaixo.
+  const HOLD_THRESHOLD_MS = 350;
+  const lastTouchRecordAtRef = useRef(0);
+  const holdTimerRef = useRef(null);
+  const isHoldRecordingRef = useRef(false);
+
+  const handleMicPointerDown = (e) => {
+    if (e.pointerType !== 'touch' || isRecording || holdTimerRef.current) return;
+    // setPointerCapture é best-effort (só evita perder o pointerup se o dedo
+    // deslizar pra fora do botão) — se falhar por algum motivo, o gesto de
+    // segurar não pode deixar de funcionar por causa disso.
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      isHoldRecordingRef.current = true;
+      lastTouchRecordAtRef.current = Date.now();
+      startRecording(0);
+    }, HOLD_THRESHOLD_MS);
+  };
+
+  const handleMicPointerUp = (e) => {
+    if (e.pointerType !== 'touch') return;
+    if (holdTimerRef.current) {
+      // soltou antes do limiar — não foi "segurar", foi um toque rápido;
+      // cancela o timer e deixa o click nativo tratar como toggle.
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+      return;
+    }
+    if (isHoldRecordingRef.current) {
+      isHoldRecordingRef.current = false;
+      // marca o timestamp pra handleMicClick ignorar o click sintético que
+      // o navegador dispara logo depois do touchend deste gesto de segurar
+      // (senão finalizaria a gravação de novo / iniciaria uma nova).
+      lastTouchRecordAtRef.current = Date.now();
+      finalizeRecording();
+    }
+  };
+
+  const handleMicClick = () => {
+    if (Date.now() - lastTouchRecordAtRef.current < 500) return;
+    if (isRecording) finalizeRecording();
+    else startRecording(0);
+  };
+
+  // Se a página desmontar com o dedo ainda parado no botão (navegou fora no
+  // meio do gesto), o timer não pode disparar startRecording depois disso.
+  useEffect(() => () => clearTimeout(holdTimerRef.current), []);
 
   const handleTransportPlayKeyDown = (e) => {
     if (!isTV) return;
@@ -297,6 +356,7 @@ const EditorPageMobile = () => {
           showNativeCaptions={false}
           showChrono={false}
           disableControls
+          onToggleClick={isRecording ? (isPaused ? resumeRecording : pauseRecording) : handleTogglePlay}
           isVideoLoading={isVideoLoading}
           badge={isRecording ? (
             <div className={`rec-badge${isPaused ? ' rec-badge--paused' : ''}`}>
@@ -304,16 +364,7 @@ const EditorPageMobile = () => {
               {isPaused ? 'PAUSADO' : 'REC'}
             </div>
           ) : (
-            <button
-              type="button"
-              className="editor-mobile__back-btn"
-              onClick={() => navigate(`/subtitle/${videoId}`)}
-              onKeyDown={handleBackBtnKeyDown}
-              aria-label="Voltar"
-              title="Voltar"
-            >
-              ‹
-            </button>
+            <FullscreenBackButton onClick={() => navigate(`/subtitle/${videoId}`)} onKeyDown={handleBackBtnKeyDown} />
           )}
         />
         {!isVideoLoading && (
@@ -385,11 +436,14 @@ const EditorPageMobile = () => {
           <button
             type="button"
             className={`editor-mobile__icon-btn editor-mobile__icon-btn--record${isRecording ? ' editor-mobile__icon-btn--recording' : ''}`}
-            onClick={isRecording ? finalizeRecording : () => startRecording(0)}
+            onClick={handleMicClick}
+            onPointerDown={handleMicPointerDown}
+            onPointerUp={handleMicPointerUp}
+            onPointerCancel={handleMicPointerUp}
             onKeyDown={handleIconBtnKeyDown}
             disabled={transportDisabled}
             aria-label={isRecording ? 'Finalizar gravação' : 'Gravar'}
-            title={isRecording ? 'Finalizar gravação' : 'Gravar do início'}
+            title={isRecording ? 'Finalizar gravação' : 'Gravar do início (toque para gravar, ou segure no celular)'}
           >
             {isRecording ? '⏹' : '🎙'}
           </button>
@@ -427,7 +481,7 @@ const EditorPageMobile = () => {
 
       </div>
 
-      <Modal open={isVolumeModalOpen} onClose={closeVolumeModal} title="Volume das faixas">
+      <Modal open={isVolumeModalOpen} onClose={closeVolumeModal} title="Volume das faixas" draggable>
         <div className="editor-mobile__volume-list">
           {state.tracks.map(track => (
             <div key={track.id} className="editor-mobile__volume-item">
@@ -443,7 +497,7 @@ const EditorPageMobile = () => {
         </div>
       </Modal>
 
-      <Modal open={isSettingsModalOpen} onClose={closeSettingsModal} title="Configurações">
+      <Modal open={isSettingsModalOpen} onClose={closeSettingsModal} title="Configurações" draggable>
         <div className="editor-mobile__settings">
           <label className="recording-option">
             <input

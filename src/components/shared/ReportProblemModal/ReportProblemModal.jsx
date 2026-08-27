@@ -13,7 +13,7 @@ const ReportProblemModal = ({ open, onClose }) => {
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title="Reportar problema">
+      <Modal open={open} onClose={onClose} title="Reportar problema" draggable>
         <ReportProblemForm onSent={handleSent} />
       </Modal>
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
