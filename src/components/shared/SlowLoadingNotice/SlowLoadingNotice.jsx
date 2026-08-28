@@ -6,7 +6,7 @@ const SlowLoadingNotice = ({ open, onClose }) => {
   return (
     <Toast
       type="info"
-      message="Desculpe a demora, servidor mais lento hoje."
+      message="Desculpe a demora, servidor mais lento hoje. Por favor, aguarde mais um pouco..."
       onClose={onClose}
       className="toast--slow-notice"
     />
