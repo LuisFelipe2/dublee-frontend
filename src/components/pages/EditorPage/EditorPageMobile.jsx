@@ -533,7 +533,7 @@ const EditorPageMobile = () => {
 
       <ReportProblemModal open={isReportModalOpen} onClose={closeReportModal} />
 
-      <Modal open={isTracksModalOpen} onClose={closeTracksModal} title="Editar faixas" draggable>
+      <Modal open={isTracksModalOpen} onClose={closeTracksModal} title="Editar faixas de áudio" draggable className="editor-mobile__tracks-modal">
         <div className="editor-mobile__tracks">
           <AddTrackMenu
             tvNav={isTV}

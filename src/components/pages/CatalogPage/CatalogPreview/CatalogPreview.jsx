@@ -1,7 +1,18 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import VideoPlayer from '../../../shared/VideoPlayer/VideoPlayer';
 import ContinueButton from '../../../shared/ContinueButton/ContinueButton';
+import useBreakpoint from '../../../../hooks/useBreakpoint';
 import './CatalogPreview.css';
+
+// Tamanho mínimo de exibição do preview por tier (ver src/styles/breakpoints.css).
+// Vídeos de baixa resolução (ex.: 144p) do catálogo respeitam a resolução
+// original (ver CatalogPreview.css), mas ficam minúsculos em telas maiores —
+// P fica de fora porque lá o vídeo já preenche a largura disponível.
+const MIN_PREVIEW_SIZE = {
+  M: { width: 480, height: 270 },
+  G: { width: 640, height: 360 },
+  X: { width: 960, height: 540 },
+};
 
 // Segundos avançados/retrocedidos por pressionar de seta na barra de
 // progresso — mesmo valor do `step` nativo do <input type="range"> (mantido
@@ -34,6 +45,72 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+
+  const screenTier = useBreakpoint();
+
+  // Volta pro estado "carregando" a cada troca de vídeo — sem isso o stage
+  // (vídeo + controles) apareceria com o tamanho/frame do preview anterior
+  // por um instante antes do 'canplay' do novo vídeo.
+  useEffect(() => {
+    setIsVideoReady(false);
+  }, [previewUrl]);
+
+  // Escala o vídeo pra cima (mantendo a proporção original) quando a
+  // resolução nativa fica abaixo do mínimo do tier atual; acima do mínimo,
+  // continua respeitando a resolução original (width/height voltam a 'auto',
+  // ver CatalogPreview.css). min-width/min-height em CSS não servem aqui
+  // porque cada um seria aplicado de forma independente, distorcendo a
+  // proporção — por isso o cálculo é feito em JS a partir de videoWidth/
+  // videoHeight.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const applyMinSize = () => {
+      const { videoWidth: nw, videoHeight: nh } = video;
+      const min = MIN_PREVIEW_SIZE[screenTier];
+      if (!nw || !nh || !min) {
+        video.style.width = '';
+        video.style.height = '';
+        return;
+      }
+      const widthScale = min.width / nw;
+      const heightScale = min.height / nh;
+      const scale = Math.max(1, widthScale, heightScale);
+      if (scale === 1) {
+        video.style.width = '';
+        video.style.height = '';
+      } else if (widthScale >= heightScale) {
+        video.style.width = `${Math.round(nw * scale)}px`;
+        video.style.height = 'auto';
+      } else {
+        video.style.height = `${Math.round(nh * scale)}px`;
+        video.style.width = 'auto';
+      }
+    };
+
+    // Em tela cheia o CSS força width/height:100% (ver
+    // .catalog-preview__stage:fullscreen .video-player video), mas isso não
+    // vence o style inline aplicado acima — por isso o mínimo é suspenso
+    // (style limpo) enquanto em tela cheia e reaplicado ao sair.
+    const onFullscreenChange = () => {
+      if (document.fullscreenElement === stageRef.current) {
+        video.style.width = '';
+        video.style.height = '';
+      } else {
+        applyMinSize();
+      }
+    };
+
+    applyMinSize();
+    video.addEventListener('loadedmetadata', applyMinSize);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => {
+      video.removeEventListener('loadedmetadata', applyMinSize);
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+    };
+  }, [previewUrl, screenTier]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -43,26 +120,34 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
     const onTimeUpdate = () => setCurrentTime(video.currentTime);
     const onDuration = () => setDuration(video.duration || 0);
     const onVolumeChange = () => setIsMuted(video.muted);
+    // 'canplay': primeiro frame decodificado e buffer suficiente pra tocar
+    // sem travar — nesse ponto o tamanho já foi resolvido (loadedmetadata,
+    // que dispara antes, ver efeito acima) e a tela preta acabou, então dá
+    // pra revelar o stage já pronto/tocando em vez de em etapas.
+    const onCanPlay = () => setIsVideoReady(true);
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('durationchange', onDuration);
     video.addEventListener('volumechange', onVolumeChange);
+    video.addEventListener('canplay', onCanPlay);
     return () => {
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('durationchange', onDuration);
       video.removeEventListener('volumechange', onVolumeChange);
+      video.removeEventListener('canplay', onCanPlay);
     };
   }, [previewUrl]);
 
   // TV: foco inicial no botão "Continuar" assim que o vídeo está pronto
+  // (isVideoReady, não só previewUrl — antes disso o stage está oculto).
   useEffect(() => {
-    if (!tvNav || !previewUrl || hasAutoFocused.current) return;
+    if (!tvNav || !previewUrl || !isVideoReady || hasAutoFocused.current) return;
     hasAutoFocused.current = true;
     continueRef.current?.focus();
-  }, [tvNav, previewUrl]);
+  }, [tvNav, previewUrl, isVideoReady]);
 
   // TV: o botão de fechar (×) é renderizado pelo Modal genérico (fora da
   // árvore deste componente), então ele nunca fazia parte do mapa de setas —
@@ -175,10 +260,19 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
   return (
     <div className="catalog-preview">
       <div className="catalog-preview__player">
-        {isLoadingPreview ? (
+        {(isLoadingPreview || (previewUrl && !isVideoReady)) && (
           <div className="catalog-preview__loading">Carregando preview...</div>
-        ) : previewUrl ? (
-          <div className="catalog-preview__stage" ref={stageRef}>
+        )}
+        {previewUrl && (
+          // Fica montado (fora da tela, sem interação) desde a troca de
+          // previewUrl pra já começar a carregar em segundo plano — só
+          // revela quando isVideoReady vira true (evento 'canplay'), pra
+          // não mostrar o stage em etapas (tela preta → redimensiona →
+          // toca). Ver efeitos de 'canplay'/'loadedmetadata' acima.
+          <div
+            className={`catalog-preview__stage${isVideoReady ? '' : ' catalog-preview__stage--hidden'}`}
+            ref={stageRef}
+          >
             <VideoPlayer
               ref={videoRef}
               src={previewUrl}
@@ -247,7 +341,7 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
               </button>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

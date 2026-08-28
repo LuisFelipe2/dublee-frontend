@@ -14,6 +14,15 @@
   background: var(--accent-subtle);
 }
 
+/* Armado pra remover (1º clique no ×, ver TrackControls.jsx) — linha
+   esmaecida com contorno vermelho até o 2º clique confirmar ou o usuário
+   clicar em qualquer outro ponto pra cancelar. */
+.track-controls--confirm-remove {
+  opacity: 0.55;
+  outline: 2px solid #dc2626;
+  outline-offset: -2px;
+}
+
 .track-controls__top {
   display: flex;
   align-items: center;
@@ -64,6 +73,18 @@
 .track-controls__remove:hover {
   background: var(--surface-hover);
   color: #dc2626;
+}
+
+/* Destaca que o próximo clique confirma a remoção. */
+.track-controls__remove--confirm {
+  background: #dc2626;
+  color: var(--white);
+  transform: scale(1.25);
+}
+
+.track-controls__remove--confirm:hover {
+  background: #b91c1c;
+  color: var(--white);
 }
 
 .track-controls__toggles {
@@ -121,5 +142,24 @@
     width: 34px;
     height: 30px;
     font-size: 16px;
+  }
+}
+
+/* tier P (mobile): M/S mantêm o tamanho original, só com padding-left extra
+   pra dar mais espaço de toque entre eles; alvo de toque do remover
+   (a altura da linha, .track-controls, fica de fora de propósito, mesmo
+   racional do bloco tier X acima). */
+@media (max-width: 600px) {
+  .track-controls__toggle {
+    /* width:auto pra o padding-left abrir espaço de verdade em vez de
+       espremer o M/S dentro dos mesmos 20px (box-sizing: border-box
+       global, ver index.css) — altura/fonte continuam as originais. */
+      margin: 6px;
+  }
+
+  .track-controls__remove {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
   }
 }

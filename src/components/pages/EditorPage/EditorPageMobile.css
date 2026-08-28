@@ -274,11 +274,31 @@
   margin-top: 8px;
 }
 
-/* ─── Tracks ("editar faixas") modal ─────────────────────── */
+/* ─── Tracks ("editar faixas de áudio") modal ────────────── */
 .editor-mobile__tracks {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* Telas grandes (G+): modal mais largo aproveita o espaço extra pra timeline,
+   e os botões M/S de cada faixa (ver TrackControls.jsx) somem pra ficar mais
+   clean — pedido explícito, a função continua disponível nas telas menores. */
+@media (min-width: 1025px) {
+  .modal.editor-mobile__tracks-modal {
+    max-width: 900px;
+  }
+
+  .editor-mobile__tracks .track-controls__toggles {
+    display: none;
+  }
+}
+
+/* tier X (TV): ainda mais largo, aproveitando a tela grande de verdade. */
+@media (min-width: 1920px) {
+  .modal.editor-mobile__tracks-modal {
+    max-width: 1400px;
+  }
 }
 
 /* ─── Foco por teclado/D-pad (navegação TV, ver useBreakpoint/isTV) ── */

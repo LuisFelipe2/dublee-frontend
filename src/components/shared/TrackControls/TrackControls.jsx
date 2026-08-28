@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import VolumeSlider from '../VolumeSlider/VolumeSlider';
 import './TrackControls.css';
 
@@ -8,6 +8,22 @@ const DOUBLE_TAP_THRESHOLD_MS = 350;
 const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, onToggleMute, onToggleSolo, onRemove, onRename }) => {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(track.label);
+
+  // Remover exige 2 cliques no ×: o 1º só "arma" a confirmação (linha
+  // esmaecida com contorno vermelho, botão maior/vermelho); o 2º de fato
+  // remove. Clicar em qualquer outro lugar cancela — o listener de
+  // 'pointerdown' no document cobre isso (dispara antes do onClick do
+  // próprio botão, mas esse não deixa o evento chegar ao document, ver
+  // onPointerDown abaixo), então qualquer outro clique/toque (na própria
+  // linha, em M/S, fora do modal etc.) desarma.
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+
+  useEffect(() => {
+    if (!confirmingRemove) return;
+    const cancel = () => setConfirmingRemove(false);
+    document.addEventListener('pointerdown', cancel);
+    return () => document.removeEventListener('pointerdown', cancel);
+  }, [confirmingRemove]);
 
   const beginEdit = (e) => {
     e.stopPropagation();
@@ -43,7 +59,7 @@ const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, on
 
   return (
   <div
-    className={`track-controls track-controls--${track.kind}${selected ? ' track-controls--selected' : ''}`}
+    className={`track-controls track-controls--${track.kind}${selected ? ' track-controls--selected' : ''}${confirmingRemove ? ' track-controls--confirm-remove' : ''}`}
     onClick={onSelect}
   >
     <div className="track-controls__top">
@@ -76,10 +92,15 @@ const TrackControls = ({ track, disabled, selected, onSelect, onVolumeChange, on
       {track.removable && (
         <button
           type="button"
-          className="track-controls__remove"
-          onClick={e => { e.stopPropagation(); onRemove(); }}
-          aria-label="Remover faixa"
-          title="Remover faixa"
+          className={`track-controls__remove${confirmingRemove ? ' track-controls__remove--confirm' : ''}`}
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => {
+            e.stopPropagation();
+            if (confirmingRemove) onRemove();
+            else setConfirmingRemove(true);
+          }}
+          aria-label={confirmingRemove ? 'Confirmar remoção da faixa' : 'Remover faixa'}
+          title={confirmingRemove ? 'Clique novamente para confirmar' : 'Remover faixa'}
         >
           ×
         </button>

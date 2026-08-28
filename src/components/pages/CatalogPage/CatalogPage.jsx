@@ -31,6 +31,9 @@ const CatalogPage = () => {
   const blobUrlRef = useRef(null);
 
   const selected = selectedCatalogId ?? selectedFile;
+  const selectedTitle = selectedFile
+    ? selectedFile.name
+    : items.find(i => i.id === selectedCatalogId)?.title;
 
   const showToast = (type, message) => setToast({ type, message, id: Date.now() });
 
@@ -104,7 +107,7 @@ const CatalogPage = () => {
     const [data, success] = await importCatalogVideo(id);
     if (!success) {
       showToast('error', 'Falha ao importar cena do catálogo');
-      return;
+      return false;
     }
 
     if (data.subtitles?.length > 0) {
@@ -112,29 +115,35 @@ const CatalogPage = () => {
     }
     showToast('success', 'Cena importada! Redirecionando...');
     setTimeout(() => navigate(`/subtitle/${data.id}?from=catalog`), 1500);
+    return true;
   };
 
   const uploadLocalFile = async (file) => {
     const [data, success] = await uploadVideoAPI(file);
     if (!success) {
       showToast('error', 'Erro ao enviar vídeo. Tente novamente.');
-      return;
+      return false;
     }
     showToast('success', 'Vídeo enviado! Redirecionando...');
     setTimeout(() => navigate(`/subtitle/${data.id}`), 2000);
+    return true;
   };
 
   const handleConfirmSelection = async () => {
     if (!selected) return;
     setIsImporting(true);
     try {
+      let ok;
       if (selectedFile) {
         showToast('loading', 'Enviando vídeo...');
-        await uploadLocalFile(selectedFile);
+        ok = await uploadLocalFile(selectedFile);
       } else {
         showToast('loading', 'Importando cena...');
-        await importFromCatalog(selectedCatalogId);
+        ok = await importFromCatalog(selectedCatalogId);
       }
+      // em caso de sucesso o modal segue travado até a navegação acontecer;
+      // em caso de erro, reabilita o botão de fechar pro usuário poder sair.
+      if (!ok) setIsImporting(false);
     } catch (err) {
       showToast('error', err.message);
       setIsImporting(false);
@@ -171,7 +180,7 @@ const CatalogPage = () => {
         </div>
       </main>
 
-      <Modal open={!!selected} onClose={handleModalClose} className="catalog-preview-modal" draggable>
+      <Modal open={!!selected} onClose={handleModalClose} title={selectedTitle} className="catalog-preview-modal" draggable>
         <CatalogPreview
           previewUrl={previewUrl}
           isLoadingPreview={isLoadingPreview}

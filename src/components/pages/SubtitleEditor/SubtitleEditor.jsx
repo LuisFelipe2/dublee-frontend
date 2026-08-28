@@ -592,6 +592,17 @@ const SubtitleEditor = () => {
   const [captionDragOffset, setCaptionDragOffset] = useState({ x: 0, y: 0 });
   const captionDragStateRef = useRef(null);
 
+  // Soltar a legenda em cima da zona de lixeira (topo do stage, ver
+  // .subtitle-editor__caption-trash) apaga o bloco em vez de só reposicionar.
+  // isDraggingCaption/isOverTrash só existem pra feedback visual (contorno do
+  // bloco + zona de lixeira reagindo); a decisão real de apagar no pointerup
+  // usa isOverTrashRef, atualizado em sincronia a cada pointermove — ler o
+  // state isOverTrash ali arriscaria pegar um valor de closure desatualizado.
+  const [isDraggingCaption, setIsDraggingCaption] = useState(false);
+  const [isOverTrash, setIsOverTrash] = useState(false);
+  const isOverTrashRef = useRef(false);
+  const trashZoneRef = useRef(null);
+
   useEffect(() => {
     if (!showOverlayCaptionUI) setCaptionDragOffset({ x: 0, y: 0 });
   }, [showOverlayCaptionUI]);
@@ -599,6 +610,7 @@ const SubtitleEditor = () => {
   const handleCaptionBoxPointerDown = (e) => {
     if (e.target.closest('.subtitle-caption__input')) return;
     captionDragStateRef.current = { startX: e.clientX, startY: e.clientY, baseX: captionDragOffset.x, baseY: captionDragOffset.y };
+    setIsDraggingCaption(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -609,11 +621,29 @@ const SubtitleEditor = () => {
       x: drag.baseX + (e.clientX - drag.startX),
       y: drag.baseY + (e.clientY - drag.startY),
     });
+
+    const trashRect = trashZoneRef.current?.getBoundingClientRect();
+    const over = !!trashRect
+      && e.clientX >= trashRect.left && e.clientX <= trashRect.right
+      && e.clientY >= trashRect.top && e.clientY <= trashRect.bottom;
+    isOverTrashRef.current = over;
+    setIsOverTrash(over);
   };
 
   const handleCaptionBoxPointerUp = (e) => {
+    const droppedOnTrash = isOverTrashRef.current;
     captionDragStateRef.current = null;
+    isOverTrashRef.current = false;
+    setIsDraggingCaption(false);
+    setIsOverTrash(false);
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* já liberado */ }
+
+    // Só apaga bloco já comitado — enquanto ainda está pendente (digitando)
+    // não há bloco salvo pra apagar por aqui (ver displayedBlock acima).
+    if (droppedOnTrash && displayedBlock) {
+      handleDeleteBlock(displayedBlock.id);
+      setCaptionDragOffset({ x: 0, y: 0 });
+    }
   };
 
   // Legenda e cronômetro usam sempre o MESMO tamanho (pedido explícito do
@@ -686,7 +716,17 @@ const SubtitleEditor = () => {
                     showOverlayCaptionUI/isTV mais acima) — então o input de
                     legenda precisa de uma cópia própria aqui dentro. */}
                 <div
-                  className="subtitle-editor__fullscreen-caption"
+                  ref={trashZoneRef}
+                  className={`subtitle-editor__caption-trash${isDraggingCaption ? ' subtitle-editor__caption-trash--active' : ''}${
+                    isOverTrash ? ' subtitle-editor__caption-trash--armed' : ''
+                  }`}
+                  aria-hidden="true"
+                >
+                </div>
+                <div
+                  className={`subtitle-editor__fullscreen-caption${isDraggingCaption ? ' subtitle-editor__fullscreen-caption--dragging' : ''}${
+                    isOverTrash ? ' subtitle-editor__fullscreen-caption--armed' : ''
+                  }`}
                   style={{ transform: `translate(calc(-50% + ${captionDragOffset.x}px), ${captionDragOffset.y}px)` }}
                   onPointerDown={handleCaptionBoxPointerDown}
                   onPointerMove={handleCaptionBoxPointerMove}

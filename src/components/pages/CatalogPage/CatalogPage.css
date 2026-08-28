@@ -42,7 +42,7 @@
    com o tamanho da tela, sem precisar de breakpoint por tier. */
 .catalog-preview-modal.modal {
   width: fit-content;
-  max-width: min(94vw, 960px);
+  max-width: min(64vw, 660px);
   background: var(--surface-2);
   border-radius: 16px;
 }

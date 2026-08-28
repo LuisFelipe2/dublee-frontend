@@ -108,12 +108,19 @@ const VideoCard = ({ item, isSelected, onClick, outerRef, canScrollLeft, canScro
     close();
   }, [close]);
 
-  // fecha ao rolar a página verticalmente (window scroll não captura scroll de elementos internos)
+  // fecha ao rolar a página verticalmente ou a fileira horizontalmente (window scroll
+  // não captura scroll de elementos internos como o .catalog-row), pra o card flutuante
+  // não ficar "grudado" na posição antiga enquanto os cards reais se movem por baixo dele.
   useEffect(() => {
     if (!hovering) return;
     const dismiss = () => setHovering(false);
     window.addEventListener('scroll', dismiss);
-    return () => window.removeEventListener('scroll', dismiss);
+    const row = cardRef.current?.closest('.catalog-row');
+    row?.addEventListener('scroll', dismiss, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', dismiss);
+      row?.removeEventListener('scroll', dismiss);
+    };
   }, [hovering]);
 
   // navegação por controle remoto (TV): setas movem o foco entre cards, import tile e busca

@@ -191,14 +191,36 @@
   width: min(640px, 80vw);
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
+  border: 2px solid transparent;
   border-radius: 10px;
   padding: 10px 20px;
   cursor: grab;
   touch-action: none;
+  /* Só transiciona borda/fundo/opacidade — NUNCA transform, que é atualizado
+     a cada pointermove via inline style (ver captionDragOffset em
+     SubtitleEditor.jsx); animar transform aqui deixaria o arraste com lag. */
+  transition: border-color 0.15s, background-color 0.15s, opacity 0.15s;
 }
 
 .subtitle-editor__fullscreen-caption:active {
   cursor: grabbing;
+}
+
+/* Arrastando (fora do texto, ver handleCaptionBoxPointerDown em
+   SubtitleEditor.jsx): contorno azul claro no BLOCO inteiro (fundo + aspas +
+   texto), não só no input, deixando claro que é a legenda toda que está
+   sendo movida. */
+.subtitle-editor__fullscreen-caption--dragging {
+  border-color: #5ac8fa;
+}
+
+/* Soltar aqui apaga a legenda (ver .subtitle-editor__caption-trash abaixo e
+   isOverTrash em SubtitleEditor.jsx) — o bloco reage ficando avermelhado/
+   semitransparente, no mesmo instante em que a zona de lixeira também reage. */
+.subtitle-editor__fullscreen-caption--armed {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.35);
+  opacity: 0.75;
 }
 
 .subtitle-editor__fullscreen-caption .subtitle-caption__quote {
@@ -222,6 +244,45 @@
 
 .subtitle-editor__fullscreen-caption .subtitle-caption__input:focus {
   border-bottom-color: var(--accent);
+}
+
+/* ─── Zona de soltar-pra-apagar: aparece no topo do stage enquanto a legenda
+   está sendo arrastada (ver isDraggingCaption em SubtitleEditor.jsx).
+   pointer-events:none porque quem recebe os eventos de ponteiro durante o
+   arraste é sempre o .subtitle-editor__fullscreen-caption (setPointerCapture
+   no pointerdown) — a zona é só feedback visual, o hit-test contra o mouse é
+   feito em JS comparando coordenadas. ────────────────────────────────────── */
+.subtitle-editor__caption-trash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  z-index: 11;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 16px;
+  font-size: 26px;
+  background: linear-gradient(to bottom, rgba(220, 38, 38, 0.55), rgba(220, 38, 38, 0) 100%);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.18s, transform 0.18s, font-size 0.15s;
+  pointer-events: none;
+  user-select: none;
+}
+
+.subtitle-editor__caption-trash--active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* O ponteiro (arrastando a legenda) está sobre a zona: fica mais intensa
+   pra reforçar, junto com .subtitle-editor__fullscreen-caption--armed, que
+   soltar agora apaga a legenda. */
+.subtitle-editor__caption-trash--armed {
+  background: linear-gradient(to bottom, rgba(220, 38, 38, 0.85), rgba(220, 38, 38, 0.1) 100%);
+  font-size: 34px;
 }
 
 /* Botão "Continuar" — ver componente compartilhado ContinueButton. */
@@ -303,6 +364,10 @@
 
 .subtitle-editor-tv .subtitle-editor__fullscreen-caption {
   bottom: 84px;
+  /* Fonte já vem 1.7x maior em tier X (CAPTION_SIZE_MULTIPLIER), então os
+     640px "de referência" ficam apertados — dá mais espaço horizontal pro
+     texto respirar antes de quebrar linha. */
+  width: min(1100px, 70vw);
 }
 
 .subtitle-editor-tv .subtitle-editor__controls {

@@ -1,10 +1,20 @@
 import { useRef } from 'react';
 import TrackRow from '../TrackRow/TrackRow';
 import TrackControls from '../TrackControls/TrackControls';
+import useBreakpoint from '../../../hooks/useBreakpoint';
 import './Timeline.css';
 
 const ROW_HEIGHT = 92;
 const RULER_HEIGHT = 32;
+// tier X (TV): play/zoom (ver .timeline__play-btn/.timeline__zoom-btn em
+// Timeline.css) crescem pra 40px nessa faixa — o cabeçalho precisa de mais
+// altura pra não cortá-los. Só o cabeçalho cresce, a altura das linhas
+// (ROW_HEIGHT) fica de fora de propósito (mesmo racional de TrackControls.css).
+const RULER_HEIGHT_X = 56;
+// tier P (mobile): mesmo racional do tier X — play/zoom crescem (ver bloco
+// @media (max-width: 600px) em Timeline.css) pra facilitar o toque, então o
+// cabeçalho precisa de mais altura pra acomodar.
+const RULER_HEIGHT_P = 48;
 const TICK_OPTIONS = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
 
 const pickTickInterval = (pxPerSec) =>
@@ -40,6 +50,8 @@ const Timeline = ({
   tvNav,
 }) => {
   const contentRef = useRef(null);
+  const screenTier = useBreakpoint();
+  const rulerHeight = screenTier === 'X' ? RULER_HEIGHT_X : screenTier === 'P' ? RULER_HEIGHT_P : RULER_HEIGHT;
 
   // Navegação por controle remoto (TV): play/zoom navegam entre si por
   // ArrowRight/Left (mesma linha), ArrowUp volta pro botão "+ Adicionar
@@ -77,7 +89,7 @@ const Timeline = ({
   return (
     <div className="timeline">
       <div className="timeline__controls-col">
-        <div className="timeline__controls-spacer" style={{ height: RULER_HEIGHT }}>
+        <div className="timeline__controls-spacer" style={{ height: rulerHeight }}>
           <div className="timeline__zoom">
             {/* Toca/pausa sem fechar o modal de faixas — o transport normal
                 da página fica atrás do backdrop do modal (inalcançável),
@@ -139,7 +151,7 @@ const Timeline = ({
         <div className="timeline__content" ref={contentRef} style={{ width: contentWidth }}>
           <div
             className="timeline__ruler"
-            style={{ height: RULER_HEIGHT }}
+            style={{ height: rulerHeight }}
             onPointerDown={handleRulerPointerDown}
           >
             {ticks.map(t => (
@@ -168,7 +180,7 @@ const Timeline = ({
 
           <div
             className="timeline__playhead"
-            style={{ left: playheadSec * pxPerSec, height: RULER_HEIGHT + tracks.length * ROW_HEIGHT }}
+            style={{ left: playheadSec * pxPerSec, height: rulerHeight + tracks.length * ROW_HEIGHT }}
           />
         </div>
       </div>

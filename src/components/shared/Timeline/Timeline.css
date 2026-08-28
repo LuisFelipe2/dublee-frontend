@@ -86,17 +86,48 @@
   outline-offset: 2px;
 }
 
-/* tier X (TV): legível e alcançável a distância. */
+/* tier X (TV): legível e alcançável a distância. Coluna de controles (1ª
+   coluna, ver .timeline__controls-col) e cabeçalho (RULER_HEIGHT_X em
+   Timeline.jsx) crescem junto, senão os botões maiores não cabem no espaço
+   que sobrava pensado pro tamanho pequeno (20px). */
 @media (min-width: 1920px) {
+  .timeline__controls-col {
+    width: 230px;
+  }
+
+  .timeline__controls-spacer {
+    padding: 0 14px;
+  }
+
+  .timeline__zoom {
+    gap: 8px;
+  }
+
   .timeline__play-btn,
   .timeline__zoom-btn {
     width: 40px;
     height: 40px;
     font-size: 20px;
+    margin-right: 0;
   }
 
   .timeline__zoom-icon {
     font-size: 22px;
+    margin-right: 4px;
+  }
+}
+
+/* tier P (mobile): play/zoom mais espaçados pra facilitar o toque, sem
+   aumentar o tamanho dos botões (tamanho original mantido, ver regras base
+   de .timeline__play-btn/.timeline__zoom-btn acima).
+   RULER_HEIGHT_P em Timeline.jsx cresce junto pra acomodar o espaçamento. */
+@media (max-width: 600px) {
+  .timeline__controls-spacer {
+    padding: 0 10px;
+  }
+
+  .timeline__zoom {
+    gap: 10px;
   }
 }
 
