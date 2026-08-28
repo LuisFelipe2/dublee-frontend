@@ -21,7 +21,7 @@ const NewsPage = () => (
             Novas funcionalidades são publicadas nas redes sociais!
           </p>
           <p className="info-page__placeholder">
-            Aceitamos sugestões e pedidos, mande mensagem para o @dublee_oficial
+            Aceitamos sugestões e pedidos, mande mensagem para o <a href="https://www.instagram.com/dublee_oficial/">@Dublee_oficial</a>
           </p>
         </section>
 

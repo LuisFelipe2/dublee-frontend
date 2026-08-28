@@ -20,19 +20,21 @@ const HowItWorksPage = () => (
           <p className="info-page__placeholder">
             Para utilizar a plataforma basta acessar um vídeo disponível em nosso catálogo ou importar um vídeo pessoal; 
             adicionar legendas; e gravar sua voz no próprio aplicativo. O Dublee se encarrega da substituir a voz original, 
-            utilizando a IA pública do DEMUCS para separar as faixas de áudio, mantendo todos os demais sons que o DEMUCS
-            não reconhecer como voz. 
+            utilizando a IA pública do <a href="https://github.com/facebookresearch/demucs">DEMUCS</a> para separar as faixas de áudio, 
+            mantendo todos os demais sons que o DEMUCS não reconhecer como voz. 
           </p>
           <p className="info-page__placeholder">
-            O código do Dublee é open-source, o que significa que a comunidade pode contribuir para o desenvolvimento da plataforma, 
-            sugerindo melhorias, corrigindo bugs e adicionando novos recursos. O Dublee não tem fins lucrativos, toda arrecadação que fizer será utilizada para mantar a aplicação e pagar os custos de hospedagem, 
-            garantindo que a plataforma continue acessível e disponível para todos os usuários interessados em praticar dublagem.
+            O código do Dublee é <a href="https://github.com/LuisFelipe2/dublee-backend">open-source</a>, o que significa que a comunidade 
+            pode contribuir para o desenvolvimento da plataforma, sugerindo melhorias, corrigindo bugs e adicionando novos recursos. 
+            O Dublee não tem fins lucrativos, toda futura arrecadação que fizer será utilizada para mantar a aplicação e pagar os 
+            custos de hospedagem, garantindo que a plataforma continue acessível e disponível para todos os usuários interessados 
+            em praticar dublagem.
           </p>
           <p className="info-page__placeholder">
             Espero que se divirtam e aproveitem ao máximo o Dublee!
           </p>
           <p className="info-page__placeholder">
-            Caso queiram compartilhar suas histórias conosco, entre em contato pela redes social: @Dublee_oficial.
+            Caso queiram compartilhar suas histórias conosco, entre em contato pela redes social: <a href="https://www.instagram.com/dublee_oficial/">@Dublee_oficial</a>.
           </p>
         </section>
 

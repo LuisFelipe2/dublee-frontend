@@ -22,7 +22,7 @@ const TermsPrivacyPage = () => (
             O Dublee não armazena nenhum dado do usuário de forma permanente, garantindo a privacidade e segurança das informações.
           </p>
           <p className="info-page__placeholder">
-            O Dublee é um aplicativo open-source, o que significa que o código-fonte está disponível publicamente para qualquer pessoa 
+            O Dublee é um aplicativo <a href="https://github.com/LuisFelipe2/dublee-backend">open-source</a>, o que significa que o código-fonte está disponível publicamente para qualquer pessoa 
             acessar, ler e inspecionar.
           </p>
         </section>
