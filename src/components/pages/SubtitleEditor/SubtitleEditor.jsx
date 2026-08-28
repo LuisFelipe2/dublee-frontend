@@ -13,9 +13,11 @@ import Toast from '../../shared/Toast/Toast';
 import SubtitleCaptionInput from './CaptionInput/SubtitleCaptionInput';
 import SubtitleTimeline from './Timeline/SubtitleTimeline';
 import SubtitleSettingsModal from './SettingsModal/SubtitleSettingsModal';
+import SlowLoadingNotice from '../../shared/SlowLoadingNotice/SlowLoadingNotice';
 import useFullscreenElement from '../../../hooks/useFullscreenElement';
 import useBreakpoint from '../../../hooks/useBreakpoint';
 import useCaptionSize from '../../../hooks/useCaptionSize';
+import useSlowLoadingNotice from '../../../hooks/useSlowLoadingNotice';
 import { CAPTION_FONT_SIZE, CAPTION_FONT_SIZE_IMMERSIVE, CAPTION_SIZE_MULTIPLIER } from '../../../constants/captionSize';
 import { formatChrono } from '../../../utils/chrono';
 import './SubtitleEditor.css';
@@ -92,6 +94,11 @@ const SubtitleEditor = () => {
   const [durationSec, setDurationSec] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  // Aviso de "serviço lento" se a geração/tradução da legenda passar de
+  // 10s — ver useSlowLoadingNotice. Renderizado dentro do
+  // modalAndToastPortal (não aqui) porque o usuário pode estar em
+  // fullscreen nativo do vídeo durante essa espera.
+  const { show: showSlowNotice, dismiss: dismissSlowNotice } = useSlowLoadingNotice(isGenerating);
   const [toast, setToast] = useState(null);
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [targetLang, setTargetLang] = useState('pt');
@@ -837,6 +844,8 @@ const SubtitleEditor = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      <SlowLoadingNotice open={showSlowNotice} onClose={dismissSlowNotice} />
     </>,
     fullscreenEl || document.body
   );

@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { getCatalog, getCatalogPreview, importCatalogVideo, uploadVideo as uploadVideoAPI } from '../../../services/api';
 import useBreakpoint from '../../../hooks/useBreakpoint';
 import useFullscreenElement from '../../../hooks/useFullscreenElement';
+import useSlowLoadingNotice from '../../../hooks/useSlowLoadingNotice';
 import Header from '../../shared/Header/Header';
 import Footer from '../../shared/Footer/Footer';
 import Toast from '../../shared/Toast/Toast';
 import Modal from '../../shared/Modal/Modal';
+import SlowLoadingNotice from '../../shared/SlowLoadingNotice/SlowLoadingNotice';
 import CatalogCarousel from '../../shared/carousel/CatalogCarousel/CatalogCarousel';
 import FileImport from '../../shared/FileImport/FileImport';
 import CatalogPreview from './CatalogPreview/CatalogPreview';
@@ -29,6 +31,12 @@ const CatalogPage = () => {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const blobUrlRef = useRef(null);
+
+  // Aviso de "serviço lento" se o carregamento do catálogo ou o envio do
+  // vídeo passarem de 10s — ver useSlowLoadingNotice. Uma instância só,
+  // já que os dois loadings são mutuamente exclusivos na prática (precisa
+  // do catálogo carregado pra selecionar/importar um vídeo).
+  const { show: showSlowNotice, dismiss: dismissSlowNotice } = useSlowLoadingNotice(isLoading || isImporting);
 
   const selected = selectedCatalogId ?? selectedFile;
   const selectedTitle = selectedFile
@@ -192,6 +200,11 @@ const CatalogPage = () => {
       </Modal>
 
       <Footer tvNav={isTV} />
+
+      {createPortal(
+        <SlowLoadingNotice open={showSlowNotice} onClose={dismissSlowNotice} />,
+        fullscreenEl || document.body
+      )}
 
       {toast && createPortal(
         <Toast

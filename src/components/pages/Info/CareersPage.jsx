@@ -14,7 +14,9 @@ const CareersPage = () => (
 
         <section className="info-page__content">
           <p className="info-page__placeholder">
-            Quer trabalhar no Dublee? o código fonte é open-source, se você tem interesse em contribuir para o desenvolvimento da plataforma, 
+            Quer trabalhar no Dublee? 
+          </p>
+          <p className="info-page__placeholder">o código fonte é open-source, se você tem interesse em contribuir para o desenvolvimento da plataforma, 
             seja como desenvolvedor, designer, ou em qualquer outra área, basta abrir um PR no github e entrar em contato através do 
             instagran: @dublee_oficial ou pelo email: dublee.plataforma@gmail.com
           </p>

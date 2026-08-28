@@ -3,19 +3,41 @@
 }
 
 .info-page__content {
-  max-width: 720px;
-  margin: 32px auto 0;
-  padding: 0 40px 32px;
+  max-width: 620px;
+  margin: 8px auto 0;
+  padding: 0 40px 40px;
+  text-align: center;
 }
 
 .info-page__placeholder {
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
+  color: var(--text-body);
+  font-size: 15px;
+  line-height: 1.85;
+  margin-bottom: 22px;
+}
+
+.info-page__placeholder:last-child {
+  margin-bottom: 0;
+}
+
+/* Primeiro parágrafo em destaque, como uma "linha de abertura" do texto. */
+.info-page__placeholder:first-child {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 @media (max-width: 720px) {
   .info-page__content {
-    padding-inline: 20px;
+    padding-inline: 24px;
+  }
+
+  .info-page__placeholder {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .info-page__placeholder:first-child {
+    font-size: 15px;
   }
 }

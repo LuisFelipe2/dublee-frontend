@@ -1,7 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import VideoPlayer from '../../../shared/VideoPlayer/VideoPlayer';
 import ContinueButton from '../../../shared/ContinueButton/ContinueButton';
+import SlowLoadingNotice from '../../../shared/SlowLoadingNotice/SlowLoadingNotice';
 import useBreakpoint from '../../../../hooks/useBreakpoint';
+import useSlowLoadingNotice from '../../../../hooks/useSlowLoadingNotice';
 import './CatalogPreview.css';
 
 // Tamanho mínimo de exibição do preview por tier (ver src/styles/breakpoints.css).
@@ -48,6 +51,11 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   const screenTier = useBreakpoint();
+
+  // Aviso de "serviço lento" se o preview (busca da URL + buffer do vídeo
+  // até 'canplay') passar de 10s — ver useSlowLoadingNotice.
+  const isPreviewLoading = isLoadingPreview || Boolean(previewUrl && !isVideoReady);
+  const { show: showSlowNotice, dismiss: dismissSlowNotice } = useSlowLoadingNotice(isPreviewLoading);
 
   // Volta pro estado "carregando" a cada troca de vídeo — sem isso o stage
   // (vídeo + controles) apareceria com o tamanho/frame do preview anterior
@@ -343,6 +351,17 @@ const CatalogPreview = ({ previewUrl, isLoadingPreview, isImporting, onImport, t
           </div>
         )}
       </div>
+
+      {/* Portado pra fora da árvore do Modal pai (CatalogPage.jsx) — a
+          animação de entrada do Modal (Modal.css, modalSlideUp) deixa um
+          `transform: translateY(0)` residual via animation-fill-mode:
+          forwards, que cria containing block pra descendentes
+          position:fixed. Sem o portal, este toast ficaria preso dentro do
+          box do modal em vez de ancorado no canto do viewport. */}
+      {createPortal(
+        <SlowLoadingNotice open={showSlowNotice} onClose={dismissSlowNotice} />,
+        document.body
+      )}
     </div>
   );
 };

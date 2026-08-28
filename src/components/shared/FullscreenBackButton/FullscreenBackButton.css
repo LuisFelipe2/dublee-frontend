@@ -5,7 +5,11 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  z-index: 10;
+  /* Acima do overlay de espera do Demucs (.editor-overlay, z-index:10, ver
+     EditorPage.css) — sair da tela precisa continuar disponível mesmo
+     enquanto o resto da interação (tocar no vídeo, transport) segue
+     bloqueado de propósito durante o processamento. */
+  z-index: 11;
   width: 34px;
   height: 34px;
   border-radius: 50%;

@@ -1,7 +1,7 @@
 import './FileImport.css';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-const MAX_DURATION_SEC = 5 * 60;
+const MAX_DURATION_SEC = 90; // 1:30
 
 const readVideoDuration = (file) => new Promise((resolve, reject) => {
   const video = document.createElement('video');
@@ -31,7 +31,7 @@ const FileImport = ({ variant = 'panel', onFileSelected, showToast }) => {
     try {
       const duration = await readVideoDuration(f);
       if (duration > MAX_DURATION_SEC) {
-        showToast('error', 'Vídeo muito longo. Limite máximo 5 minutos.');
+        showToast('error', 'Vídeo muito longo. Limite máximo 1 minuto e 30 segundos.');
         return;
       }
     } catch {
@@ -115,7 +115,7 @@ const FileImport = ({ variant = 'panel', onFileSelected, showToast }) => {
             <div className="upload-label-icon">📹</div>
             <div className="upload-label-hint">Clique para selecionar ou arraste seu vídeo aqui</div>
             <div className="upload-label-formats">MP4, MOV, AVI e outros formatos</div>
-            <div className="upload-limit">Máximo 10 MB, até 5 minutos</div>
+            <div className="upload-limit">Máximo 10 MB, até 1 minuto e 30 segundos</div>
           </div>
         </label>
       </div>

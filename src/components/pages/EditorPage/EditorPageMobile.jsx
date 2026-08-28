@@ -8,9 +8,11 @@ import VolumeSlider from '../../shared/VolumeSlider/VolumeSlider';
 import Modal from '../../shared/Modal/Modal';
 import ReportProblemModal from '../../shared/ReportProblemModal/ReportProblemModal';
 import FullscreenBackButton from '../../shared/FullscreenBackButton/FullscreenBackButton';
+import SlowLoadingNotice from '../../shared/SlowLoadingNotice/SlowLoadingNotice';
 import { useEditorEngine, formatTime } from './useEditorEngine';
 import useCaptionSize from '../../../hooks/useCaptionSize';
 import useBreakpoint from '../../../hooks/useBreakpoint';
+import useSlowLoadingNotice from '../../../hooks/useSlowLoadingNotice';
 import { CAPTION_FONT_SIZE_IMMERSIVE, CAPTION_SIZE_MULTIPLIER } from '../../../constants/captionSize';
 import { formatChrono } from '../../../utils/chrono';
 import './EditorPage.css';
@@ -83,6 +85,12 @@ const EditorPageMobile = () => {
     interactionsDisabled,
     transportDisabled,
   } = useEditorEngine();
+
+  // Aviso de "serviço lento" se a espera pelo Demucs passar de 10s — ver
+  // useSlowLoadingNotice. Fullscreen só é possível depois que isso termina
+  // (startRecording exige transportDisabled=false, que inclui
+  // isWaitingDemucs), então não precisa de portal pra fullscreenEl.
+  const { show: showSlowDemucsNotice, dismiss: dismissSlowDemucsNotice } = useSlowLoadingNotice(isWaitingDemucs);
 
   const [isVolumeModalOpen, setIsVolumeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -532,6 +540,8 @@ const EditorPageMobile = () => {
       </Modal>
 
       <ReportProblemModal open={isReportModalOpen} onClose={closeReportModal} />
+
+      <SlowLoadingNotice open={showSlowDemucsNotice} onClose={dismissSlowDemucsNotice} />
 
       <Modal open={isTracksModalOpen} onClose={closeTracksModal} title="Editar faixas de áudio" draggable className="editor-mobile__tracks-modal">
         <div className="editor-mobile__tracks">

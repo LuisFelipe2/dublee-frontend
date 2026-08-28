@@ -33,6 +33,16 @@
 .toast--success { --toast-color: #43a047; --toast-color-dim: #7a9c7c; --toast-glow: rgba(67, 160, 71, 0.30); }
 .toast--error   { --toast-color: #e53935; --toast-color-dim: #a97674; --toast-glow: rgba(229, 57, 53, 0.30); }
 .toast--loading { --toast-color: #667eea; --toast-color-dim: #8b8fae; --toast-glow: rgba(102, 126, 234, 0.30); }
+.toast--info    { --toast-color: #f59e0b; --toast-color-dim: #b89968; --toast-glow: rgba(245, 158, 11, 0.30); }
+
+/* Trava em 1 linha (com reticências se não couber) — sem isso, a
+   mensagem quebra em 2-3 linhas e o toast cresce bem mais que os outros
+   (que normalmente são curtos o suficiente pra caber numa linha só). */
+.toast--slow-notice .toast__message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ─── Responsivo (mesmos tiers de src/constants/breakpoints.js) ──────── */
 @media (min-width: 601px) {  /* M — tablet / notebook pequeno */
