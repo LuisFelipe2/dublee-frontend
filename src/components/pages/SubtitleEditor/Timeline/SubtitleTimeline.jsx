@@ -68,10 +68,6 @@ const SubtitleTimeline = ({
     seekFromClientX(e.clientX);
   };
 
-  // Arrastar (mover) e redimensionar (alças) — mesmo padrão de
-  // pointerdown/pointermove/pointerup + setPointerCapture do shared/Clip/Clip.jsx.
-  // Aqui só calcula o delta em segundos e repassa pro pai (SubtitleEditor), que
-  // decide o quanto é permitido mover/crescer (colisão com vizinhos).
   const beginDrag = (e, type, block) => {
     if (disabled) return;
     e.stopPropagation();

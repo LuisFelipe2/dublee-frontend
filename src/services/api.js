@@ -45,6 +45,12 @@ export const translateSubtitles = async (videoId, subtitles, targetLang) => {
   return await post(`videos/${videoId}/subtitles/translate`, requestBody, headers);
 };
 
+export const submitFeedback = async (description) => {
+  const requestBody = JSON.stringify({ description });
+  const headers = { 'Content-Type': 'application/json' };
+  return await post('feedback', requestBody, headers);
+};
+
 export const mixTracks = async (videoId, tracks) => {
   const formData = new FormData();
   formData.append('tracks_count', String(tracks.length));

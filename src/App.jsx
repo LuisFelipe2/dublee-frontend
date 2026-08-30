@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CatalogPage from './components/pages/CatalogPage/CatalogPage';
 import SubtitleEditor from './components/pages/SubtitleEditor/SubtitleEditor';
 import EditorPage from './components/pages/EditorPage/EditorPage';
-import FaqPage from './components/pages/FaqPage/FaqPage';
 import AboutPage from './components/pages/Info/AboutPage';
 import CopyrightPage from './components/pages/Info/CopyrightPage';
 import TermsPrivacyPage from './components/pages/Info/TermsPrivacyPage';
@@ -21,7 +20,6 @@ function App() {
           <Route path="/"                     element={<CatalogPage />} />
           <Route path="/subtitle/:videoId"    element={<SubtitleEditor />} />
           <Route path="/record/:videoId"      element={<EditorPage />} />
-          <Route path="/faq"                  element={<FaqPage />} />
           <Route path="/direitos-autorais"    element={<CopyrightPage />} />
           <Route path="/sobre"                element={<AboutPage />} />
           <Route path="/termos-privacidade"   element={<TermsPrivacyPage />} />

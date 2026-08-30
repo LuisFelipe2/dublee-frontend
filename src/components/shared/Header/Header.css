@@ -17,10 +17,29 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 18px 6px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-header__brand:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
 .app-header__logo {
-  font-size: 28px;
-  line-height: 1;
+  height: 36px;
+  width: 36px;
   flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .app-header__text h1 {
@@ -44,4 +63,5 @@
 @media (min-width: 1920px) {
   .app-header { padding: 24px 56px; gap: 20px; }
   .app-header__text h1 { font-size: 32px; }
+  .app-header__logo { height: 48px; width: 48px; }
 }

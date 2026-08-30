@@ -3,11 +3,6 @@ import './SubtitleCaptionInput.css';
 
 const DOUBLE_TAP_THRESHOLD_MS = 350;
 
-// Duplo-clique deve selecionar o texto INTEIRO, não só a palavra clicada
-// (comportamento nativo do browser). Interceptando no mousedown (2º clique
-// da sequência, e.detail===2) e bloqueando o default ANTES da seleção nativa
-// de palavra ser aplicada é o único jeito confiável de sobrescrever isso —
-// fazer só no onDoubleClick roda tarde demais em alguns browsers.
 const handleMouseDown = (e) => {
   if (e.detail > 1) {
     e.preventDefault();
@@ -17,10 +12,6 @@ const handleMouseDown = (e) => {
 };
 
 const SubtitleCaptionInput = ({ value, onChange, onBlur, onKeyDown, disabled, autoGrow = false }) => {
-  // Duplo-toque em telas touch não gera um mousedown com detail>1 de forma
-  // confiável (os eventos de mouse sintetizados a partir de toque variam
-  // muito entre browsers mobile, e telas touch costumam tratar duplo-toque
-  // como zoom, não como seleção) — precisa de detecção própria via toque.
   const lastTapRef = useRef(0);
   const handleTouchEnd = (e) => {
     const now = Date.now();

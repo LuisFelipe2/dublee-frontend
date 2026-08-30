@@ -1,24 +1,30 @@
 import { useState } from 'react';
 import Button from '../Button/Button';
 import Toast from '../Toast/Toast';
+import { submitFeedback } from '../../../services/api';
 import './ReportProblemForm.css';
-
-const SUPPORT_EMAIL = 'dublee.plataforma@gmail.com';
 
 const ReportProblemForm = ({ onSent }) => {
   const [description, setDescription] = useState('');
   const [toast, setToast] = useState(null);
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim()) {
       setToast({ type: 'error', message: 'Descreva o problema antes de enviar.', id: Date.now() });
       return;
     }
 
-    const subject = encodeURIComponent('[Dublee] Reportar problema');
-    const body = encodeURIComponent(`Descrição do problema:\n${description.trim()}`);
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+    setSending(true);
+    const [, ok] = await submitFeedback(description.trim());
+    setSending(false);
+
+    if (!ok) {
+      setToast({ type: 'error', message: 'Não foi possível enviar. Tente novamente.', id: Date.now() });
+      return;
+    }
+
     setDescription('');
     onSent?.();
   };
@@ -34,7 +40,9 @@ const ReportProblemForm = ({ onSent }) => {
           rows={5}
         />
         <div className="report-problem-form__actions">
-          <Button type="submit" variant="primary">Enviar</Button>
+          <Button type="submit" variant="primary" disabled={sending}>
+            {sending ? 'Enviando...' : 'Enviar'}
+          </Button>
         </div>
       </form>
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}

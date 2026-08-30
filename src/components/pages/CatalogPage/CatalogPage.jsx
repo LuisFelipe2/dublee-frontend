@@ -32,10 +32,6 @@ const CatalogPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const blobUrlRef = useRef(null);
 
-  // Aviso de "serviço lento" se o carregamento do catálogo ou o envio do
-  // vídeo passarem de 10s — ver useSlowLoadingNotice. Uma instância só,
-  // já que os dois loadings são mutuamente exclusivos na prática (precisa
-  // do catálogo carregado pra selecionar/importar um vídeo).
   const { show: showSlowNotice, dismiss: dismissSlowNotice } = useSlowLoadingNotice(isLoading || isImporting);
 
   const selected = selectedCatalogId ?? selectedFile;
@@ -66,8 +62,6 @@ const CatalogPage = () => {
     setIsLoadingPreview(false);
   };
 
-  // enquanto importa/envia, não deixa fechar o modal (evita navegação
-  // confusa se o usuário clicar em outro card por baixo).
   const handleModalClose = isImporting ? () => {} : clearSelection;
 
   const handleSelectCatalogItem = async (item) => {
@@ -149,8 +143,6 @@ const CatalogPage = () => {
         showToast('loading', 'Importando cena...');
         ok = await importFromCatalog(selectedCatalogId);
       }
-      // em caso de sucesso o modal segue travado até a navegação acontecer;
-      // em caso de erro, reabilita o botão de fechar pro usuário poder sair.
       if (!ok) setIsImporting(false);
     } catch (err) {
       showToast('error', err.message);
